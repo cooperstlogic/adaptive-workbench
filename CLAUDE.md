@@ -12,7 +12,7 @@ results and commands are in `README.md`; every settled choice and its reasoning 
 `skills/adaptive-optimization/SKILL.md` before touching anything in the round loop.
 
 - Use `.venv/bin/python`, never `python3` — the system interpreter has no numpy.
-- Run `.venv/bin/python check.py` before and after any phase. It verifies 131 invariants
+- Run `.venv/bin/python check.py` before and after any phase. It verifies 132 invariants
   that correspond to rules here and numbers in `DECISIONS.md`; a failure means the state
   drifted from what is documented. It takes about half a minute, because it runs two full
   six-round campaigns through the CLI, checks them against the evaluator, and drives both

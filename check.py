@@ -957,6 +957,17 @@ def main():
     check("a refusal reaches the caller as a message, not as a crash",
           missing["error"] and "CST99999" in missing["text"],
           "ToolError carries the reason; a bare exception reaches the agent as noise")
+    # Phase 5b pinned this shape after reading the wire in Claude Science, whose
+    # bundled SDK is mcp 1.x. Both SDK versions prefix the text with "Error
+    # executing tool <name>: " -- that prefix is theirs and is not removable.
+    # What ToolError buys is the sentence after it, so the sentence is what is
+    # asserted, and the prefix is asserted too so nobody re-words the README
+    # into claiming it is absent -- decision 104.
+    check("the refusal is isError with the reason after the SDK's own prefix",
+          resubmit["error"] is True
+          and resubmit["text"].startswith("Error executing tool submit_batch: ")
+          and "has already been submitted" in resubmit["text"].split(": ", 1)[1],
+          "the prefix is the SDK's on 1.x and 2.x alike; the sentence after it is ours")
     check("list_designs caps what it returns and says what it held back",
           listing["data"]["n_shown"] == 3 and listing["data"]["n_total"] > 3,
           "%d of %d" % (listing["data"]["n_shown"], listing["data"]["n_total"]))

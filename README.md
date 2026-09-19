@@ -189,7 +189,7 @@ live git tree, and it splits the project directory in two, which is the one thin
 beat 5 cannot survive — the batch hashes only mean something if both surfaces read the
 same state.
 
-`check.py` runs 131 checks in about half a minute and is the handoff contract. Every
+`check.py` runs 132 checks in about half a minute and is the handoff contract. Every
 check in it corresponds to a rule in `CLAUDE.md` or a number recorded in `DECISIONS.md`,
 so a failure means the state has drifted from what is documented.
 
@@ -646,7 +646,7 @@ skill as an installable plugin.
 | Tools | `submit_batch`, `pull_assay_results`, `list_designs`, `get_construct`, `attach_recommendation` |
 | Not available, deliberately | `create_sample`, `edit_assay_result`, `start_workflow`, `delete_record` |
 | Implementation | five calls into `lims.py`. `check.py` compares the connector's export against the CLI's **byte for byte** |
-| Refusals | a round already submitted, a construct that does not exist — each reaching the caller as a message rather than as "error executing tool" |
+| Refusals | a round already submitted, a construct that does not exist — each raised as `ToolError`, so the **reason** reaches the caller instead of a traceback. The SDK prefixes it: the caller sees `Error executing tool submit_batch: round R3 has already been submitted; …`, on both `mcp` 1.x and 2.x. The prefix is the SDK's, the sentence after it is ours, and that sentence is the property worth having |
 
 | `bioprovider` — the provider stand-in | |
 | --- | --- |
@@ -660,7 +660,7 @@ reading its tool list* — is now a check rather than a sentence, asserted from 
 the served tool list does not contain the four withheld names, and `--tools` prints them
 as withheld.
 
-**Checks went from 103 to 131.** The new ones cover the gate's record, both tool lists,
+**Checks went from 103 to 131, and 5b added one more, for 132.** The new ones cover the gate's record, both tool lists,
 the byte-for-byte export parity, the one-hot hash parity, the unwired-backend refusal,
 the structure stub returning no number, that no connector prints outside its `--tools`
 branch — stdout is the JSON-RPC stream — and that the plugin manifests point at files
@@ -729,7 +729,7 @@ that exist.
 | `web/public/assets/campaign.json` | The proof chart's data, written by the evaluator |
 | `plot_campaign.py` | Renders the proof chart from `campaign.json`. matplotlib lives here, never in `core/` |
 | `gates/` | The two agent gates: the transcripts, and the script that re-runs them |
-| `check.py` | Invariant verification, 131 checks. Run it after any phase |
+| `check.py` | Invariant verification, 132 checks. Run it after any phase |
 
 ## What is real and what is staged
 
