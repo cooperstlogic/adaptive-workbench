@@ -424,6 +424,14 @@ The centre column is where the agentic claim is made or lost, so nothing in it i
 
 **Model and cost.** `claude-opus-5` with `thinking: {type: "adaptive"}`, `output_config: {effort: "low"}`, streaming, and `max_tokens` around 400. Low effort is the cost lever that matters here; the session reads small JSON, picks tests and explains. With the prefix cached, a diagnosis costs on the order of a cent.
 
+**`ask.ts` must handle `stop_reason: "refusal"`, and this is not hypothetical.** The phase 5 gate runs fired a safety-classifier refusal three times across two sessions, category `bio`, on antibody-engineering content — recoverable there because Claude Code retries, and both sessions completed. A single-shot proxy has no retry. A refusal returns **HTTP 200** with no usable content and `stop_details: {type: "refusal", category: ...}`, so code that reads `content[0].text` on a 200 renders an empty bubble on stage. Three requirements, in order:
+
+1. Send the server-side fallback on every request — `betas: ["server-side-fallback-2026-07-01"]` with `fallbacks: "default"`, which routes by refusal category and needs no model list. A decline before any output is not billed; the rescue bills at the fallback model's rates. That alone would have absorbed all three of the gate's refusals.
+2. Check `stop_reason` before reading `content`, on every response. `stop_details` is populated only for `refusal` and is `null` otherwise, so guard it. A `refusal` on the final response means the whole chain declined.
+3. Treat that case exactly as the budget cap is treated: flip to verified replay and say so on the badge. The fallback already exists for the cap, and this is a second door into the same room rather than new machinery.
+
+None of this is a reason to change models. It is a reason the browser path's default has to be replay and its live mode an upgrade, which is what the paragraph below already says — the refusal is simply one more way the upgrade can fail to apply.
+
 **Anyone can use it, until the budget says otherwise.** The key lives in a Netlify environment variable, so visitors supply nothing. A global daily spend cap and a per-IP counter live in Netlify Blobs. Under the cap the session runs live. Over it, the site returns to replay — and the fallback is not a degraded mode, it is the default that live calls temporarily upgrade. The badge reads *live*, or *replayed · evidence recomputed · 5 of 5 values match*, and the page always says which mode it is in.
 
 ## Build order

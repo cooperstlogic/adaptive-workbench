@@ -663,3 +663,29 @@ differ only in how they spell the path — `.mcp.json` relative, for a clone ope
 directly, and the same two servers inline in `plugin.json` under `${CLAUDE_PLUGIN_ROOT}`,
 for an install. `check.py` asserts both name the same two servers and that every path in
 either one exists.
+
+**A safeguard refusal fired three times during the gates, and it changes one thing in
+phase 7.** Both gate sessions show `API Error: Opus 5's safeguards flagged this message`,
+category `bio` — twice in the round-4 run, once in the round-1 run, across roughly a
+hundred turns of antibody-engineering content. It cost nothing either time: Claude Code
+retried, one refused turn emitted a malformed `Grep` call that errored and was reissued,
+and both sessions completed with correct output. The gate is unaffected and the record
+verifies.
+
+| # | Decision | Reasoning |
+| --- | --- | --- |
+| 100 | `netlify/functions/ask.ts` sends `fallbacks: "default"` with the `server-side-fallback-2026-07-01` beta, checks `stop_reason` before reading `content`, and treats a surviving refusal exactly as it treats the budget cap | The browser path is a single-shot proxy with no agent loop, so nothing retries for it. A refusal is **HTTP 200** with no usable content and a populated `stop_details`, which means the naive read — `content[0].text` on a 200 — renders an empty bubble in front of the audience and looks like the product being broken. The server-side fallback re-runs the request on another model inside the same call and would have absorbed all three of the gate's refusals; a decline before output is not billed. If the whole chain declines, the badge flips to verified replay, which is a door into a room that already exists rather than new machinery. Recorded now because it is a two-line requirement that is very expensive to discover on stage |
+
+**What is *not* being changed, and why.** The model stays `claude-opus-5`: three fires in
+a hundred turns on content that is exactly what this build is about, every one of them
+recovered, is not evidence for a downgrade, and the audience for this pitch will find the
+subject matter unremarkable. The gate transcripts keep the error text rather than editing
+it out — decision 98. And nothing about the CLI path changes, because Claude Code's own
+retry is the handling.
+
+**The open question this leaves for 5b.** The same content will run in Claude Science
+against the same classifier family. Whether it fires there, and whether the host recovers
+as gracefully as Claude Code did, cannot be answered from here. It goes on the 5b
+checklist beside the interpreter question, and whatever happens gets written down —
+including "it never fired", which is the likeliest outcome and still worth recording
+once rather than wondered about twice.
