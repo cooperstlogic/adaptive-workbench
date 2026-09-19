@@ -14,7 +14,7 @@ That layer is thin. It is a template that instantiates a project, a handful of s
 | --- | --- |
 | The decision layer is thin and file-based, not another platform | Whole project state is a directory of JSON; the LIMS mock stays authoritative for samples and assays |
 | The skills are real and portable, not demo mocks | The same `.py` files run in Claude Science, from the CLI, and in the deployed browser app |
-| A specialized surface beats open-ended chat for this workflow | Batch review with approve and override, beside a panel that explains and diagnoses but cannot write |
+| Typed artifacts and enumerated actions beat free-form output | The conversation stays; what it produces is a typed batch, a typed decision record, and four ruling verbs bound to code paths |
 | The agent reasons rather than sequences | Round 4 comes back ambiguous; the agent forms competing hypotheses, tests them, and asks a named human to rule |
 
 Visibly absent, because the concept doc lists them as non-goals: sample management, plate design, hosted GPU, de novo generation, autonomous approval.
@@ -56,7 +56,7 @@ One core module tree, three surfaces over it.
 | mcp/ | registry\_server.py (LIMS stand-in), bioprovider\_server.py (Tamarind-shaped provider) |
 | templates/ | antibody-affinity-maturation/, plus a stub second template |
 | data/ | build\_oracle.py, build\_features.py, synthetic.py |
-| web/ | Vite app, panels, and public/assets/ for the precomputed matrices |
+| web/ | Vite app: the Claude Science-shaped shell, its artifact tabs, and public/assets/ for the precomputed matrices |
 | netlify/functions/ | ask.ts — the single stateless model proxy |
 | projects/demo-trastuzumab/ | A completed six-round project, committed to the repo |
 | simulate\_campaign.py | Headless N-round run that emits the proof chart |
@@ -225,9 +225,13 @@ This is the only place model-written code is permitted, and the boundary is enfo
 
 **Oversight has four verbs, not two.** `accepted`, `accepted_with_modification`, `rejected` with a reason, and `more_evidence_requested`, which names a test and sends the agent back to run it. That last one is the loop closing: the human pushes work back to the agent without dropping into open chat. Every ruling carries a named approver and a timestamp, and no action is taken on an unruled record.
 
+`more_evidence_requested` is the verb a pipeline cannot imitate, so it is exercised rather than merely defined. The demo project's round-4 record is two-pass: a recommendation, a ruling that names a test the agent had not run, the test, a revised recommendation, and the final ruling. Both passes are committed, so the beat survives with no key. It is acceptance criterion 8.
+
 **Refusal is a valid recommendation.** If the bridging set is missing or its members disagree, the correct output is `no_action` with `confidence: "refuses"` and an explanation. Having a principled reason not to refuse is the better demo; being unable to refuse is the worse product.
 
 **Round 4 in the demo project.** The oracle already applies a per-round offset and the assay version already changes at round 4, and an exploiting optimizer naturally concentrates on one mutation class — so check whether the ambiguity arises on its own before engineering it. If it does not, place the synthetic landscape's cliff at a high-expected-improvement position, record that parameter in `DECISIONS.md` with the rest, and let the campaign walk into it.
+
+Phase 3 confirmed it arises on its own, and richer than this sketched. The bridge recovers about a pKD of assay shift against a fresh-design discrepancy of two, the residual is flat across mutated positions so the cliff is ruled out, and what remains is the model extrapolating from an incumbent inflated by taking a maximum over noisy reads. A diagnosis that corrects the offset and stops is wrong about half the round, which is a better artifact than the single-cause story. `DECISIONS.md` has the numbers.
 
 ## Project state
 
@@ -365,43 +369,64 @@ In the prototype, ship one working template and one stub. The stub exists in the
 
 ## Web app
 
-Vite plus React, static output, deployed to a default Netlify URL. One page, three panels, a persistent round timeline across the top. No router, no state library, no backend beyond a single stateless function.
+Vite plus React, static output, deployed to a default Netlify URL. No router, no state library, no backend beyond a single stateless function.
 
-On load: fetch the template list, load the committed demo project's state, boot Pyodide with numpy, fetch `core/*.py` into the Pyodide filesystem, fetch the binary assets into numpy arrays. Show a progress line while this happens — it takes a few seconds and pretending otherwise looks broken.
+**The layout is Claude Science's, because the claim is that this is a layer inside it rather than a product beside it — and phase 5b earns the right to say so by running inside it first.** A bespoke dashboard makes the audience translate; borrowing the host's own grammar makes the argument before anyone reads a word of copy. It is also less to build, not more — the three panels of the earlier plan become tabs in a slot that already exists. Three regions and a home screen, mirroring the beta:
 
-Pin the Pyodide version and serve the runtime and the numpy wheel from the site's own origin. A demo that depends on a third-party CDN and conference wifi at the same moment has a coin flip in it.
+| Claude Science | Here | What the borrowed slot carries |
+| --- | --- | --- |
+| Home, *1 waiting on you* | *Round 4 — ruling pending · 2 hypotheses*, with the `Needs you` badge | Their approval primitive is an untyped chat interrupt — *asking what the new specialist should do*. Ours is a typed decision with hashed evidence, an `if_wrong` line, and four verbs bound to code paths |
+| Home, Projects and Recent sessions | Projects and recent rounds. `+ New project` opens the template gallery | Demo beat 1, in its native slot |
+| Left rail: New, Search, Customize, Files, Compute | The same, plus one added item: **Rounds** | Exactly one new primitive, sitting where it would ship. Everything above it already exists in the product |
+| Rail: Active and Older sessions | *Round 4 · diagnosis* active, *Round 3 · batch approved*, *Round 2 · flagged, refit* — each with its elapsed date | The longitudinal claim, visible at a glance. A session list spanning six weeks is the argument for persistent decision state |
+| Centre: conversation, inline figures, generated-artifact chips, the composer | The round's session: the agent's messages, its tool-call stream, artifact chips, the same composer | The reasoning panel stops being a sidebar and becomes the centre column, which is where judgment belongs |
+| Right: artifact viewer with a version stepper and a Notebook toggle | Tabs — Batch, Decision, Progress, Objectives, Notebook — with `< v2 >` where versions are real | Objectives is versioned on amendment and a snapshot is rewritten when a round is corrected, so the stepper is not decoration |
 
-**Panel 1, Setup.** Renders `objectives.json`: editable region, mutation budget, per-objective direction and threshold, batch size. Read-only in this build — editing objectives is the mechanic that a stop-or-widen recommendation would need, and that recommendation is not in scope for day one. Collapsed by default once a project has rounds.
+**The chrome is a wireframe, and the page says so.** The panels, the Python, the state and the hashes inside it are real; the frame around them is not the product. That distinction goes in the staged table and in a line on the page, because failure mode one applies to the frame as much as to the contents.
 
-**Panel 2, Batch review.** A table of the 48 selected designs with mutations, predicted value and interval per objective, selection rationale, and a badge for controls, replicates, and exploration picks. Beside it a Pareto scatter of predicted affinity against the developability score, with tested designs in one style and proposed ones in another. Every row has a checkbox and an override note field. One Approve button.
+**It is a proposal, not an imitation, and 5b is what makes that true.** The order of the argument matters more than either piece of it. We install into the host, run a real campaign there, and hit the wall; the audit records where. Then every element of this shell exists because the audit named the thing it is standing in for — the `Needs you` card because a ruling is an untyped chat interrupt today, the Rounds item because `rounds.json` has nowhere to render, the Notebook tab because traceability is a reviewer's after-the-fact check rather than a structural guarantee. A mockup shown *before* that walk is a competitor's redesign of someone else's product. Shown after it, it is a feature request with a working implementation attached, which is the only version worth presenting.
 
-**Panel 3, Progress.** Two charts. The proof chart — cumulative best observed pKD by round, model-guided against the random baseline's median and interquartile band, plus the naive-pooling arm if it earned its place. And calibration — predicted against observed for the previous batch, with the 80% interval coverage printed as a number.
+**Objectives tab** — formerly the Setup panel. Renders `objectives.json`: editable region, mutation budget, per-objective direction and threshold, batch size. Read-only in this build, because editing objectives is the mechanic a stop-or-widen recommendation would need and that is not in scope for day one.
 
-**The round timeline carries decisions.** A flagged round renders as a card in the timeline: *Round 4 flagged — 2 hypotheses, ruling pending*. Opening it shows each hypothesis, the diagnostic that tested it, the number it returned, any ad hoc analysis with its source, and the recommendation with its `if_wrong` line. The four ruling buttons sit at the bottom. This replaces walking individual batch rows as the governance beat, because approving a judgment is something a human can actually do and approving 48 rows is not.
+**Batch tab** — formerly Batch review. A table of the 48 selected designs with mutations, predicted value and interval per objective, selection rationale, and a badge for controls, replicates and exploration picks. Every row has a checkbox and an override note field. One Approve button. The Pareto scatter stays where it was, near the top of the cut list.
 
-**The interactive loop, entirely in-browser.** Approve a batch, and the app calls the simulated lab, runs `import_round`, and — if the round is flagged — surfaces the decision card before advancing. Once ruled, it runs the correction, `fit_surrogates`, `generate_candidates`, and `select_batch` through Pyodide, then re-renders with round N+1 proposed. Two to four seconds.
+**Progress tab.** Two charts. The proof chart — cumulative best observed pKD by round, model-guided against the random baseline's median and interquartile band, plus the naive-pooling arm. And calibration — predicted against observed for the previous batch, with the 80% interval coverage printed as a number.
+
+**The Notebook tab is where non-negotiable 7 becomes visible, and it is the cheapest credibility in the build.** Claude Science ships a background reviewer that flags *untraceable numbers*. Click any figure in the batch table or the decision record and the Notebook tab shows the `core/` function that produced it, its source, its arguments and its input hash. The line to use: *their reviewer catches untraceable numbers after the fact; a template makes them impossible to write.* It renders lineage the project already stores, so it costs a component and no new plumbing.
+
+**The interactive loop, entirely in-browser.** Approve a batch, and the app calls the simulated lab, runs `import_round`, and — if the round is flagged — opens that round's session instead of advancing. Once ruled, it runs the correction, `fit_surrogates`, `generate_candidates` and `select_batch` through Pyodide, then re-renders with round N+1 proposed. Two to four seconds.
+
+On load: fetch the template list, load the committed demo project's state, boot Pyodide with numpy, fetch `core/*.py` into the Pyodide filesystem, fetch the binary assets into numpy arrays. Show a progress line while this happens — it takes a few seconds and pretending otherwise looks broken. Pin the Pyodide version and serve the runtime and the numpy wheel from the site's own origin. A demo that depends on a third-party CDN and conference wifi at the same moment has a coin flip in it.
 
 Rounds a visitor runs live in the Pyodide filesystem and in `localStorage`, so a reload keeps their progress and Reset clears it. Nothing is written back to the repository, and the page says so. The oracle also ships in the bundle, because the simulated lab has to run client-side, so anyone can download ground truth. Say that first. The claim is that `core/` never reads it, and that is checkable by reading six files.
 
 Ship the committed demo project at round three so a visitor lands mid-campaign with history already visible, and can run rounds four through six themselves — round four being the one that flags. A Reset link restores it.
 
-## The reasoning panel
+## The agent in the session
 
-One Netlify function, `netlify/functions/ask.ts`. This is no longer the last thing built or the first thing cut: it is where the agentic layer is visible in the browser, so it moves up the order and the site's honesty depends on its fallback being good.
+The centre column is where the agentic claim is made or lost, so nothing in it is decorative and it is built before the polish.
 
-**Context.** The panel receives the whole decision state, not just the current batch: the decision record, the diagnostic outputs, `rounds.json`, `objectives.json`, the active model run, the previous batch's eval, and a summarized batch table rather than all 48 rows with full rationale. That lands near 20k tokens, which is cached as a stable prefix with the visitor's question placed after the breakpoint.
+**What it is fixing.** Without this section the browser shows three things that are not an agent. Approve runs the same five steps whatever comes back, which is a scheduler with a mouse. The decision card renders a record produced yesterday, in a terminal, on a laptop. And a panel that answers questions but cannot write project state is a narrator with a calculator. The agentic claim would then rest entirely on the terminal beat, which to an audience looks like a different product.
 
-**Two tools, both read-only.** `run_diagnostic(test, round)` calls a named function from `core/diagnostics.py`. `execute_analysis(code)` runs model-written numpy in the Pyodide sandbox against the mounted snapshot arrays. Neither can write project state, and the model cannot name a test outside the template's list. When a scientist asks *is it really a batch effect*, the panel runs the test instead of speculating about it — that is the whole difference between a narrator and a colleague.
+**Orchestration runs live; the verdict stays the human's.** Those separate cleanly and only the first needs to be live. Under non-negotiable 7 the model produces no numbers, the tests come from the template's allowlist, and the action is one of four verbs a named person rules on — so a live model here chooses a sequence from a five-item list and writes prose. That is bounded, cheap and low-variance, and it is precisely the part a scheduler cannot do. The risk the earlier plan was avoiding is a wrong *verdict* on stage, and the four ruling buttons already absorb it: a wrong recommendation that a human visibly rejects is a better governance demo than a right one.
 
-**The tool loop lives in the browser.** Pyodide is where the data and the sandbox already are, and the key cannot go client-side, so the function is a stateless single-turn proxy over `messages.create` and React owns the `while stop_reason == "tool_use"` loop. Each function invocation is therefore one short model turn, which keeps every request inside Netlify's synchronous window. On the CLI path there is no function at all: Claude Code is the loop and Bash is the sandbox.
+**One tool-call stream component, two sources.** The diagnosis arrives a step at a time — *chose `offset_from_controls`; −1.014 pKD, se 0.059, bridge concordant; therefore chose `residual_by_mutation_class`; flat, so the cliff is not supported; coverage 0.07 against 0.80, so the remainder is the model.* In **live** mode the model drives it. In **replay** mode the committed record drives the same component with the same animation, and every diagnostic is genuinely recomputed in Pyodide and checked against the record. One component, and the badge is the only visible difference. A visitor at 2am with no key watches reasoning happen rather than reading a finished JSON blob.
+
+**The push-back is the loop closing.** `more_evidence_requested` is the one beat a pipeline cannot imitate, and the earlier plan defined it without ever firing it. Round 4's record is therefore two-pass: a recommendation, a ruling naming `calibration_by_region`, the test, a revised recommendation, the final ruling. Live mode does it for real; replay steps the recorded second pass. One extra recorded pass, no new code, and it is acceptance criterion 8.
+
+**The agent speaks on quiet rounds too.** An unflagged round gets one line — *coverage 0.78, offset inside its standard error, nothing to decide, proceed.* Declining to act is judgment, and an agent that appears only when something breaks is an alarm rather than a colleague.
+
+**Two tools, both read-only.** `run_diagnostic(test, round)` calls a named function from `core/diagnostics.py`. `execute_analysis(code)` runs model-written numpy in the Pyodide sandbox against the mounted snapshot arrays. Neither can write project state, and the model cannot name a test outside the template's list. Every write happens through a ruling.
+
+**Context.** The session receives the whole decision state, not just the current batch: the decision record, the diagnostic outputs, `rounds.json`, `objectives.json`, the active model run, the previous batch's eval, and a summarized batch table rather than all 48 rows with full rationale. That lands near 20k tokens, cached as a stable prefix with the visitor's question placed after the breakpoint.
+
+**The tool loop lives in the browser.** Pyodide is where the data and the sandbox already are, and the key cannot go client-side, so `netlify/functions/ask.ts` is a stateless single-turn proxy over `messages.create` and React owns the `while stop_reason == "tool_use"` loop. Each function invocation is one short model turn, which keeps every request inside Netlify's synchronous window. On the CLI path there is no function at all: Claude Code is the loop and Bash is the sandbox.
 
 **The function is not a proxy for the Claude API.** It builds the request itself from a fixed system prompt, the project state it loads server-side, and the visitor's question as a length-capped string. It must never accept a client-supplied `messages` array — that would publish a free Opus endpoint under your key. This is the single most important line in this section.
 
-**Model and cost.** `claude-opus-5` with `thinking: {type: "adaptive"}`, `output_config: {effort: "low"}`, streaming, and `max_tokens` around 400. Low effort is the cost lever that matters here; the panel reads small JSON and explains, it does not do hard reasoning. With the prefix cached, a question costs on the order of a cent.
+**Model and cost.** `claude-opus-5` with `thinking: {type: "adaptive"}`, `output_config: {effort: "low"}`, streaming, and `max_tokens` around 400. Low effort is the cost lever that matters here; the session reads small JSON, picks tests and explains. With the prefix cached, a diagnosis costs on the order of a cent.
 
-**Anyone can use it, until the budget says otherwise.** The key lives in a Netlify environment variable, so visitors supply nothing. A global daily spend cap and a per-IP counter live in Netlify Blobs. Under the cap, the panel calls Claude live. Over it, the site falls back — and the fallback is not a degraded mode, it is the default that live calls temporarily upgrade.
-
-**The fallback is verifiable, which is better than live.** With no key, over budget, or on a fork, the panel renders the committed decision record and re-runs its diagnostics in Pyodide, checking each returned number against the record. The badge reads *reasoning replayed · evidence recomputed · 5 of 5 values match*. A visitor at 2am gets a complete and honest experience, and the page always says which mode it is in.
+**Anyone can use it, until the budget says otherwise.** The key lives in a Netlify environment variable, so visitors supply nothing. A global daily spend cap and a per-IP counter live in Netlify Blobs. Under the cap the session runs live. Over it, the site returns to replay — and the fallback is not a degraded mode, it is the default that live calls temporarily upgrade. The badge reads *live*, or *replayed · evidence recomputed · 5 of 5 values match*, and the page always says which mode it is in.
 
 ## Build order
 
@@ -409,15 +434,20 @@ Run these as separate Claude Code sessions with a clean context each. The gate a
 
 There is a second gate at hour 5, and the simulated-only decision gives it teeth. It is no longer "the agent called five scripts in order" — it is whether the agent diagnosed an ambiguous round correctly from the skill and the connectors alone.
 
+**Why the hour-5 gate is verified in Claude Code and demonstrated in Claude Science.** What the gate tests is whether `SKILL.md`, the five diagnostics and the state contract are *sufficient* — a property of the skill pack, not of the client. Claude Code is the harness that can be scripted, re-run after a skill edit, and committed as a transcript, so it holds the repeatable evidence and criterion 3 stays anchored there. Claude Science holds the demonstration, and beta access is confirmed: it accepts custom MCP connectors and local skill packs, so the same plugin installs and the same gate runs inside the host product. The repo carries the proof; the host carries the pitch.
+
+**Phase 5b is not a screenshot errand.** Running inside the host is also the only way to find out whether the gap this whole artifact claims exists actually does. Claude Science already has projects, a Files directory, persistent kernels, artifacts that ship with their history, skills that every future session inherits, and a *waiting on you* queue. A sceptic will ask which of those already covers us, and the answer has to come from using it rather than from reading its marketing page. So 5b's deliverable is two things: the skill running in the host, and a written audit in `DECISIONS.md` of precisely where the host's abstractions run out. Phase 6 builds against that list. Any claimed gap that does not survive contact with the product is struck — same discipline as the threshold, applied to the pitch instead of the science.
+
 | Phase | Deliverable | Done when |
 | --- | --- | --- |
 | 1 | Repo skeleton, synthetic oracle, project schema, one-hot encoder, landscape parameters committed to DECISIONS.md | A project directory can be created from the template and round 1 designs written |
 | 2 | core/ surrogate, candidates, acquisition, plus simulate\_campaign.py | GATE: twenty seeds per arm, guided reaches the pre-registered threshold in fewer rounds, and the interquartile bands separate |
 | 3 | The five pipeline scripts and SKILL.md wrapping core/ | The same six rounds run through the CLI scripts, not just the library |
 | 4 | core/diagnostics.py, run\_diagnostic.py, record\_decision.py, the decision record schema | Each of the five tests returns a sane number on the round-4 snapshot |
-| 5 | Both MCP servers, .mcp.json, one end-to-end run driven by Claude Code | GATE: Claude Code diagnoses round 4 correctly using only skill and connector calls, and writes a decision record |
-| 6 | Web app: Pyodide boot, three panels, the approve loop, the decision card | Approving a batch advances the round in-browser in under five seconds, and round 4 stops for a ruling |
-| 7 | The reasoning panel: function, two tools, budget cap, verified fallback | Works with a key, degrades to verified replay without one |
+| 5 | Both MCP servers, .mcp.json, one end-to-end run driven by an agent | GATE: an agent given only the skill and the connectors diagnoses round 4 correctly and writes a decision record. Verified in Claude Code, for the reason above |
+| 5b | The plugin installed into Claude Science, the same gate re-run there, and the gap audit written | The skill and both connectors load in the host, the agent diagnoses round 4 there, and `DECISIONS.md` records which claimed gaps survived contact with the product and which were struck |
+| 6 | Web app: Pyodide boot, the shell, the artifact tabs, the approve loop | Approving a batch advances the round in-browser in under five seconds, and round 4 opens its session instead of advancing |
+| 7 | The agent in the session: the tool-call stream, two tools, the push-back round trip, budget cap, verified replay | Runs the diagnosis live with a key and steps the recorded one without, through the same component |
 | 8 | Committed demo project at round 3, Netlify deploy, README with the staged table | The public URL runs a round and a ruling from a cold visit with no key |
 | 9 | Demo script, five-minute rehearsal, cut anything broken | You can run it start to finish without apologising |
 
@@ -437,7 +467,7 @@ If the real data lands, one line changes in the README and one sentence changes 
 
 ## Acceptance and demo script
 
-**Acceptance criteria.** Seven in total, and all seven are testable.
+**Acceptance criteria.** Eight in total, and all eight are testable.
 
 1. `simulate_campaign.py` produces a chart where guided selection reaches the pre-registered threshold in measurably fewer rounds than random, over twenty seeds per arm.
 2. Claude Code, given only the skill and the two MCP servers, completes one full round unaided.
@@ -446,18 +476,19 @@ If the real data lands, one line changes in the README and one sentence changes 
 5. Clicking any batch reaches the exact evidence snapshot hash that produced it.
 6. The registry connector cannot create a sample — demonstrable by reading its tool list.
 7. The CLI and the browser, given the same project state, select the same batch and print the same batch hash.
+8. A visitor rules `more_evidence_requested` on the round-4 record, and the agent comes back with a named test it had not run, a number from `core/`, and a revised recommendation.
 
-The count is unchanged from the earlier spec because one criterion was struck and one added. Gone: switching the provider backend changes no code outside `project.json` — the second backend is not wired in this build, and a criterion with an asterisk is worth less than one fewer criterion. It lives in the staged table instead. New: criterion 3, which is the one that carries the agentic claim.
+One criterion was struck and two added. Gone: switching the provider backend changes no code outside `project.json` — the second backend is not wired in this build, and a criterion with an asterisk is worth less than one fewer criterion. It lives in the staged table instead. New: criterion 3, which carries the agentic claim on the CLI, and criterion 8, which carries it in the browser. Criterion 8 is the only one on the list a pipeline cannot pass, because passing it requires the next action to depend on a human's push-back.
 
 **Five-minute demo.**
 
-1. **Thirty seconds.** Template picker. Pick antibody affinity maturation, name the lead, and a project exists. This is the part Claude Science has no answer for today.
-2. **Forty-five seconds.** Setup panel. Editable region, mutation budget, three objectives, batch of 48. Note that affinity is measured and the rest are computed, and that the optimizer treats them differently.
-3. **Ninety seconds.** Approve round 4. It comes back flagged. Open the decision card: two hypotheses, the diagnostic behind each, the numbers, and the `if_wrong` line. Ask the panel one question it has to run a test to answer. Rule on it.
+1. **Thirty seconds.** The home screen: one card reading *Round 4 — ruling pending*, a project list, and a template gallery behind `+ New project`. Pick antibody affinity maturation, name the lead, and a project exists. This is the part Claude Science has no answer for today — and the screen it is missing from is its own.
+2. **Thirty seconds.** The Objectives tab. Editable region, mutation budget, three objectives, batch of 48. Note that affinity is measured and the rest are computed, and that the optimizer treats them differently.
+3. **Two minutes.** Approve round 4. It comes back flagged and opens its session. Watch the agent choose `offset_from_controls`, get −1.014, and pick its second test *because of* that number. Click one figure in the record; the Notebook tab shows the `core/` function behind it. Then rule `more_evidence_requested` — it goes back, runs `calibration_by_region`, and revises. Accept.
 4. **Forty-five seconds.** The round advances. Calibration updates. The proof chart extends, with the naive-pooling arm visibly worse. Say the number, and say that the landscape is synthetic in the same breath.
-5. **One minute.** Drop to the terminal. Same round, same files, run through Claude Code with the skill and connectors. Put the two batch hashes side by side; they match. The web app was never the product — it is one surface over a decision layer that also works as a skill.
+5. **One minute.** Open Claude Science. Same skill, same connectors, same project directory, installed as a plugin — and run the same round there. Put the two batch hashes side by side; they match. The shell was never the product: it is one surface over a decision layer that already runs inside the thing you ship. Then name what the host is missing, from the 5b audit, in three sentences. Claude Code is the backup for this beat and the terminal is a keystroke away, but lead with the host, because the argument lands twice as hard when the demo is running in the audience's own product.
 
-Beat 3 replaces walking three batch rows, which was the weakest minute in the earlier script: it asked the audience to watch a rubber stamp. Beat 5 is the whole pitch, so protect the time for it.
+Beat 3 replaces walking three batch rows, which was the weakest minute in the earlier script: it asked the audience to watch a rubber stamp. It is now the longest beat, because it is the one carrying the agentic claim, and the push-back at its end is the part that cannot be a pipeline. Beat 5 is the whole pitch, so protect the time for it.
 
 ## Risks and cutlines
 
@@ -467,15 +498,19 @@ Beat 3 replaces walking three batch rows, which was the weakest minute in the ea
 
 **Overclaiming the chart.** A synthetic landscape supports "the loop works", not "this finds better antibodies". Every place the chart appears — README, page, slide, spoken line — carries the synthetic label in the same breath as the number.
 
-**The agent diagnoses it wrong on stage.** A live model making a judgment call in front of an audience is a coin flip you do not control. The demo path uses the committed record with evidence recomputed live, and the terminal beat is where the live agent runs and can be retried. There is a braver reading available if it goes wrong anyway: a wrong recommendation that a human visibly rejects is a better governance demo than a right one, and the four ruling verbs are on screen to make that point.
+**The agent diagnoses it wrong on stage.** A live model making a judgment call in front of an audience is a coin flip you do not control, so the coin is only tossed where losing it is survivable. The live part is which test runs next, chosen from a five-item allowlist, with every number coming from `core/`. The verdict is a human's, and the four ruling verbs are on screen. If the recommendation is wrong, reject it out loud — a wrong recommendation that a named person visibly overrules is a better governance demo than a right one, and it is the one thing an audience cannot suspect was rehearsed. If the network or the budget fails instead, the badge flips to replay and the same component steps the committed record.
 
 **Pyodide is slower than expected.** Exact GP inference is cubic in observations; by round six with 48 per round that is a 288-by-288 solve, which is nothing. If the boot is the slow part, drop to numpy-only Pyodide and lazy-load. If it is genuinely unworkable, the fallback is precomputing all six rounds and having the approve button step through them. Do not take that fallback before hour nine.
 
 **The public panel runs up a bill.** Covered by the daily cap and the per-IP counter, and by the function never accepting a caller-supplied message array. Verify both before the URL is shared, not after.
 
+**The gap is smaller than the pitch claims.** The host already has projects, Files, persistent kernels, artifacts with history, inherited skills and a *waiting on you* queue, and an audience that builds it knows exactly what it does. If the 5b audit finds that two of our four claimed gaps are already covered, the honest response is to strike them and make the remaining two properly, not to argue the covered ones harder. Better found at hour five, in their product, than in the room.
+
 **Scope creep into the LIMS.** The moment Claude Code starts writing sample or plate models, stop it. The absence is the argument.
 
-**Cut in this order if the day runs short:** ad hoc code execution (keep the five library diagnostics), the second template stub, the Pareto scatter (keep the table), the override note field. **Never cut:** the proof chart, the approve loop, the round-4 decision record, the CLI path through the skill.
+**Cut in this order if the day runs short:** ad hoc code execution (keep the five library diagnostics), the second template stub, the Pareto scatter (keep the table), the Notebook tab, the browser's *live* mode (keep animated replay), the override note field. **Never cut:** the proof chart, the approve loop, the round-4 decision record, the push-back round trip, the CLI path through the skill.
+
+**The shell becomes the work.** Imitating another product's interface has no natural stopping point, and every hour spent on rail iconography is an hour not spent on the thing the rail is holding. The stopping rule: the shell is done when the five demo beats land, and anything beyond that is cut. Three regions, one list, one tab strip, one composer. If the shell is eating phase 7, ship it uglier — the agent in the centre column is the claim and the chrome is the frame around it.
 
 ## What is real and what is staged
 
@@ -495,11 +530,17 @@ This audience will ask. Put this table in the README and be able to recite it, b
 | The agent's reasoning in the browser | **Real Claude** while the daily budget holds. Verified replay of a committed record otherwise, with the evidence recomputed live |
 | The agent's reasoning in the CLI | **Real.** Claude Code runs the diagnosis unaided; this is acceptance criterion 3 |
 | Rounds run in the browser | **Real.** The same Python, on state held in the browser and never written back to the repository |
+| The web app's chrome | **A wireframe.** It renders the layer the 5b audit found missing, in the host's own grammar. The panels, the Python, the state and the hashes inside it are real |
+| The skill and connectors inside Claude Science | **Real.** Beta access confirmed; the plugin installs, the connectors load, and phase 5b runs the round-4 gate in the host |
 
 ## Packaging for Claude Science
 
 The skill and connectors should be installable, not merely described. Anthropic publishes a life-sciences marketplace of MCP servers and skills for Claude Code, so mirror that shape: a `marketplace.json` at the repo root declaring one plugin that bundles the `adaptive-optimization` skill and both MCP servers, plus a README section giving the one command to add it.
 
-The test that matters is criterion 3 in the acceptance list: someone installs the plugin, points it at a project directory, hits a flagged round, and gets a defensible diagnosis by conversation alone. If that works, the claim that this is an extension of Claude Science rather than a separate application is demonstrated rather than argued.
+The distribution mechanism is the host's, in the host's own words: *"Save any pipeline as a reusable skill, or connect to your lab's preferred tool with a connector, and every future session inherits it automatically."* Quote that line in the README directly above the install command. It is the strongest available argument that this is an extension rather than a rival, and it is not ours.
+
+The test that matters is criterion 3 in the acceptance list: someone installs the plugin, points it at a project directory, hits a flagged round, and gets a defensible diagnosis by conversation alone. Beta access is confirmed and the host takes custom connectors and local skill packs, so this is a thing to do in phase 5b rather than a thing to claim. The README's install command is then a command that has been run, not a command that should work.
+
+**One portability risk, worth ten minutes at the start of 5b.** `SKILL.md` tells the agent to invoke the scripts as shell commands with `--project` and `--round`. A notebook-kernel-first harness may prefer to import them. If so the fix is small and should be made rather than worked around: give each script a `main(argv)` that the CLI entry point and a kernel call both route through, so one implementation serves both and neither surface is special. Check this before running the gate there, because discovering it midway looks like the skill failing when it is the invocation path.
 
 Keep `SKILL.md` under 150 lines. The scripts carry the procedure; the skill body carries only the state contract, the call order, the diagnosis procedure, and the four rules the agent must not break.

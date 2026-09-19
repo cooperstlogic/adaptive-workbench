@@ -40,6 +40,21 @@ answering one question at a time.
 The audience is technically sophisticated and will poke at it. Optimize for a demo that
 survives scrutiny, not for feature count.
 
+**The web app wears the Claude Science interface**, because the claim is that this is a
+layer inside it rather than a product beside it: a home screen with a `Needs you` card,
+a left rail whose sessions are rounds, a centre conversation, and a right artifact panel
+with tabs. The chrome is a wireframe and is labelled one. Decisions 57–66 in
+`DECISIONS.md` record that choice, why orchestration runs live while the verdict stays
+human, and what was cut to pay for it. Read them before phase 6.
+
+**Phase 5b is the checkpoint that matters for the pitch.** Beta access to Claude Science
+is confirmed and it takes custom connectors and local skill packs, so the plugin installs
+and the round-4 gate runs in the host. Its second deliverable is an audit of where the
+host's abstractions actually run out — it already has projects, Files, persistent kernels,
+artifacts with history, inherited skills and a *waiting on you* queue. Any gap this
+artifact claims that does not survive contact with the product gets struck, not argued
+harder. Phase 6 builds against the surviving list. Decisions 67–71 record this.
+
 ## The two proof artifacts
 
 1. **One chart:** cumulative best-observed affinity versus experimental round,
@@ -136,7 +151,13 @@ trustworthy and inspectable.
 ## Cut order if time runs short
 
 Ad hoc code execution (keep the five library diagnostics) → second template stub →
-Pareto scatter (keep the table) → override note field.
+Pareto scatter (keep the table) → the Notebook tab → the browser's *live* mode (keep
+animated replay) → override note field.
 
-**Never cut:** the proof chart, the approve loop, the round-4 decision record, the CLI
-path through the skill.
+**Never cut:** the proof chart, the approve loop, the round-4 decision record, the
+push-back round trip, the CLI path through the skill.
+
+**The shell has no natural stopping point.** Phases 6 and 7 imitate the Claude Science
+interface, and every hour on rail iconography is an hour not spent on what the rail holds.
+The shell is done when the five demo beats land. If it is eating phase 7, ship it uglier —
+the agent in the centre column is the claim and the chrome is the frame around it.

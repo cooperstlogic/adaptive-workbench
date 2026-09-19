@@ -63,9 +63,10 @@ drifted from what is documented.
 | 2 | `core/surrogate.py`, `acquisition.py`, `reconcile.py`, `simulate_campaign.py` | **Done — gate passed** |
 | 3 | The five pipeline scripts, `SKILL.md`, the mock LIMS | **Done** |
 | 4 | `core/diagnostics.py`, `run_diagnostic.py`, `record_decision.py`, decision records | **Next** |
-| 5 | Both MCP servers, end-to-end run driven by Claude Code | Not started |
-| 6 | Web app: Pyodide boot, three panels, approve loop, decision card | Not started |
-| 7 | Reasoning panel: function, two tools, budget cap, verified fallback | Not started |
+| 5 | Both MCP servers, end-to-end run driven by an agent | Not started |
+| 5b | The plugin installed into Claude Science, the gate re-run there, and the gap audit written | Not started — beta access confirmed, so this is a deliverable rather than a maybe |
+| 6 | Web app: Pyodide boot, the Claude Science-shaped shell, artifact tabs, approve loop | Not started |
+| 7 | The agent in the session: tool-call stream, two tools, push-back round trip, budget cap, verified replay | Not started |
 | 8 | Committed demo project at round 3, Netlify deploy, public README | Not started |
 | 9 | Demo script and rehearsal | Not started |
 
@@ -258,7 +259,9 @@ than a single-cause round, and it is what phase 4 has to get right.
 | The LIMS | **Staged.** `lims.py` mints identifiers and exports rows; the write path attaches a link and nothing more. The MCP transport lands in phase 5 |
 | Sequence embeddings | **Not built.** One-hot only; the provider interface exists and `esm_live` is unwired |
 | Structure prediction | **Stubbed.** Returns a cached result and says so |
-| The agent's reasoning in the browser | **Real Claude** while the daily budget holds; verified replay otherwise |
+| The agent's reasoning in the browser | **Real Claude** while the daily budget holds — it chooses and sequences the diagnostics live, and a named human rules. Verified replay of the committed record otherwise, animated through the same component |
+| The web app's chrome | **A wireframe.** It renders the layer the phase-5b audit found missing, in the host's own grammar. The panels, the Python, the state and the hashes inside it are real |
+| The skill and connectors inside Claude Science | **Real.** Beta access confirmed; the plugin installs, the connectors load, and phase 5b runs the round-4 gate in the host |
 | The agent's reasoning in the CLI | **Not yet exercised.** Phase 5, and it is the hour-5 gate |
 | Rounds run in the browser | **Real.** The same Python, state held in the browser, never written back |
 

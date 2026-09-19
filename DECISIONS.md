@@ -432,3 +432,59 @@ A phase-4 diagnosis that corrects the offset and stops is wrong about half of ro
 correct recommendation is a partial correction plus a statement about calibration, and
 `if_wrong` has something real to say: if the whole discrepancy were the assay, the bridge
 and the fresh designs would agree, and they do not.
+
+### The shell is Claude Science's, and the agent runs live inside it
+
+Recorded before phase 4, after reviewing the Claude Science beta interface. Nothing here
+touches the landscape, the threshold, the parameters or any number already published; it
+changes where phases 5 to 9 put their hours.
+
+**The problem.** Phase 5's gate named Claude Code, and phases 6 and 7 described a bespoke
+three-panel dashboard with the model confined to a read-only sidebar. Read together, the
+artifact argues it extends Claude Science and then demonstrates in two places that are not
+Claude Science. Worse, the browser surface as specified contains no agency at all: Approve
+runs the same five steps whatever comes back, the decision card replays a record produced
+yesterday in a terminal, and a panel that cannot write project state is a narrator with a
+calculator. The agentic claim rested entirely on the terminal beat.
+
+| # | Decision | Reasoning |
+| --- | --- | --- |
+| 57 | The hour-5 gate is reworded to "an agent given only the skill and the connectors", with Claude Code named as the verifying harness | What the gate tests is whether `SKILL.md`, the five diagnostics and the state contract are *sufficient*, which is a property of the skill pack and not of the client. Claude Code can be scripted, re-run after a skill edit, and committed as a transcript; the beta desktop app can do none of those and cannot sit behind the public URL. Naming the harness and its reason costs two sentences and removes the appearance of a category error |
+| 58 | A phase 5b: install the plugin into Claude Science and re-run the same gate there, thirty minutes, cut if beta access does not land | One screenshot of this skill running inside the host product is worth more than every paragraph arguing it is an extension. It is optional because it depends on access we may not have, and nothing downstream depends on it |
+| 59 | The web app adopts the Claude Science layout: home with the `Needs you` card and template gallery, left rail with rounds as sessions, centre conversation, right artifact panel with tabs | Borrowing the host's grammar makes the argument before anyone reads a word of copy, and it is *less* to build: Setup, Batch review and Progress become tabs in a slot that already exists, and the reasoning panel merges into the centre column instead of being a fourth surface. The rail's session list, dated across six weeks, states the persistence claim at a glance in a way a timeline strip does not |
+| 60 | The chrome is labelled a wireframe, in the staged table and on the page | Failure mode one applies to the frame as much as to the contents. We imitate someone else's interface to show where this layer would live; claiming to *be* it would be the exact mock-dressed-as-real the rules forbid |
+| 61 | Orchestration runs live in the browser; the verdict stays the human's | These separate cleanly and only the first needs to be live. Under non-negotiable 7 the model produces no numbers, the tests come from the template's allowlist, and the action is one of four verbs — so a live model chooses a sequence from a five-item list and writes prose, which is bounded, cheap and low-variance. The risk the earlier plan avoided was a wrong *verdict* on stage, and the four ruling buttons already absorb it; SPEC.md had already conceded that a visibly rejected wrong recommendation is the better governance demo |
+| 62 | One tool-call stream component, driven by either the live model or the committed record | Replay was specified as a rendered JSON blob, which reads as a finished document rather than as reasoning. Animating the recorded sequence through the same component means a cold visitor with no key watches the diagnosis happen, the diagnostics are still genuinely recomputed and checked, and the badge is the only difference between the two modes. One component instead of two |
+| 63 | `more_evidence_requested` is exercised, and becomes acceptance criterion 8 | It was defined as a ruling verb and nothing in the build order made it fire. It is the only beat on the list a pipeline cannot imitate, because passing it requires the next action to depend on a human's push-back. Round 4's record becomes two-pass — recommendation, a ruling naming `calibration_by_region`, the test, a revision, the final ruling — which costs one extra recorded pass and no new code |
+| 64 | A Notebook tab resolves any number on screen to the `core/` function, source, arguments and input hash that produced it | Claude Science ships a background reviewer that flags *untraceable numbers*; a template makes them impossible to write, and this is that claim rendered rather than asserted. It displays lineage the project already stores, so it costs a component and no plumbing. Cheapest credibility in the build |
+| 65 | The claim "a specialized surface beats open-ended chat" is reworded to "typed artifacts and enumerated actions beat free-form output" | The original argued against the shape we are now adopting. The true claim was never that conversation is the problem — it is that conversation whose output is prose cannot be approved, compared across projects, or walked back to evidence. The conversation stays; what it produces stops being prose |
+| 66 | The agent gets one line on unflagged rounds | Declining to act is judgment, and an agent that appears only when something breaks is an alarm rather than a colleague. One sentence per quiet round, from numbers already computed |
+
+**What pays for it.** The Pareto scatter, already first-but-one on the cut list, and the
+Setup panel as a standalone surface — it becomes a read-only tab. Phase count is unchanged
+at nine plus an optional 5b; phases 6 and 7 are re-cut along a better seam rather than
+expanded.
+
+**What did not change.** The threshold, the landscape, its parameters, the seed, every
+published number, and the rule that `simulate_campaign.py` is the only thing permitted to
+read landscape values.
+
+### Claude Science access is confirmed, and phase 5b becomes a gap audit
+
+The user confirmed access to the Claude Science beta, and that it accepts custom MCP
+connectors and local skill packs. Decisions 57 and 58 were written under the assumption
+that access might not land; it has, and the consequences reach further than making 5b
+non-optional.
+
+| # | Decision | Reasoning |
+| --- | --- | --- |
+| 67 | Phase 5b is a real phase, not an optional screenshot, and it comes off the cut list | The plugin installing into the host and diagnosing round 4 there is the single strongest asset in the artifact. It is no longer contingent on anything, so it stops being contingent in the plan. What goes onto the cut list in its place is the browser's *live* mode, which is the correct trade once the live-agency proof has a better home |
+| 68 | 5b's deliverable is the skill running in the host **and** a written audit of where the host's abstractions run out | The artifact's entire thesis is that a gap exists. The host already has projects, Files, persistent kernels, artifacts that ship with their history, skills every future session inherits, and a *waiting on you* queue. An audience that builds it will ask which of those already covers us, and the answer has to come from using the product rather than from reading its page. Any claimed gap that does not survive contact is struck — the threshold discipline, applied to the pitch instead of the science |
+| 69 | The web app is reframed as a proposal built on the audit, and the order of the argument is load-bearing | A mockup of someone else's product shown *before* running inside it is a competitor's redesign. Shown after a real campaign in the host, with each element traceable to an audited gap, it is a feature request with a working implementation attached. Nothing about the shell changes; the sequence it is presented in does, and that is what makes it defensible rather than presumptuous |
+| 70 | Demo beat 5 moves from Claude Code to Claude Science, with the terminal as the backup | The beat's claim is "same skill, different harness, same batch hash". Running it in the audience's own product makes that claim twice, and the hash match works identically. Claude Code remains the harness that verifies criterion 3, because it is the one that can be scripted, re-run and committed — the repo carries the proof and the host carries the pitch |
+| 71 | Each pipeline script gets a `main(argv)` that both the CLI entry point and a kernel call route through, checked at the start of 5b | `SKILL.md` invokes the scripts as shell commands. A notebook-kernel-first harness may prefer to import them, and discovering that midway through the gate looks like the skill failing when it is the invocation path. One implementation serving both surfaces is also the non-negotiable-2 rule applied to invocation rather than to science |
+
+**The risk this creates, recorded because it is the one that would hurt.** If the audit
+finds that two of the four claimed gaps are already covered by Files and artifact history,
+the deliverable is a shorter list built properly, not the same list argued harder. That
+sentence is in SPEC.md's risk section so it is read before phase 6 rather than after.
