@@ -1,0 +1,22 @@
+{
+  "editable_region": [
+    99,
+    107
+  ],
+  "enumerated": 10261,
+  "feasible": 7294,
+  "hash": "sha256:22fa176033b0d1e9547bc84a536b2a34fa56cdb146f5637f5e2d84923c44862e",
+  "inputs": {
+    "objectives": "sha256:9fe07853c3b3928615c98b6c1a4287a56bdab1c274777aeaca340407c442fc89"
+  },
+  "max_mutations": 2,
+  "removed": 2967,
+  "removed_by_reason": {
+    "hydrophobicity_above_threshold": 1625,
+    "introduces_liability": 1342
+  },
+  "round": 1,
+  "round1_draw_size": 119,
+  "round1_policy": "single_mutant_scan",
+  "schema_version": 1
+}

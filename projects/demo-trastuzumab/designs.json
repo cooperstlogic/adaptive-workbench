@@ -1,0 +1,822 @@
+{
+  "designs": [
+    {
+      "computed": {
+        "hydrophobicity": 0.506944,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "8b8998709aa9",
+      "first_round": 1,
+      "mutations": [],
+      "n_mutations": 0,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.5375,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "033db628211f",
+      "first_round": 1,
+      "mutations": [
+        "G99A"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWAGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "22071e74814a",
+      "first_round": 1,
+      "mutations": [
+        "G99E"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWEGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.468056,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "f88e6ed6f766",
+      "first_round": 1,
+      "mutations": [
+        "G99H"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWHGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.458333,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "fd8f76aa5818",
+      "first_round": 1,
+      "mutations": [
+        "G99K"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWKGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.538889,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "cd86085034f3",
+      "first_round": 1,
+      "mutations": [
+        "G99M"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWMGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.490278,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "8dd1ae56d237",
+      "first_round": 1,
+      "mutations": [
+        "G99P"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWPGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "8400589dd729",
+      "first_round": 1,
+      "mutations": [
+        "G99Q"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWQGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.45,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "a0cf8a074262",
+      "first_round": 1,
+      "mutations": [
+        "G99R"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWRGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "5fc55d2d2274",
+      "first_round": 1,
+      "mutations": [
+        "G99S"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWSGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.502778,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "ca93f173c90b",
+      "first_round": 1,
+      "mutations": [
+        "G99T"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWTGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.5,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "e2158f90500c",
+      "first_round": 1,
+      "mutations": [
+        "G99W"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWWGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.494444,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "4daa1c0a1782",
+      "first_round": 1,
+      "mutations": [
+        "G99Y"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWYGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.5375,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "861d7b164749",
+      "first_round": 1,
+      "mutations": [
+        "G100A"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGADGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "5592b6553294",
+      "first_round": 1,
+      "mutations": [
+        "G100D"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGDDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "4b6e69c90313",
+      "first_round": 1,
+      "mutations": [
+        "G100E"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGEDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.468056,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "0f252aca394e",
+      "first_round": 1,
+      "mutations": [
+        "G100H"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGHDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.458333,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "845e5cd48da9",
+      "first_round": 1,
+      "mutations": [
+        "G100K"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.538889,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "55c21ce920fe",
+      "first_round": 1,
+      "mutations": [
+        "G100M"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGMDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "0a964296e7ca",
+      "first_round": 1,
+      "mutations": [
+        "G100N"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGNDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.490278,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "d794b9e03424",
+      "first_round": 1,
+      "mutations": [
+        "G100P"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGPDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "415003bc3ad7",
+      "first_round": 1,
+      "mutations": [
+        "G100Q"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGQDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.45,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "d2597a4c43e1",
+      "first_round": 1,
+      "mutations": [
+        "G100R"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGRDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "4925b930af23",
+      "first_round": 1,
+      "mutations": [
+        "G100S"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGSDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.502778,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "32c1306fd36a",
+      "first_round": 1,
+      "mutations": [
+        "G100T"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGTDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.5,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "cf009e89f84e",
+      "first_round": 1,
+      "mutations": [
+        "G100W"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGWDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.494444,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "da2d58befd95",
+      "first_round": 1,
+      "mutations": [
+        "G100Y"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGYDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.506944,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "ea525ee66108",
+      "first_round": 1,
+      "mutations": [
+        "D101E"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGEGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.55,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "075714d6f435",
+      "first_round": 1,
+      "mutations": [
+        "D101G"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGGGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.511111,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "058ed95bd61f",
+      "first_round": 1,
+      "mutations": [
+        "D101H"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGHGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "78cfce74484f",
+      "first_round": 1,
+      "mutations": [
+        "D101K"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGKGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.533333,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "677512f708bf",
+      "first_round": 1,
+      "mutations": [
+        "D101P"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGPGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.506944,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "48a018bf0408",
+      "first_round": 1,
+      "mutations": [
+        "D101Q"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGQGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.493056,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "d8b7f50da108",
+      "first_round": 1,
+      "mutations": [
+        "D101R"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGRGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.544444,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "79c67a7ef092",
+      "first_round": 1,
+      "mutations": [
+        "D101S"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.545833,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "98a55f9db92d",
+      "first_round": 1,
+      "mutations": [
+        "D101T"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGTGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.543056,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "5013add1f694",
+      "first_round": 1,
+      "mutations": [
+        "D101W"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGWGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.5375,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "1986cdd87787",
+      "first_round": 1,
+      "mutations": [
+        "D101Y"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGYGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.5375,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "4879e53244a7",
+      "first_round": 1,
+      "mutations": [
+        "G102A"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDAFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "76cdf6433ac8",
+      "first_round": 1,
+      "mutations": [
+        "G102D"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDDFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "de7943c5dd73",
+      "first_round": 1,
+      "mutations": [
+        "G102E"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDEFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.468056,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "6941510aa3a4",
+      "first_round": 1,
+      "mutations": [
+        "G102H"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDHFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.458333,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "24beed7cdca2",
+      "first_round": 1,
+      "mutations": [
+        "G102K"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDKFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.538889,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "09c975676747",
+      "first_round": 1,
+      "mutations": [
+        "G102M"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDMFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "d922a659b483",
+      "first_round": 1,
+      "mutations": [
+        "G102N"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDNFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.490278,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "b5f7d5bdf7b5",
+      "first_round": 1,
+      "mutations": [
+        "G102P"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDPFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "b21812e4ab7a",
+      "first_round": 1,
+      "mutations": [
+        "G102Q"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDQFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.45,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "615da7ef8bf5",
+      "first_round": 1,
+      "mutations": [
+        "G102R"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_diversity_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDRFYAMDYWGQGTLVTVSS"
+    }
+  ],
+  "external_refs": [],
+  "hash": "sha256:5fb4fb727340a896a1caec06fbf4250938a21c2a8054dc056eb6ff4ef9e1fabd",
+  "parent": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAMDYWGQGTLVTVSS",
+  "schema_version": 1
+}

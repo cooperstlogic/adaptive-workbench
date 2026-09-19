@@ -1,0 +1,12 @@
+{
+  "id": "enzyme-thermostability",
+  "version": "0.0.0",
+  "title": "Enzyme thermostability",
+  "status": "stub",
+  "description": "Placeholder. Present in the picker, greyed out, so the abstraction is visibly not single-purpose. Building it would cost an hour and prove nothing further.",
+  "objectives": [],
+  "constraints": {},
+  "batch": {},
+  "model_recipes": [],
+  "panels": []
+}

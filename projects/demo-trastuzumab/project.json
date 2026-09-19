@@ -1,0 +1,34 @@
+{
+  "created": "2026-09-19T07:09:02+00:00",
+  "feature_block": "onehot",
+  "hash": "sha256:b1eac72c2ae54380d80b67386ffdd89012fa7ae5fd526817f9c267dbb2d2aa92",
+  "id": "demo-trastuzumab",
+  "lead": {
+    "chain": "VH",
+    "known_liabilities": [
+      "DG isomerization motif present in the parent CDR-H3"
+    ],
+    "name": "trastuzumab",
+    "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAMDYWGQGTLVTVSS"
+  },
+  "schema_version": 1,
+  "sources": {
+    "bioprovider": {
+      "backend": "local",
+      "kind": "tamarind-shaped",
+      "server": "bioprovider_server"
+    },
+    "registry": {
+      "kind": "mock-lims",
+      "server": "registry_server"
+    }
+  },
+  "target": "HER2",
+  "team": [
+    "d.webster"
+  ],
+  "template": {
+    "id": "antibody-affinity-maturation",
+    "version": "1.0.0"
+  }
+}

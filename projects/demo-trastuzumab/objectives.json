@@ -1,0 +1,65 @@
+{
+  "anomaly_flag": {
+    "expected_outside": 0.2,
+    "interval": 0.8,
+    "trigger_above": 0.35
+  },
+  "batch": {
+    "controls": 2,
+    "exploration_slots": 2,
+    "replicates": 2,
+    "round1_policy": "single_mutant_scan",
+    "round1_policy_note": "Round 1 is a diversity-maximizing scan restricted to single mutants. This is what an affinity maturation campaign actually does first, it teaches the surrogate site effects before it has to reason about combinations, and it makes round 1 structurally incapable of reaching the threshold.",
+    "size": 48
+  },
+  "constraints": {
+    "forbidden_motifs": [
+      "NG",
+      "DG",
+      "C"
+    ],
+    "max_mutations": 2
+  },
+  "created": "2026-09-19T07:09:02+00:00",
+  "diagnostics": [
+    "offset_from_controls",
+    "residual_by_plate",
+    "residual_by_mutation_class",
+    "replicate_concordance",
+    "calibration_by_region"
+  ],
+  "editable_region": [
+    99,
+    107
+  ],
+  "hash": "sha256:9fe07853c3b3928615c98b6c1a4287a56bdab1c274777aeaca340407c442fc89",
+  "model_recipes": [
+    "ridge_onehot",
+    "gp_pca64"
+  ],
+  "objectives": [
+    {
+      "direction": "maximize",
+      "name": "affinity",
+      "source": "measured",
+      "unit": "pKD"
+    },
+    {
+      "direction": "minimize",
+      "name": "hydrophobicity",
+      "note": "Normalized Kyte-Doolittle over the editable window. Threshold sits marginally above the parent at 0.507: the lead is an approved therapeutic, so the design rule is not to become more aggregation-prone than the molecule that already works.",
+      "source": "computed",
+      "threshold": 0.55
+    },
+    {
+      "direction": "minimize",
+      "name": "liability_count",
+      "note": "Counts motifs the variant introduces relative to the parent. The parent's own DG is inherited, not introduced.",
+      "source": "computed",
+      "threshold": 0
+    }
+  ],
+  "schema_version": 1,
+  "unit": "pKD",
+  "version": 1
+}

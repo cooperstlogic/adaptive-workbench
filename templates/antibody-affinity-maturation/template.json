@@ -1,0 +1,38 @@
+{
+  "id": "antibody-affinity-maturation",
+  "version": "1.0.0",
+  "title": "Antibody affinity maturation",
+  "description": "Design-test-learn rounds over a CDR window, optimizing measured binding affinity under enforced developability constraints.",
+  "lead": {
+    "name": "trastuzumab",
+    "chain": "VH",
+    "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAMDYWGQGTLVTVSS",
+    "cdr_h3": [98, 109],
+    "editable_region": [99, 107],
+    "editable_region_note": "Half-open [start, end). CDR-H3 is WGGDGFYAMDY at VH index 98; the editable window is the 8 residues GGDGFYAM, excluding the conserved W and the terminal DY.",
+    "known_liabilities": ["DG isomerization motif present in the parent CDR-H3"]
+  },
+  "objectives": [
+    { "name": "affinity", "direction": "maximize", "unit": "pKD", "source": "measured" },
+    { "name": "hydrophobicity", "direction": "minimize", "threshold": 0.55, "source": "computed",
+      "note": "Normalized Kyte-Doolittle over the editable window. Threshold sits marginally above the parent at 0.507: the lead is an approved therapeutic, so the design rule is not to become more aggregation-prone than the molecule that already works." },
+    { "name": "liability_count", "direction": "minimize", "threshold": 0, "source": "computed",
+      "note": "Counts motifs the variant introduces relative to the parent. The parent's own DG is inherited, not introduced." }
+  ],
+  "constraints": {
+    "max_mutations": 2,
+    "forbidden_motifs": ["NG", "DG", "C"]
+  },
+  "batch": {
+    "size": 48, "controls": 2, "replicates": 2, "exploration_slots": 2,
+    "round1_policy": "single_mutant_scan",
+    "round1_policy_note": "Round 1 is a diversity-maximizing scan restricted to single mutants. This is what an affinity maturation campaign actually does first, it teaches the surrogate site effects before it has to reason about combinations, and it makes round 1 structurally incapable of reaching the threshold."
+  },
+  "model_recipes": ["ridge_onehot", "gp_pca64"],
+  "diagnostics": [
+    "offset_from_controls", "residual_by_plate", "residual_by_mutation_class",
+    "replicate_concordance", "calibration_by_region"
+  ],
+  "anomaly_flag": { "interval": 0.8, "expected_outside": 0.2, "trigger_above": 0.35 },
+  "panels": ["setup", "batch_review", "progress"]
+}
