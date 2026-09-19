@@ -816,3 +816,63 @@ verbs and hashed evidence, a round graph with somewhere to render, and a declara
 what a connector needs. 107 is narrowed to one sentence about numbers rather than skills
 and should be made in one component, not argued at length. 108 is under-tested and the
 shell should not lean on it.
+
+### What phase 5b taught about working inside the host, kept for phases 6 to 9
+
+The gap audit records what the product is missing. This records what using it was like,
+because several of these change what later phases should do.
+
+**One mental-model difference explains all four install faults, and it will explain the
+next one.** Claude Code treats a connector as a *declaration*: `plugin.json` names the
+interpreter, both servers and the skill, and the loader satisfies it. Claude Science
+treats a connector as *a program it runs on your behalf*: you supply a command line, it
+supplies the interpreter, the sandbox and the working directory. Every fault today was
+that difference surfacing one layer at a time — the interpreter it refuses, the arguments
+it expects inline, the SDK version it brings, the filesystem it will not show you.
+Nothing was broken. When something else fails in the host, look for the next place we
+assumed declaration and the product assumed execution, before looking for a bug.
+
+**Failures cluster at seams neither side owns, and they are silent.** A connector with a
+missing argument loads forever with no log line. A connector writes a file the agent that
+called it cannot read. A configuration key takes effect only after a restart nothing
+prompts for. The loud errors — the `execvp` refusal, the sandbox visibility message —
+were the easy ones, and the sandbox message was genuinely excellent. Budget time for the
+quiet ones, and treat "it is still loading" as a diagnosis rather than a wait.
+
+**The application's own state files are better documentation than the documentation.**
+`~/.claude-science/mcp/local-mcp.json` identified two of the four faults faster than the
+dialog did; `~/.claude-science/logs/spawn.log` and the strings in the binary produced the
+`[sandbox]` schema that the published configuration reference omits entirely. The docs
+also described an Advanced-settings arguments field that the form does not have. For a
+beta product, verify against the artifact and keep the docs for orientation.
+
+**Determinism held across three numpy versions, and that is what makes demo beat 5
+safe.** The `.venv` runs numpy 2.5.3, the bundled connector environment 2.5.2, the
+analysis kernel 2.4.6 on Python 3.11. All three reproduce `sha256:4f6ba1ff3d2c…`, the
+−1.014229 offset, 0.342449, and a byte-identical `batch_003.eval.json`. The hash-match
+beat was never guaranteed by anything we control — it is a property of the numbers being
+integer-ish work over hashed inputs, and it now has evidence behind it rather than hope.
+
+**The agent's conduct in the host is the specification for phase 7's centre column.**
+Across five sessions, unprompted: it re-ran five diagnostics rather than trust a decision
+record sitting on disk; it read a guard in `lims.py` *before* sending a call that might
+half-apply; it said "I read the head and the failed rows only" instead of implying it had
+read the file; it gave two hypotheses for a missing write and refused to pick; it named
+the `fair-esm` escape hatch and asked about provenance before taking it; it refused to
+size a correction to make residuals vanish. **Phase 7 should render these, not just the
+tool calls.** A stream of green ticks is a pipeline with better typography; the partial
+knowledge, the declined choice and the stop for a human are the claim.
+
+**Do not build a claim on the host's reviewer.** It raised nothing across every session,
+against numbers that were in fact fully traceable. From outside, *passed the check* and
+*was not checked* are indistinguishable, so the Notebook tab's line stays as decision 107
+words it — the host versions the skill, nothing versions the number — and never "their
+reviewer missed this."
+
+**Demo-day risk, and it is the largest one this phase created.** Beat 5 now depends on a
+machine where the skill is imported, both connectors are configured, `config.toml` carries
+two sandbox grants, and the app has been restarted since. That is a multi-step manual
+install including an undocumented key. **It cannot be done live and it does not travel.**
+Demo from a machine set up and verified beforehand, check the connectors list green
+before the room fills, and keep Claude Code as the stated fallback for the beat — which
+decision 70 already allows for a different reason.

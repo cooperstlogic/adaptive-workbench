@@ -158,6 +158,24 @@ trustworthy and inspectable.
   only, local provider backend. Real data, real embeddings and the live backend are
   listed under "After the demo works" and are attempted only once phase 9 passes.
 
+## Working in Claude Science
+
+Four rules from phase 5b. The reasoning is in `DECISIONS.md` under *What phase 5b taught
+about working inside the host*.
+
+- **Check the app's own state before the docs.** `~/.claude-science/mcp/local-mcp.json`
+  is what the connector dialog actually saved, and `logs/spawn.log` is what the daemon
+  actually did. Both beat the published documentation twice.
+- **Never revert repository state underneath a running host session.** Doing so made an
+  agent correctly report its own verified write as missing, and offer two wrong
+  hypotheses for why. Cleanup waits for the session to finish, or is told to the session
+  in words — decision 104.
+- **A connector that is "still loading" is diagnosed, not waited on.** A missing argument
+  produces no error, no timeout and no log line.
+- **The host install does not travel.** Beat 5 needs a machine with the skill imported,
+  both connectors configured, `config.toml` carrying both sandbox grants, and a restart
+  since. Verify it green before the room fills; it cannot be done live.
+
 ## Cut order if time runs short
 
 Ad hoc code execution (keep the five library diagnostics) → second template stub →
