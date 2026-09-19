@@ -28,30 +28,53 @@ recorded here and committed first — git history is the evidence that the order
 
 ## Pre-registered landscape parameters
 
-**Fill this in and commit it before `simulate_campaign.py` runs for the first time.** Each
-value needs a justification that does not reference the outcome. If the hour-3 gate fails
-on these parameters, the deliverable is a sentence saying it failed — not a new table.
+**Committed 2026-09-19, before any landscape was generated and before
+`simulate_campaign.py` had ever run.** Every value carries a justification that does not
+reference the outcome. If the hour-3 gate fails on these parameters, the deliverable is a
+sentence saying it failed — not a new table.
+
+### Structure of the landscape
+
+Additive site effects plus pairwise epistasis, over 8 positions of the trastuzumab
+CDR-H3, with one structure-activity cliff.
+
+Not an NK model, and the reason is decisive: with `max_mutations = 2`, only first- and
+second-order terms are ever reachable from the parent. A model with higher-order
+interactions would carry terms that can never fire. Pairwise is exactly expressive
+enough, and anything beyond it is unreachable machinery.
 
 | Parameter | Value | Justification (independent of result) |
 | --- | --- | --- |
-| Positions | 8 | Matches the trastuzumab CDR-H3 editable region in the template |
-| Max mutations | 2 | Template constraint; keeps the candidate pool enumerable |
-| Epistasis order (K) | _TBD_ | Set so a linear model explains roughly 60% of landscape variance, which is the range published DMS landscapes show |
-| Ruggedness / correlation length | _TBD_ | |
-| Assay noise (lognormal σ, pKD) | _TBD_ | Set from typical ACE-assay replicate spread, not from what separates the arms |
-| Per-round batch offset (σ, pKD) | _TBD_ | Large enough that round 4 is genuinely ambiguous, chosen before the arms are run |
-| Cliff position | _TBD_ | Placed at a high-expected-improvement position so the optimizer walks into it naturally |
-| Cliff depth (pKD) | _TBD_ | |
-| Detection limit (pKD) | _TBD_ | Set so a few percent of round-1 designs censor, matching the ~3% failure rate |
+| Lead | trastuzumab VH, public sequence | The template's declared lead |
+| Editable region | 8 residues of CDR-H3 (`GGDGFYAM`), 0-based VH indices recorded at build | Excludes the conserved flanking `W` and the `DY` motif; 8 positions matches the template |
+| Alphabet | 20 standard amino acids | — |
+| Max mutations | 2 | Template constraint; keeps the pool enumerable at 10,261 sequences |
+| Parent pKD | 9.00 | Low-nanomolar, the regime an approved anti-HER2 lead occupies |
+| Additive effect scale (σ_a) | 0.45 pKD | Single-point CDR substitutions in affinity maturation typically move affinity by a few tenths of a log unit with occasional ~1-log effects; σ = 0.45 puts 95% of singles inside ±0.9 |
+| Epistasis weight (β) | calibrated to a linear R² of 0.60 | Set so a one-hot linear model explains 60% of landscape variance over the candidate pool. Additive-dominant with a substantial epistatic residual is the regime antibody affinity DMS studies report; it also gives the surrogate real structure to learn without making epistasis decorative. β is solved numerically against this target, which is a calibration to a pre-registered number, not a tuning to a result |
+| Cliff position | the editable position with the largest maximum additive effect | Stated as a rule, not an index, so the seed determines it. Placing the cliff at the most attractive position is what makes the optimizer walk into it naturally rather than by construction |
+| Cliff residues | `{P, D, E, K, R}` | Mechanistically motivated and drawn independently of the additive draw: proline breaks backbone geometry and burying charge at a contact residue is costly |
+| Cliff depth | −1.50 pKD | Deep enough to dominate the round-4 offset, so the two explanations genuinely compete in the marginals |
+| Assay noise (σ, pKD) | 0.15 | ~1.4-fold apparent KD error, typical replicate spread for a well-run binding assay |
+| Per-round offset (σ, pKD) | 0.10 | Small round-to-round drift that the bridging set exists to absorb |
+| Round-4 assay-version shift | −0.80 pKD, deterministic | An assay version change producing a ~6-fold apparent shift is a thing that happens. At 5.3× the noise σ it is resolvable from a 3-design bridge (offset/SE ≈ 9), which is what makes the diagnosis defensible rather than a coin flip |
 | Construct failure rate | 0.03 | Typical for a small expression campaign |
+| Assay reads per design | 2 | Returned as separate rows, never pre-averaged |
+| Detection limit | 2nd percentile of the landscape | Censors a few percent of round-1 designs; the round-4 offset then pushes more below it, which is realistic and gives `import_round` work to do |
+| Threshold (the gate) | 99th percentile of the landscape | Fixed here, before the first run, per SPEC. Absolute value recorded below once generated |
+| RNG seed | 20260918 | Fixed so the landscape is reproducible |
 
-**Pre-registered threshold:** the 99th percentile of the landscape, fixed before the first
-run. Recorded here as an absolute pKD value once the landscape is generated, so that it
-cannot drift.
+### Derived absolute values
+
+Recorded immediately after generation, still before any campaign run.
 
 | Item | Value | Recorded at |
 | --- | --- | --- |
-| Threshold (pKD) | _TBD_ | _commit before first gate run_ |
+| Cliff position (VH index) | _generated_ | phase 1 |
+| Detection limit (pKD) | _generated_ | phase 1 |
+| Threshold (pKD) | _generated_ | phase 1 |
+| Landscape max (pKD) | _generated_ | phase 1 |
+| Realized linear R² | _generated_ | phase 1 |
 
 ## Decided during the build
 
