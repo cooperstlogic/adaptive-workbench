@@ -3,6 +3,22 @@
 Project context and working rules. Read `SPEC.md` for full spec and `DECISIONS.md` for
 every choice already settled.
 
+## Where the build is
+
+**Phase 1 is done. Phase 2 is next, and it is the gate.** Full status, results and
+commands are in `README.md`; every settled choice and its reasoning is in `DECISIONS.md`.
+Read both before writing code.
+
+- Use `.venv/bin/python`, never `python3` — the system interpreter has no numpy.
+- Run `.venv/bin/python check.py` before and after any phase. It verifies 23 invariants
+  that correspond to rules here and numbers in `DECISIONS.md`; a failure means the state
+  drifted from what is documented.
+- **The threshold is already fixed at 10.762 pKD**, pre-registered and recorded before any
+  campaign ran. Do not recompute, re-pick, or adjust it. Do not change the landscape or
+  its parameters. If guided does not separate from random, say so.
+- Update `README.md`'s build status table and append to `DECISIONS.md` at the end of every
+  phase, so the next session can pick up without reading the transcript.
+
 ## What this is
 
 A one-day functional prototype of an adaptive therapeutic optimization workbench: a
