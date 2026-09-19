@@ -762,3 +762,57 @@ scripts resolve, given that the skill's copy of them now lives in the applicatio
 folder while `SKILL.md` names them by repository-relative path and the repository is
 granted separately. And whether the `bio` safeguard fires there, which is still the open
 question decision 100 left.
+
+### Phase 5b: the gap audit
+
+The round-4 diagnosis ran in Claude Science and reproduced every number. What follows
+grades the four gaps this artifact claims against what the product actually does, using
+only what was observed today. Decision 68's rule applies: a claimed gap that does not
+survive contact is struck or narrowed, not argued harder.
+
+**What the host run is evidence of, and what it is not.** The Claude Code gate removes
+`README.md`, `SPEC.md`, `DECISIONS.md`, `CLAUDE.md` and `decision_004.json` from the
+tree, because it tests whether `SKILL.md` and the five diagnostics are *sufficient*. The
+host session had the whole repository, including `decision_004.json`, and said so: *"A
+proposed decision record for round 4 already exists on disk. I'll re-run the diagnostics
+myself rather than take its reading on trust."* It then re-ran all five tests and its
+numbers reproduce independently. That makes the host run strong evidence that the stack
+**runs and reproduces** in the host, and weaker evidence for sufficiency than the Claude
+Code gate. Criterion 3 therefore stays anchored in Claude Code, which is what SPEC.md
+said from the start: the repo carries the proof, the host carries the pitch.
+
+| # | Claimed gap | Verdict | Evidence |
+| --- | --- | --- | --- |
+| 105 | A ruling has no type | **Survives, narrowed** | The host has a real, scoped approval primitive — permission cards for folder access, code execution and each connector tool, with Once / This conversation / This project / Global, all revocable in Settings > Permissions. That is more governance than the claim credited it with, and the claim is reworded accordingly. What it gates is **access**, not **decisions**: there is no typed decision over a domain object, no enumerated verbs bound to code paths, no hashed evidence, no `if_wrong`. The host session wrote *"No action may be taken until a named approver rules on it"* — but that rule came from `SKILL.md` and is enforced by `record_decision.py`, not by the product. Nothing in the host represents "round 4 is waiting on a ruling" |
+| 106 | `rounds.json` has nowhere to render | **Survives** | The left rail listed three sessions — *Diagnose Round 4…*, *Run evaluate_prior.py Round 3*, *List Designs Registry Connector* — chat threads named after what was asked. A six-week campaign is a round graph, and the host has no view of one. This is the gap that changed least on contact |
+| 107 | Traceability is an after-the-fact check | **Survives, heavily narrowed** | Two things cut against it. The host records skill provenance to the commit — `.import-origin` carries `sha db99c082`, and **Check for updates** flags a skill behind its repository. And it ships a background reviewer for untraceable numbers. But the reviewer raised nothing across every session today, and from outside we cannot distinguish *passed the check* from *was not checked*, so it is recorded as neither. The traceability in the memo — input hashes beside every figure, `core.diagnostics` named as the source — came from the skill and the scripts, not from the host. The surviving claim is exact: **the host versions the skill; nothing versions the number a skill produced back to the function and the input hash that made it** |
+| 108 | No project instantiation from a declaration | **Survives, but under-tested** | A host project is a session container with custom instructions and persistent folder grants. It does not instantiate `objectives.json`, and it has no notion of a constraint ruleset enforced in code before optimization runs. But no template was instantiated in the host today, so this rests on the product's shape rather than on an experiment. Recorded as the weakest of the four, and phase 6 should not lean on it |
+
+**Three gaps found that were not claimed, and they are better than two of the four.**
+
+| # | Found | Why it matters |
+| --- | --- | --- |
+| 109 | **A connector cannot declare what it needs.** Installing these two took a bare interpreter name that is the host's and not the one `plugin.json` declares, a full command line in a single field, and a hand-written `config.toml` with an undocumented `[sandbox] user_read_paths` key, plus a restart | `plugin.json` states the interpreter, both servers and the skill in one file. In the host those became three manual acts, one of them undocumented. The host has every primitive needed — sandbox grants, per-tool approval, a local-command transport — and no way for a connector to say what it requires. This is the sharpest finding of the phase |
+| 110 | **The connector sandbox and the agent sandbox have separate grants.** `pull_assay_results` wrote a CSV and the agent in the same session could not read it: *"The CSV sits inside the workbench repo, which isn't in my host grants"* | The registry's contract is *here is a path, now run `import_round.py` on it* — it even returns the command. The connector produces an artifact, names it, and the agent that called it cannot open it. Nothing in either grant declares the dependency between them. Two mechanisms for one directory |
+| 111 | **A local-command connector with a missing argument fails silently.** Bare `python` with no script reads the JSON-RPC stream as a program and answers nothing: no error, no timeout, no log line, an indefinite spinner | The host validates that the command resolves, not that the process ever speaks MCP. A handshake deadline saying "started but never completed `initialize`" would have turned a long dig through `~/.claude-science/logs/` into one line. The cheapest, most concrete product feedback in the audit |
+
+**What the host does well, recorded because an audit that only finds fault is not an
+audit.** Local stdio connectors run at all, which was the question that could have ended
+the phase. Per-tool approval carries four scopes and is revocable in one place. Skills
+import from a private GitHub repository, record the commit, and flag when they fall
+behind. The persistent kernel's starter environment carried numpy and reproduced
+`sha256:4f6ba1ff3d2c…` and every diagnostic to the digit under a different Python and a
+different numpy. And the sandbox error message named the exact configuration key, the
+exact remedy and an alternative — the abstraction running out honestly, which is the
+strongest version of this whole argument.
+
+**The `bio` safeguard never fired.** Not once, across every session today, on content
+that is exactly what this build is about. Decision 100 left that open for 5b; it is
+closed, and the answer is the one that was likeliest and still worth recording rather
+than wondered about twice.
+
+**What phase 6 builds against.** Gaps 105, 106 and 109 — a typed decision with enumerated
+verbs and hashed evidence, a round graph with somewhere to render, and a declaration of
+what a connector needs. 107 is narrowed to one sentence about numbers rather than skills
+and should be made in one component, not argued at length. 108 is under-tested and the
+shell should not lean on it.

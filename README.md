@@ -365,7 +365,7 @@ diagnostics itself and refuses any payload that arrives carrying its own numbers
 | 3 | The five pipeline scripts, `SKILL.md`, the mock LIMS | **Done** |
 | 4 | `core/diagnostics.py`, `run_diagnostic.py`, `record_decision.py`, decision records | **Done** |
 | 5 | Both connectors, `.mcp.json`, the installable plugin, end-to-end run driven by an agent | **Done — gate passed** |
-| 5b | The plugin installed into Claude Science, the gate re-run there, and the gap audit written | **In progress** — skill and both connectors installed and serving tools in the host. The gate re-run and the gap audit are outstanding |
+| 5b | The plugin installed into Claude Science, the gate re-run there, and the gap audit written | **Done** — skill and both connectors installed, all eight tools exercised, the round-4 diagnosis reproduced in the host, and the audit written. Three of four claimed gaps survive narrowed, three unclaimed ones were found |
 | 6 | Web app: Pyodide boot, the Claude Science-shaped shell, artifact tabs, approve loop | Not started |
 | 7 | The agent in the session: tool-call stream, two tools, push-back round trip, budget cap, verified replay | Not started |
 | 8 | Committed demo project at round 3, Netlify deploy, public README | Not started |
@@ -696,6 +696,35 @@ that exist.
   host refuses that interpreter outright and supplies its own, which carries `mcp` 1.x
   against this repo's 2.x. Both connectors now import either — decision 101.
 
+### Phase 5b results — what the host audit found
+
+The skill and both connectors run in Claude Science, all eight tools were exercised
+against the committed project, and the round-4 diagnosis was reproduced there — every
+figure and all three input hashes identical to `core/`, under a different Python and a
+different numpy. `gates/5b-host-round4.md` is that session's memo; `gates/README.md`
+says why it is a demonstration and not the gate.
+
+The audit is decisions 105–111. In short:
+
+| Claimed gap | Verdict |
+| --- | --- |
+| A ruling has no type | **Survives, narrowed.** The host has scoped, revocable approval for folder access, code execution and each connector tool. It gates *access*, not *decisions*: no typed decision, no verbs bound to code paths, no hashed evidence, no `if_wrong` |
+| `rounds.json` has nowhere to render | **Survives.** The rail lists chat threads named after what was asked. A campaign is a round graph and there is no view of one |
+| Traceability is an after-the-fact check | **Survives, heavily narrowed.** The host records skill provenance to the commit and flags skills behind their repository. The surviving claim is only this: it versions the *skill*, and nothing versions the *number* back to the function and input hash that made it |
+| No project instantiation from a declaration | **Survives, but under-tested.** No template was instantiated in the host, so this rests on the product's shape rather than an experiment. Phase 6 should not lean on it |
+
+Three gaps were found that had not been claimed, and two of them are stronger than the
+four above: **a connector cannot declare what it needs** (interpreter, code location,
+writable state — three manual acts and an undocumented TOML key), **the connector
+sandbox and the agent sandbox hold separate grants** (a connector wrote a CSV the agent
+in the same session could not read), and **a local-command connector with a missing
+argument fails silently** rather than timing out.
+
+What the host does well is recorded beside it, because an audit that only finds fault is
+not an audit: local stdio connectors run, approval carries four scopes, skills import
+from a private repository with their commit, the kernel reproduced every number, and the
+sandbox error named the exact key and remedy. The `bio` safeguard never fired.
+
 ## Repo map
 
 | Path | Contents |
@@ -751,7 +780,7 @@ that exist.
 | The agent's reasoning in the browser | **Real Claude** while the daily budget holds — it chooses and sequences the diagnostics live, and a named human rules. Verified replay of the committed record otherwise, animated through the same component |
 | The web app's chrome | **A wireframe.** It renders the layer the phase-5b audit found missing, in the host's own grammar. The panels, the Python, the state and the hashes inside it are real |
 | The two connectors | **Real.** MCP stdio, five tools and three, each one call into `lims.py` or `core/`. `check.py` drives both over the protocol and compares them against the CLI |
-| The skill and connectors inside Claude Science | **Installed and loading.** The skill imported from GitHub with its commit recorded; both connectors serve their tools in the host, under its interpreter and inside its sandbox. What the install took is written up under *Installing into Claude Science*. The round-4 gate has not yet been re-run there |
+| The skill and connectors inside Claude Science | **Real, and exercised end to end.** The skill imported from GitHub with its commit recorded; both connectors serve their tools under the host's interpreter, inside its sandbox. All eight tools run, the kernel executes the pipeline scripts from the repo, and the round-4 diagnosis reproduces every number and every input hash. `gates/5b-host-round4.md`, and the install is written up under *Installing into Claude Science* |
 | The agent's reasoning in the CLI | **Real, and the transcripts are committed.** Two headless Claude Code sessions on `claude-opus-5`: one diagnosed round 4 and wrote its record, one ran a full round unaided. `gates/` |
 | Rounds run in the browser | **Real.** The same Python, state held in the browser, never written back |
 

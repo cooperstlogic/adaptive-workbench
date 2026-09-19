@@ -5,8 +5,10 @@ every choice already settled.
 
 ## Where the build is
 
-**Phases 1 to 5 are done. The hour-3 gate and the hour-5 gate both passed, and the
-gate transcripts are committed in `gates/`. Phase 5b is next.** Full status,
+**Phases 1 to 5b are done. The hour-3 gate and the hour-5 gate both passed, the
+plugin runs in Claude Science and the round-4 diagnosis reproduces there, and the gap
+audit is written — decisions 105 to 111. Phase 6 is next, and it builds against the
+surviving gaps rather than the claimed ones.** Full status,
 results and commands are in `README.md`; every settled choice and its reasoning is in
 `DECISIONS.md`. Read both before writing code, and read
 `skills/adaptive-optimization/SKILL.md` before touching anything in the round loop.
@@ -53,13 +55,13 @@ human, and what was cut to pay for it. Read them before phase 6.
 the skill and the connectors wrote it, `check.py` recomputes every number in it, and its
 whole value is that nobody touched it. Amendments go through a ruling — decision 99.
 
-**Phase 5b is the checkpoint that matters for the pitch.** Beta access to Claude Science
-is confirmed and it takes custom connectors and local skill packs, so the plugin installs
-and the round-4 gate runs in the host. Its second deliverable is an audit of where the
-host's abstractions actually run out — it already has projects, Files, persistent kernels,
-artifacts with history, inherited skills and a *waiting on you* queue. Any gap this
-artifact claims that does not survive contact with the product gets struck, not argued
-harder. Phase 6 builds against the surviving list. Decisions 67–71 record this.
+**Phase 5b is done and its audit is what phase 6 builds against.** The plugin installs
+into Claude Science, all eight tools run there, and the round-4 diagnosis reproduces
+every number and input hash. The audit is decisions 105–111: three of the four claimed
+gaps survive narrowed, one is under-tested, and three unclaimed gaps were found that are
+stronger than two of the four. **Build against 105, 106 and 109** — a typed decision with
+verbs bound to code paths, a round graph with somewhere to render, and a connector that
+can declare what it needs. Narrow 107 to one component. Do not lean on 108.
 
 ## The two proof artifacts
 

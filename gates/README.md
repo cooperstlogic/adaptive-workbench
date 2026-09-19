@@ -12,6 +12,10 @@ Both ran on `claude-opus-5` through headless Claude Code, with both connectors l
 from `.mcp.json`. Re-run either with `gates/run_gate.sh round4` or
 `gates/run_gate.sh round1`.
 
+A third transcript, [`5b-host-round4.md`](5b-host-round4.md), is the same diagnosis run
+in **Claude Science** in phase 5b, from the installed plugin. It is a demonstration
+rather than a gate, and the difference is recorded below because it matters.
+
 ## What the session was given, and what it was not
 
 The gate builds a throwaway tree holding the code, the skill, the connectors and the
@@ -45,3 +49,31 @@ on a turn about antibody engineering, tagged `[bio]`. The skill content did land
 in the raw transcript as the message after the tool call) and both sessions continued
 without a retry. It is left in the committed transcripts rather than edited out, because
 a transcript with the awkward part removed is not evidence.
+
+## The host run is not the gate, and the difference is the point
+
+`5b-host-round4.md` was produced in Claude Science with the skill imported from GitHub
+and both connectors installed as local commands. It reaches the same diagnosis: the
+−1.014 pKD bridge offset, the cliff rejected because the shortfall is flat across the
+edited positions rather than concentrated in a class, `apply_offset_correction`
+recommended, the n=3 caveat carried. Every figure in it reproduces against `core/` to
+the digit, and it wrote nothing into the repository.
+
+**But the host session had the whole repository**, including `decision_004.json` and all
+four documents the Claude Code gate removes. It said so and worked around it — *"A
+proposed decision record for round 4 already exists on disk. I'll re-run the diagnostics
+myself rather than take its reading on trust"* — then re-ran all five tests and
+independently reproduced the numbers.
+
+So it is strong evidence that the stack **runs and reproduces** in the host, and weaker
+evidence of what the Claude Code gate tests, which is whether `SKILL.md` and the five
+diagnostics are *sufficient on their own*. Criterion 3 stays anchored here, in the
+harness that can be scripted, re-run after a skill edit, and committed. The repo carries
+the proof; the host carries the pitch.
+
+One honest difference in depth. The Claude Code run went a level further on the
+remainder, with an ad hoc residue-level cut finding that 40 of 42 fresh designs carry
+G102L against one measured observation of it. The host run reached the same conclusion —
+*"the additive surrogate over-credits the dominant substitution when it is combined into
+doubles"* — and stated it generally, without the cut that produces the number. Same
+diagnosis, same action, same caveats, one level less specific.
