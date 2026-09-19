@@ -5,12 +5,12 @@ every choice already settled.
 
 ## Where the build is
 
-**Phase 1 is done. Phase 2 is next, and it is the gate.** Full status, results and
-commands are in `README.md`; every settled choice and its reasoning is in `DECISIONS.md`.
-Read both before writing code.
+**Phases 1 and 2 are done and the hour-3 gate passed. Phase 3 is next.** Full status,
+results and commands are in `README.md`; every settled choice and its reasoning is in
+`DECISIONS.md`. Read both before writing code.
 
 - Use `.venv/bin/python`, never `python3` — the system interpreter has no numpy.
-- Run `.venv/bin/python check.py` before and after any phase. It verifies 23 invariants
+- Run `.venv/bin/python check.py` before and after any phase. It verifies 47 invariants
   that correspond to rules here and numbers in `DECISIONS.md`; a failure means the state
   drifted from what is documented.
 - **The threshold is already fixed at 10.762 pKD**, pre-registered and recorded before any
@@ -65,7 +65,15 @@ trustworthy and inspectable.
 
 ## Non-negotiables
 
-1. `core/` is pure numpy. No scipy, no scikit-learn, no pandas.
+1. **`core/` is pure numpy.** No scipy, no scikit-learn, no pandas — and this rule is
+   about `core/` only. It is not because those packages cannot run in the browser;
+   Pyodide ships wheels for all of them. It is because `core/` is the part an audience
+   is invited to read, and fifty lines of numpy they can check beats a library call they
+   have to trust, and because every wheel is weight on a cold visit to a public URL.
+   **Outside `core/` the rule is ordinary judgment.** `simulate_campaign.py` and
+   `plot_campaign.py` are evaluator paths, not product paths, and they use matplotlib.
+   The web app renders its own charts in the browser from `campaign.json`. Still ask
+   before adding a dependency, and never add one to `core/`.
 2. `core/` does no network I/O and no printing. Skills, MCP servers, and the web app are
    thin wrappers over it.
 3. Project state is a directory of JSON files. No database, no server.
@@ -109,7 +117,8 @@ trustworthy and inspectable.
 - If something in the spec is wrong, underspecified, or would blow its hour budget, say
   so before building it rather than working around it silently.
 - Don't add dependencies without asking. The dependency list is a design constraint, not
-  an oversight.
+  an oversight. numpy for `core/`, matplotlib for the evaluator, and nothing else without
+  a conversation.
 - Everything laboratory is simulated in this build: synthetic landscape, one-hot features
   only, local provider backend. Real data, real embeddings and the live backend are
   listed under "After the demo works" and are attempted only once phase 9 passes.

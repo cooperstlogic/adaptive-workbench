@@ -239,6 +239,32 @@ def main():
               for run_ in guided),
           "v1.3 is unknown at round 4 and known at round 5")
 
+    print("\nPhase 2: what naive pooling actually costs")
+    g6 = [run_[5]["nominated_true"] for run_ in guided]
+    n6 = [run_[5]["nominated_true"] for run_ in camp["runs"]["guided_naive"]]
+    worse = [a - b for a, b in zip(g6, n6) if b < a - 1e-9]
+    check("naive pooling makes you advance a worse molecule, not just misreport one",
+          len(worse) >= len(g6) // 2 and np.median(worse) > 0.3,
+          "in %d of %d seeds, median %.3f pKD worse at round 6"
+          % (len(worse), len(g6), np.median(worse)))
+    check("guided holds the feasible pool's best design once it finds it",
+          all(run_[5]["nominated_true"] >= run_[3]["nominated_true"] - 1e-9 for run_ in guided),
+          "median nominated %.3f against a pool maximum of %.3f"
+          % (np.median(g6), max(v for v in [float(np.max(land.value(kept)))])))
+    check("the uncorrected arm keeps raising alerts it never resolves",
+          sum(1 for r in camp["runs"]["guided_naive"] if r[4]["flagged"])
+          > sum(1 for r in guided if r[4]["flagged"]),
+          "round 5 flagged in %d of 20 naive runs against %d of 20 corrected"
+          % (sum(1 for r in camp["runs"]["guided_naive"] if r[4]["flagged"]),
+             sum(1 for r in guided if r[4]["flagged"])))
+
+    assets = os.path.join(REPO, "web", "public", "assets")
+    charts = ["campaign.png", "campaign.svg", "campaign-dark.png", "campaign-dark.svg"]
+    check("the proof chart is rendered in both modes",
+          all(os.path.getsize(os.path.join(assets, c)) > 20000 for c in charts),
+          ", ".join("%s %dkB" % (c, os.path.getsize(os.path.join(assets, c)) // 1024)
+                    for c in charts))
+
     print("\nPhase 2 gate (SPEC.md acceptance criterion 1)")
     gate = camp["gate"]
     check("the campaign scored the pre-registered threshold on the built landscape",

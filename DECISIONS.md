@@ -267,3 +267,40 @@ measurements, is recorded beside it so neither claim rests on the choice of metr
 - **One seed in twenty did not flag at round 4.** Its true offset was −0.595 pKD rather
   than the typical −0.82, because that round's drift partly cancelled the version shift.
   A flag that fires when the shift is large and not when it is small is behaving.
+
+**2026-09-19 (phase 2, follow-up: plotting and the third arm)**
+
+| # | Decision | Reasoning |
+| --- | --- | --- |
+| 40 | The numpy-only rule applies to `core/` and nowhere else; matplotlib is an evaluator dependency | The justification that sounds natural — "it has to run in the browser" — is false: Pyodide ships wheels for scipy, scikit-learn, pandas and matplotlib. Stating it out loud to this audience would cost more than the dependency saves. The two reasons that survive are real and narrower: `core/` is the part an audience is invited to read, where fifty lines of numpy they can check beats a library call they must trust; and every wheel is weight on a cold visit to a public URL. Neither reason reaches `simulate_campaign.py`, which is already not a product path |
+| 41 | The chart renderer is `plot_campaign.py`, separate from the campaign | Redrawing from the committed `campaign.json` takes a second where re-running takes thirty-five, and the split means the renderer's only input is the published numbers. `simulate_campaign.py` calls it at the end and degrades to numbers-only if matplotlib is missing |
+| 42 | The web app draws its own charts in the browser rather than embedding the rendered image | A visitor's rounds extend the curve live, and a PNG cannot. This duplicates *presentation*, not science — both surfaces read the same `campaign.json`, and the rule that matters, never porting `core/` to JavaScript, is untouched. Rendering through matplotlib under Pyodide would keep one implementation but costs a heavy wheel on boot and looks like matplotlib on a web page |
+| 43 | Both light and dark renders ship, and the chart's palette is validated rather than chosen | Categorical slots 1–3 of the reference palette, checked for colourblind separation, lightness band, chroma and contrast in both modes. Slot 3 sits below 3:1 on the light surface, so every series carries a direct endpoint label — the relief, not a flourish |
+| 44 | The campaign records the design each arm's own state ranks first, scored at its landscape value | "Your reported number is wrong" is a weaker claim than "you would advance the wrong molecule", and only the second is a decision. The metric is evaluator-only and it is what turned the third arm from a presentational difference into a measured one |
+
+### What the third arm actually shows
+
+The naive-pooling arm was kept on the condition SPEC.md set: it ships only if
+mis-correcting degrades measurably. It does, but not where it was expected to, and the
+claim attached to it has been narrowed to what the numbers support.
+
+**It does not make the optimizer pick worse designs.** Its noise-free selection line
+reaches the same 11.674 pKD as corrected guided selection. Every design it chooses is as
+good.
+
+**It corrupts the ranking the project holds, and that is a decision.** At round 6 it
+advances a genuinely worse molecule in **12 of 20 seeds, a median 0.605 pKD worse** — a
+four-fold error in the KD of the lead taken forward. The mechanism is specific: the
+best-so-far design is re-run as a control every round, so pooling its round-4 reading
+without correction drags its own average down until a worse design outranks it. The arm
+demotes its own best molecule. One seed in twenty crosses the threshold and then reports
+itself back below it.
+
+**And the alert never clears.** Because no ruling is ever recorded for v1.3, the flag
+keeps firing: 20 of 20 at round 5 and 11 of 20 at round 6, against 6 and 0 for the
+corrected arm. That is the cost of a flagged round nobody decided, and it is the most
+direct argument in the build for why the decision record exists at all.
+
+The line to use: *not correcting does not change which molecules you make. It changes
+which one you believe is best, and in twelve of twenty runs you take the wrong one
+forward.*

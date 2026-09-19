@@ -23,7 +23,7 @@ import time
 
 import numpy as np
 
-from core import acquisition, candidates, reconcile, schema, surrogate
+from core import acquisition, candidates, encode, reconcile, schema, surrogate
 from data import oracle as oracle_mod
 from data import synthetic
 
@@ -160,6 +160,11 @@ def run_campaign(ctx, arm, run_seed):
 
         merged = reconcile.pool(records)
         best_observed = max(v["value"] for v in merged.values())
+        # The molecule this arm would actually advance: the design its own
+        # project state ranks first. Scoring that pick at its landscape value
+        # is the decision-relevant question, and it is a different question
+        # from whether the reported number is right.
+        nominated = max(merged, key=lambda s: merged[s]["value"])
         # Two readings of "best observed", and they differ where it matters.
         # ``best_observed`` is the project's current estimate for its best
         # design, so re-measuring a design can move it down -- which is
@@ -182,6 +187,8 @@ def run_campaign(ctx, arm, run_seed):
             "assay_version_known": known is not None,
             "best_observed": float(best_observed),
             "best_single_observation": float(best_single),
+            "nominated_true": float(ctx.truth[nominated]),
+            "nominated_id": encode.sequence_id(nominated),
             "best_landscape": float(best_landscape),
             "n_measured": len(merged),
             "n_failed": sum(1 for s in sequences if aggregated[s]["status"] == "failed"),
@@ -251,6 +258,7 @@ def summarize(ctx, results):
                 "round": r,
                 "best_observed": quantiles(obs),
                 "best_single_observation": quantiles([run[r - 1]["best_single_observation"] for run in runs]),
+                "nominated_true": quantiles([run[r - 1]["nominated_true"] for run in runs]),
                 "best_landscape": quantiles(land),
                 "reached_threshold": float(np.mean([v >= ctx.threshold for v in obs])),
                 "reached_threshold_landscape": float(np.mean([v >= ctx.threshold for v in land])),
@@ -564,11 +572,21 @@ def main(argv=None):
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
     schema.write_json(args.out, payload)
 
+    try:
+        import plot_campaign
+        charts = plot_campaign.render_all(payload)
+    except ImportError as exc:  # matplotlib is an evaluator dependency, not a hard one
+        charts = []
+        print("chart not rendered (%s); the numbers are still in campaign.json" % exc,
+              file=sys.stderr)
+
     print(report(ctx, summary, comparisons, arms, elapsed))
     if verdict:
         print()
         print(verdict["statement"])
     print("\nwrote %s" % os.path.relpath(args.out, REPO))
+    for path in charts:
+        print("wrote %s" % os.path.relpath(path, REPO))
     return 0 if (verdict is None or verdict["passed"]) else 1
 
 
