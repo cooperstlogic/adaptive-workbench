@@ -4,17 +4,18 @@
 
 ## Purpose and thesis
 
-The prototype exists to show Anthropic one thing: Claude Science is a workbench for analyses, and the missing layer above it is **persistent decision state across experimental rounds**.
+The prototype exists to show Anthropic one thing: Claude Science is a workbench for analyses, and the missing layer above it is **persistent decision state across experimental rounds** — and the reason that layer matters is that it is what lets a model exercise judgment across rounds rather than answer one question at a time.
 
 That layer is thin. It is a template that instantiates a project, a handful of skills that read and write that project's state, connectors that keep the LIMS authoritative, and a narrow surface for approving decisions instead of chatting about them.
 
-**The proof artifact** is a single chart: cumulative best-observed binding affinity versus experimental round, model-guided selection against a random-selection baseline, on real measured data. Everything else makes that chart trustworthy and its decisions inspectable.
+**The proof artifact** is a single chart: cumulative best-observed binding affinity versus experimental round, model-guided selection against a random-selection baseline. Everything else makes that chart trustworthy and its decisions inspectable.
 
 | Claim | Demonstrated by |
 | --- | --- |
 | The decision layer is thin and file-based, not another platform | Whole project state is a directory of JSON; the LIMS mock stays authoritative for samples and assays |
 | The skills are real and portable, not demo mocks | The same `.py` files run in Claude Science, from the CLI, and in the deployed browser app |
-| A specialized surface beats open-ended chat for this workflow | Batch review with approve and override, beside a chat panel that only explains |
+| A specialized surface beats open-ended chat for this workflow | Batch review with approve and override, beside a panel that explains and diagnoses but cannot write |
+| The agent reasons rather than sequences | Round 4 comes back ambiguous; the agent forms competing hypotheses, tests them, and asks a named human to rule |
 
 Visibly absent, because the concept doc lists them as non-goals: sample management, plate design, hosted GPU, de novo generation, autonomous approval.
 
@@ -34,15 +35,15 @@ flowchart LR
   W --> P
 ```
 
-**2. The browser runs the real Python, via Pyodide.** This is the key move. The deployed site loads the identical `core/*.py` files through Pyodide and runs the actual surrogate fit and batch selection client-side. The site is fully static, works with no backend, no API key, and no cold start — and the pitch line "the same code runs in Claude Science and in this page" is literally true.
+**2. The browser runs the real Python, via Pyodide.** This is the key move. The deployed site loads the identical `core/*.py` files through Pyodide and runs the actual surrogate fit, batch selection, and diagnostics client-side. The site is fully static, works with no backend, no API key, and no cold start — and the pitch line "the same code runs in Claude Science and in this page" is literally true.
 
-**3. Pure numpy, no scipy or scikit-learn.** An exact Gaussian process with an RBF kernel is about forty lines of numpy. Ridge regression is six. Avoiding the heavy wheels keeps Pyodide's first load near three seconds instead of thirty, and keeps the skill's dependency footprint trivial for Claude Science.
+**3. Pure numpy, no scipy or scikit-learn.** An exact Gaussian process with an RBF kernel is about forty lines of numpy. Ridge regression is six. Each diagnostic is under twenty. Avoiding the heavy wheels keeps Pyodide's first load near three seconds instead of thirty, and keeps the skill's dependency footprint trivial for Claude Science.
 
-**4. Everything expensive is precomputed at build time.** The candidate space is finite and enumerable, so the full feature matrix and the oracle ship as static assets. Embeddings are genuinely from a protein language model; they are just computed once, offline, and committed.
+**4. Everything expensive is precomputed at build time.** The candidate space is finite and enumerable, so the full feature matrix and the oracle ship as static assets.
 
-**5. Synthetic-first, real data second.** The oracle sits behind an adapter. Claude Code builds the entire system against a generated landscape in the first hour, then swaps in the real dataset when the download and parse are done. A dataset problem at hour six cannot then sink the build.
+**5. Everything laboratory is simulated, and nothing in the build waits on a download.** The landscape is synthetic, the features are one-hot, the provider backend is local. No dataset licence to resolve, no 150 MB model to fetch, no parse step that can fail at hour six. Real data and real embeddings are upgrades attempted only once a working demo exists end to end — see "After the demo works".
 
-Cut from the earlier plan: the local FastAPI service (Pyodide replaces it), the four-view UI (one page, three panels), the second working template (shipped as a visible stub), structure prediction (a stub tool that returns a cached result).
+Cut from the earlier plan: the local FastAPI service (Pyodide replaces it), the four-view UI (one page, three panels), the second working template (shipped as a visible stub), structure prediction (a stub tool that returns a cached result), the real-data swap and the ESM-2 feature build (both moved off the day entirely).
 
 ## Repo layout
 
@@ -50,20 +51,22 @@ One core module tree, three surfaces over it.
 
 | Path | Contents |
 | --- | --- |
-| core/ | Pure numpy, shared by every surface: encode.py, surrogate.py, candidates.py, acquisition.py, scoring.py, schema.py |
-| skills/adaptive-optimization/ | SKILL.md plus five thin CLI wrappers in scripts/ |
+| core/ | Pure numpy, shared by every surface: encode.py, surrogate.py, candidates.py, acquisition.py, scoring.py, diagnostics.py, schema.py |
+| skills/adaptive-optimization/ | SKILL.md plus seven thin CLI wrappers in scripts/ |
 | mcp/ | registry\_server.py (LIMS stand-in), bioprovider\_server.py (Tamarind-shaped provider) |
 | templates/ | antibody-affinity-maturation/, plus a stub second template |
 | data/ | build\_oracle.py, build\_features.py, synthetic.py |
 | web/ | Vite app, panels, and public/assets/ for the precomputed matrices |
+| netlify/functions/ | ask.ts — the single stateless model proxy |
 | projects/demo-trastuzumab/ | A completed six-round project, committed to the repo |
 | simulate\_campaign.py | Headless N-round run that emits the proof chart |
+| DECISIONS.md | Every choice the spec left open, plus the pre-registered landscape parameters |
 
 The web build step copies `core/*.py` into `web/public/core/` so Pyodide fetches the same files the skill executes. Claude Code must not port them to JavaScript — that fork is the one mistake that would undermine the whole demo.
 
 ## Data layer
 
-The oracle answers exactly one question: given these sequences, what would the lab have reported? It sits behind an adapter so the build is never blocked on a download.
+The oracle answers exactly one question: given these sequences, what would the lab have reported? It sits behind an adapter, and in this build the adapter has exactly one implementation.
 
 ```python
 # data/oracle.py
@@ -73,22 +76,17 @@ def measure(sequences, round_id):
     left-censoring at the detection limit, and a per-round batch offset."""
 ```
 
-The noise model is not decoration. It is what gives the import step real reconciliation work and what makes the calibration panel non-trivial. The per-round offset applies to every well in the round, controls included, which is what makes it recoverable from the controls rather than merely a nuisance.
+The noise model is not decoration. It is what gives the import step real reconciliation work, what makes the calibration panel non-trivial, and what makes round 4 genuinely ambiguous. The per-round offset applies to every well in the round, controls included, which is what makes it recoverable from the controls rather than merely a nuisance.
 
-**Units, fixed once.** The objective is pKD, the negative base-ten logarithm of the dissociation constant, so higher is better and the detection limit censors weak binders from below. Every value crossing a file boundary carries `unit: "pKD"`, and datasets reporting a dissociation constant in molar are converted at load. A sign error here points the entire proof chart downward, so the loader asserts the convention instead of trusting it.
+**Units, fixed once.** The objective is pKD, the negative base-ten logarithm of the dissociation constant, so higher is better and the detection limit censors weak binders from below. Every value crossing a file boundary carries `unit: "pKD"`. A sign error here points the entire proof chart downward, so the loader asserts the convention instead of trusting it.
 
-Build against the synthetic landscape first and upgrade only if time allows.
+**The landscape is synthetic and its parameters are pre-registered.** `data/synthetic.py` generates an NK-style landscape over eight positions with tunable epistasis, plus a deliberate structure-activity cliff at one high-value position. Owning the landscape means owning a temptation: if the hour-3 gate fails, the quickest fix is a parameter rather than the science. That fix is forbidden.
 
-| Priority | Dataset | Variants | Why |
-| --- | --- | --- | --- |
-| 0 | Synthetic landscape | any | NK-style with tunable epistasis; zero download risk; identical schema |
-| 1 | [Absci trast-1](https://www.biorxiv.org/content/10.1101/2022.08.16.504181v1.full) | 8,932 | All variants with up to two mutations across eight positions of trastuzumab CDR-H3, ACE-assay affinity covering 97% of the combinatorial space |
-| 2 | [AbCDR-Binding anti-fluorescein](https://zenodo.org/records/18762978) | 11,052 | Single and combinatorial mutants, continuous affinity, one CC-BY download |
-| 3 | [AbCDR-Binding anti-HR2 SARS-CoV-2](https://zenodo.org/records/18762978) | 71,830 | Deeper combinatorial landscape if two-mutation depth saturates by round three |
+Every landscape parameter — epistasis order, ruggedness, noise scale, cliff position and depth, detection limit — is written into `DECISIONS.md` and committed **before** `simulate_campaign.py` runs for the first time, justified on grounds independent of the result. Git history then proves the order. If guided does not separate from random on that landscape, the spec's answer is to say so, not to regenerate the landscape.
 
-Resolve the download and the license in the first hour with a single request, not at hour five. The swap itself is a one-file change; discovering at hour five that the file is gated is what sinks it.
+**What a synthetic chart proves.** It proves the loop is wired correctly, the surrogate learns, the acquisition prefers better designs, and the decision layer carries state between rounds. It does not prove this method finds better antibodies. Both the README and the demo say the first sentence and not the second. The line to use out loud: *this is a synthetic landscape, so the chart proves the machinery, not the chemistry — point it at real data and the same code runs.*
 
-**Objectives.** Affinity is the measured objective. The secondary objectives are deterministic in-silico scores computed by `core/scoring.py` on the same sequences: hydrophobicity, net charge, and liability motifs (NG deamidation, DG isomerization, unpaired cysteine). No public dataset measures affinity and developability over a single variant library, so do not fabricate assays to fill the gap.
+**Objectives.** Affinity is the measured objective. The secondary objectives are deterministic in-silico scores computed by `core/scoring.py` on the same sequences: hydrophobicity, net charge, and liability motifs (NG deamidation, DG isomerization, unpaired cysteine).
 
 The asymmetry is an asset, and it decides what each kind of objective is for. Affinity is uncertain, so it is optimized under a model. The computed scores are exact, so their thresholds are enforced as filters before optimization runs and whatever margin remains is a tie-break among candidates that already pass. The batch panel renders the difference visibly — wide uncertainty bars on affinity, none at all on the computed scores. Treating all three as objectives and multiplying a probability of satisfaction into the acquisition would be theatre, because that probability is always zero or one.
 
@@ -110,39 +108,37 @@ Two arms run over the same landscape, from the same round-1 seed batch, drawing 
 
 One guided curve against one random curve is an anecdote, and this audience counts runs. Twenty seeds of six rounds is under a minute of numpy. Fixing the threshold before the first run is what separates a result from a number chosen after seeing the curve.
 
-**Why two metrics.** Best-observed is the honest lab view and stays the headline. It is also a maximum over noisy reads, so a random arm can be flattered by one lucky well. The diagnostic line scores the same selections at the landscape value, before the simulated assay noise is added. On the real dataset that value is a published measurement, which makes the diagnostic a retrospective benchmark rather than privileged knowledge. On the synthetic landscape both lines are invented and the diagnostic is labelled as such.
+**Why two metrics.** Best-observed is the honest lab view and stays the headline. It is also a maximum over noisy reads, so a random arm can be flattered by one lucky well. The diagnostic line scores the same selections at the landscape value, before the simulated assay noise is added. On a synthetic landscape both lines are invented and the diagnostic is labelled as such.
 
 Compute both in hour two. If they track each other, ship the single chart and the question never arises. If they diverge, the assay noise is large enough to convince a lab it has found a winner — a real result, one the calibration panel should carry, and far better found in hour two than on stage.
 
+**A third arm, if it earns its place.** Guided selection with naive pooling — no offset correction at round 4 — should degrade measurably against corrected guided selection. If it does, the diagnosis step has a number attached rather than a story, and the chart carries three lines. If mis-correcting turns out not to hurt measurably, say so and drop the arm. Same discipline as the threshold: the arm is not kept because it looks good.
+
 ## Feature layer
 
-One-hot is the default feature block and always ships. Embeddings are upside: real, from a real protein language model, computed exactly once at build time, and never on the critical path.
+One-hot is the only feature block in this build. Eight positions by twenty amino acids, written once at build time to `web/public/assets/features_onehot.bin` as float32.
 
-`data/build_features.py` loads ESM-2 (`esm2_t12_35M_UR50D`, roughly 150 MB) via HuggingFace transformers, mean-pools the final hidden layer over each full VH sequence, fits a 64-component PCA across the whole candidate space, and writes:
+This costs less than it sounds. Over eight positions with at most two mutations, a one-hot ridge model is expected to beat PCA-reduced embeddings anyway — the FLAb2 benchmark found that with enough data a fine-tuned one-hot encoding model can match fine-tuned billion-parameter pretrained models. A product that picks the simple model when the simple model wins is more credible to this audience, not less.
 
-- `web/public/assets/features_onehot.bin` — float32, 8 positions by 20 amino acids, always present
-- `web/public/assets/features_esm2_pca64.bin` — float32, one row per candidate, about 2.3 MB for 9,000 candidates, present only if the build ran
-- `web/public/assets/oracle.bin` — landscape values, loaded only by the simulated lab
+**The bake-off survives intact.** `gp_pca64` is defined as a Gaussian process over the first 64 principal components of *whichever feature block is active*. With one-hot as the active block, that is a PCA over the 160-dimensional one-hot matrix — a real reduction and a real second recipe. So the model registry still fits two genuine recipes each round, cross-validates, selects on held-out calibrated performance, and reports which won. Every model run records the block it used and the interface prints it.
 
-Use the 35M model, not 650M. It downloads in under a minute, runs 9,000 short sequences on a laptop CPU in minutes rather than hours, and PCA to 64 dimensions discards most of the difference anyway.
-
-**Nothing depends on that build succeeding.** The second recipe is a Gaussian process on the first 64 principal components of whichever feature block is active, and the default block is one-hot. If the embeddings build, they become a second block and a second row in the bake-off. Every model run records the block it used and the interface prints it. This keeps an hour of download and inference friction off the critical path, for a recipe the next paragraph expects to lose.
-
-**Expect one-hot to win, and make that a feature.** Over eight positions with at most two mutations, a one-hot ridge model will likely beat PCA-reduced embeddings. The FLAb2 benchmark found that with enough data a fine-tuned one-hot encoding model can match fine-tuned billion-parameter pretrained models. So the model registry fits both recipes each round and selects on held-out calibrated performance, and the UI shows which recipe won. A product that picks the simple model when the simple model wins is more credible to this audience, not less.
+`web/public/assets/oracle.bin` ships alongside, holding landscape values, loaded only by the simulated lab.
 
 ## The skill pack
 
-One skill, five scripts. Every script takes a project directory and writes back into it. No script talks to the network. This is what makes the skill droppable into Claude Science and runnable under Pyodide without modification.
+One skill, seven scripts. Every script takes a project directory and writes back into it. No script talks to the network. This is what makes the skill droppable into Claude Science and runnable under Pyodide without modification.
 
-`SKILL.md` frontmatter carries `name: adaptive-optimization` and a description that fires on antibody or protein lead optimization, design-test-learn rounds, and batch selection. The body is short: the project state contract, when to call each script in sequence, and three rules the agent must not break — never change objectives without explicit approval, never pool measurements across assay versions without a bridging set, never invent a model recipe outside the registry.
+`SKILL.md` frontmatter carries `name: adaptive-optimization` and a description that fires on antibody or protein lead optimization, design-test-learn rounds, and batch selection. The body is short: the project state contract, when to call each script in sequence, the diagnosis procedure, and four rules the agent must not break — never change objectives without explicit approval, never pool measurements across assay versions without a bridging set, never invent a model recipe outside the registry, and never write a number into a decision record that did not come from a named `core/` function.
 
 | Script | Reads | Writes | Does |
 | --- | --- | --- | --- |
-| import\_round.py | a results CSV | evidence/snapshot\_NNN.json | Reconciles returned measurements to designs, checks units, bridges assay versions through the shared controls, keeps censored wells as censored, averages replicates, hashes the result into an immutable manifest |
+| import\_round.py | a results CSV | evidence/snapshot\_NNN.json | Reconciles returned measurements to designs, checks units, bridges assay versions through the shared controls, keeps censored wells as censored, averages replicates, hashes the result into an immutable manifest, and sets the anomaly flag |
 | fit\_surrogates.py | all snapshots | models/run\_NNN.json | Fits every registered recipe, cross-validates, computes calibration (coverage of the 80% interval), picks the winner, stores predictions for the whole candidate pool |
 | generate\_candidates.py | objectives.json | candidates/pool\_NNN.json | Enumerates variants inside the editable region under the mutation budget, applies hard constraints and liability filters, reports how many were removed and why |
 | select\_batch.py | pool + model run | batches/batch\_NNN.json | Constrained selection with an explicit diversity term, plus controls and replicates, with per-design rationale and an extrapolation flag |
 | evaluate\_prior.py | batch N-1 + snapshot N | batches/batch\_NNN.eval.json | Compares predictions for the designs actually approved against what came back, reports calibration drift and realized improvement against the random baseline |
+| run\_diagnostic.py | snapshot + model run | stdout JSON | Runs one named test from `core/diagnostics.py` and returns its result. Read-only; writes nothing |
+| record\_decision.py | a decision payload | decisions/decision\_NNN.json | Writes hypotheses, evidence, recommendation and ruling into the project, hashing its inputs. A dumb writer with no logic of its own |
 
 **Model registry.** Two recipes only. `ridge_onehot` is ridge regression on one-hot features, read as Bayesian linear regression so the predictive variance is analytic. `gp_pca64` is an exact Gaussian process with an RBF kernel on the first 64 principal components of the active feature block, fit by grid search over two hyperparameters against the marginal likelihood. Both are under fifty lines of numpy. Only affinity is measured, so there is exactly one surrogate per round and the bake-off is between recipes rather than across objectives.
 
@@ -150,11 +146,88 @@ Censored wells enter the fit at the detection limit, carrying a flag. That biase
 
 **Acquisition.** The hard thresholds are already gone by this point: `generate_candidates` removed every candidate that failed one and reported the count and the reason. What survives is scored by expected improvement on affinity, then selected greedily with a diversity penalty on sequence distance to members already chosen, breaking ties toward the better developability margin.
 
-Every batch carries the same controls: the parent, two designs from the previous batch as replicates, and two deliberately high-uncertainty designs. The first three exist so that round-to-round offsets are estimable rather than merely suffered. The last two are the visible difference between exploitation and information gathering, and the UI labels them.
+Every batch carries the same controls: the parent, two designs from the previous batch as replicates, and two deliberately high-uncertainty designs. The first three exist so that round-to-round offsets are estimable rather than merely suffered — they are also the bridging set the diagnosis step depends on. The last two are the visible difference between exploitation and information gathering, and the UI labels them.
 
 Batch size is inclusive. A batch of 48 is 42 fresh picks plus the six control, replicate, and exploration slots, so the number of wells is the number the scientist set. The random arm spends the same budget the same way.
 
-**Round 1 needs no sixth script.** With no model run on disk, `select_batch` has nothing to exploit, so it returns a diversity-maximizing seed batch over the feasible pool and says so in the rationale. That is the same code path, one branch deep, and it is the batch both arms of the comparison start from.
+**Round 1 needs no extra script.** With no model run on disk, `select_batch` has nothing to exploit, so it returns a diversity-maximizing seed batch over the feasible pool and says so in the rationale. That is the same code path, one branch deep, and it is the batch both arms of the comparison start from.
+
+## Diagnosis and decision records
+
+Everything above is a pipeline: import, fit, generate, select, repeat. A pipeline runs the same steps whatever comes back, and a scheduler can drive it. The part that needs an agent is the part where the next action depends on what was observed and more than one action is defensible.
+
+There is exactly one such moment in this prototype. Build it properly rather than building five of them badly.
+
+**The trigger is code.** `import_round` compares each returned measurement against the previous model run's 80% predictive interval and writes `flagged: true` on the snapshot when the fraction falling outside exceeds 0.35 against an expected 0.20. That is a threshold in the template, not a judgment.
+
+**The diagnosis is not.** A round where most designs come back low has several explanations that are indistinguishable in the marginals:
+
+| Hypothesis | If true, the right action is |
+| --- | --- |
+| Assay-version or reagent offset | Estimate the offset from the shared controls, correct, then pool |
+| Plate or well-position artifact | Correct per group, or drop the affected wells |
+| The model extrapolated into a region it has not seen | Nothing to the data. Refit and widen exploration next round |
+| A real structure-activity cliff the optimizer walked into | Nothing to the data. Correcting it away would erase the finding |
+
+Rows one and four produce the same first look and opposite actions. Telling them apart means knowing to condition on the designs shared with earlier rounds rather than on the new ones, checking whether those shared designs agree with each other at all, and refusing to correct when they do not. And the second test worth running depends on what the first returned. That sequence is the agent's contribution, and it differs by round.
+
+**The diagnostics are code.** Five functions in `core/diagnostics.py`, pure numpy, read-only, each under twenty lines:
+
+| Test | Returns |
+| --- | --- |
+| offset\_from\_controls | Additive per-round offset estimated from designs shared with earlier rounds, its standard error, the bridge size, and whether the bridge members agree with each other |
+| residual\_by\_plate | Mean prediction residual grouped by plate and by well position, with spread |
+| residual\_by\_mutation\_class | Mean residual grouped by which position was mutated, and each class against the rest |
+| replicate\_concordance | Spread between replicate rows for the same sample, flagging designs whose replicates disagree beyond assay noise |
+| calibration\_by\_region | Coverage of the 80% interval overall and within predicted-value deciles |
+
+**The corrections are code too.** The agent never transforms data. It names an action — `apply_offset_correction`, `drop_wells`, `refit_only`, `no_action` — and a `core/` function performs it once a human has ruled.
+
+**Ad hoc analysis is the escape hatch.** Five diagnostics is a fixed set, and the sixth question is always the interesting one. When the scientist or the agent needs something the library does not cover — *do the designs carrying N100D specifically underperform their predictions?* — the agent writes ten lines of numpy, executes it in the sandbox, and shows the code beside the number.
+
+This is the only place model-written code is permitted, and the boundary is enforced by what is mounted rather than by instruction: the sandbox holds the snapshot arrays and `core/`, and never the oracle. Ad hoc results are evidence a human reads. They are recorded in the decision record with their source inlined and labelled one-off and unversioned, and they are never an input to a code path. An ad hoc analysis that keeps getting run is a candidate addition to `core/diagnostics.py` — the agent's one-off becoming methodology is the template thesis one level down.
+
+**The decision record is the artifact.** One JSON file per flagged round in `decisions/`, hashed and linked from `rounds.json` like everything else:
+
+```json
+{
+  "id": "decision_004",
+  "round": 4,
+  "trigger": "38 of 42 designs below the predicted 80% interval",
+  "hypotheses": [
+    { "id": "h1", "claim": "Assay-version offset between v1.2 and v1.3",
+      "diagnostic": "offset_from_controls",
+      "result": { "offset_pkd": -0.81, "se": 0.09, "n_bridge": 3, "concordant": true },
+      "reading": "supported" },
+    { "id": "h2", "claim": "Position 102 substitutions destroy binding",
+      "diagnostic": "residual_by_mutation_class",
+      "result": { "class": "102X", "n": 11, "mean_residual": -0.22, "vs_other_classes": 0.04 },
+      "reading": "not supported" }
+  ],
+  "ad_hoc": [
+    { "question": "Is the offset consistent across both plates?",
+      "code": "...", "stdout": "plate A -0.79, plate B -0.84, diff within se",
+      "note": "one-off, unversioned" }
+  ],
+  "recommendation": {
+    "action": "apply_offset_correction",
+    "confidence": "high",
+    "rationale": "...",
+    "alternative_considered": "h2, rejected because the 102X residual is flat relative to other classes",
+    "if_wrong": "Correcting a genuine cliff would hide it. The 102X class residual would not be flat if the cliff were real."
+  },
+  "ruling": { "verdict": "accepted", "by": "d.webster", "at": "...", "note": "" },
+  "inputs": { "snapshot": "sha256:...", "model_run": "sha256:...", "batch": "sha256:..." }
+}
+```
+
+`if_wrong` is not decoration. An agent that states what would falsify its own recommendation is inspectable in a way that a confident paragraph is not, and it is the field a sceptical scientist reads first.
+
+**Oversight has four verbs, not two.** `accepted`, `accepted_with_modification`, `rejected` with a reason, and `more_evidence_requested`, which names a test and sends the agent back to run it. That last one is the loop closing: the human pushes work back to the agent without dropping into open chat. Every ruling carries a named approver and a timestamp, and no action is taken on an unruled record.
+
+**Refusal is a valid recommendation.** If the bridging set is missing or its members disagree, the correct output is `no_action` with `confidence: "refuses"` and an explanation. Having a principled reason not to refuse is the better demo; being unable to refuse is the worse product.
+
+**Round 4 in the demo project.** The oracle already applies a per-round offset and the assay version already changes at round 4, and an exploiting optimizer naturally concentrates on one mutation class — so check whether the ambiguity arises on its own before engineering it. If it does not, place the synthetic landscape's cliff at a high-expected-improvement position, record that parameter in `DECISIONS.md` with the rest, and let the campaign walk into it.
 
 ## Project state
 
@@ -169,14 +242,15 @@ projects/demo-trastuzumab/
   models/run_001.json ...
   candidates/pool_001.json ...
   batches/batch_001.json, batch_001.eval.json ...
+  decisions/decision_004.json ...
   rounds.json           the decision graph: which batch led to which snapshot led to which model
 ```
 
-`rounds.json` is the artifact that matters. It is the thin longitudinal link from recommendation to tested constructs to returned evidence to updated model to next batch, and it is what the history panel renders. Everything else could be regenerated; this cannot.
+`rounds.json` is the artifact that matters. It is the thin longitudinal link from recommendation to tested constructs to returned evidence to diagnosis to updated model to next batch, and it is what the history panel renders. Everything else could be regenerated; this cannot.
 
 **A batch record separates what was proposed from what was run.** `recommended` is what the optimizer returned, `approved` is what the scientist let through, and `overrides` records each removal with a note, an approver, and a timestamp. Usually the two lists are identical, and the demo project makes them differ on purpose. This is the governance claim in one file: the system proposes, a named person disposes, and the evaluation step scores predictions for what was actually tested.
 
-Every snapshot, model run, and batch carries a content hash and the hashes of its inputs. Reproducibility in the demo is not a claim in a slide — click any batch and the UI walks back to the exact evidence that produced it.
+Every snapshot, model run, batch, and decision carries a content hash and the hashes of its inputs. Reproducibility in the demo is not a claim in a slide — click any batch and the UI walks back to the exact evidence that produced it.
 
 Hashes are taken over canonical JSON: sorted keys, no insignificant whitespace, floats at fixed precision. Without that rule two surfaces produce two hashes for one decision and the lineage claim quietly stops being checkable. Fixed precision is also what keeps the hash stable across numpy under WebAssembly and numpy on a laptop, which will not agree in the last bits.
 
@@ -193,15 +267,17 @@ The concept doc names eight durable entities. Seven are implemented as files; on
 | Recommendation batch | batches/batch\_NNN.json with rationale and overrides | No |
 | Experimental round | rounds.json | No |
 
+Decision records are an addition rather than a reduction: the concept doc has no entity for "a judgment call made between rounds", and it turns out to be the one that carries the agentic claim.
+
 Feature and embedding lineage from the concept doc is recorded as a build hash on the feature assets rather than a full lineage graph. Say so if asked; it is the one place the prototype is thinner than the concept.
 
 ## Mock MCP servers
 
 Two stdio servers built with FastMCP, about eighty lines each, both thin wrappers over `core/` and the project directory. They exist to make two boundary claims demonstrable rather than asserted.
 
-**`registry_server.py` — the LIMS stand-in.** Tools: `list_designs`, `pull_assay_results(round_id)`, `get_construct(id)`, and `attach_recommendation(batch_id, report_url)`. The write path is deliberately crippled: it can attach a recommendation ID and a link to an existing record, and it cannot create samples, edit assay data, or drive a workflow. When someone asks in the demo whether this replaces Benchling, the answer is a tool list.
+**`registry_server.py` — the LIMS stand-in.** Tools: `submit_batch`, `list_designs`, `pull_assay_results(round_id)`, `get_construct(id)`, and `attach_recommendation(batch_id, report_url)`. The write path is deliberately crippled: it can attach a recommendation ID and a link to an existing record, and it cannot create samples, edit assay data, or drive a workflow. When someone asks in the demo whether this replaces Benchling, the answer is a tool list.
 
-**`bioprovider_server.py` — the Tamarind-shaped provider.** Tools: `embed_sequences(model, sequences)`, `score_properties(tool_set, candidates)`, `predict_structures(model, complexes)`. Ship two backends behind one interface: `local` reads the precomputed PCA matrix, `esm_live` shells out to a real ESM-2 load. Swapping them is a one-line config change in `project.json`, which is the provider-independence claim made concrete. `predict_structures` returns a cached result with an honest note that structure prediction is stubbed.
+**`bioprovider_server.py` — the Tamarind-shaped provider.** Tools: `embed_sequences(model, sequences)`, `score_properties(tool_set, candidates)`, `predict_structures(model, complexes)`. The interface is real and the backend is a config field in `project.json`. Only the `local` backend is built: `embed_sequences` returns the precomputed one-hot matrix, `predict_structures` returns a cached result with an honest note that structure prediction is stubbed. An `esm_live` backend is declared and unwired, and selecting it returns a clear "not available in this build" error rather than a silent fallback. Both facts go in the staged table.
 
 Register both in `.mcp.json` at the repo root so the demo starts with one command.
 
@@ -220,18 +296,18 @@ sequenceDiagram
   R->>O: measure(sequences, round_id)
   W->>R: pull_assay_results(round_id)
   R-->>W: rows keyed by sample id
-  W->>W: import_round reconciles, snapshots
+  W->>W: import_round reconciles, snapshots, flags
   W->>R: attach_recommendation(batch_id, url)
 ```
 
-The registry therefore exposes a fifth tool, `submit_batch(designs)`, alongside the four named above. It mints construct and sample identifiers in its own namespace, records the round as in flight, and returns only the external references — the workbench stores those links in `designs.json` and owns nothing about the samples themselves.
+`submit_batch` mints construct and sample identifiers in its own namespace, records the round as in flight, and returns only the external references — the workbench stores those links in `designs.json` and owns nothing about the samples themselves.
 
 `pull_assay_results` returns rows shaped the way a real export is shaped, not the way the model wants them:
 
 | Field | Note |
 | --- | --- |
 | sample\_id | The registry's identifier. Never the design id — reconciliation is the point |
-| plate, well | Present so batch effects have somewhere to live |
+| plate, well | Present so batch effects have somewhere to live, and so `residual_by_plate` has something to group on |
 | assay\_version | Changes at round 4 in the demo project, which forces the bridging path to fire visibly |
 | value, unit | Raw assay units, not normalized |
 | status | ok, failed, or censored\_low |
@@ -239,7 +315,7 @@ The registry therefore exposes a fifth tool, `submit_batch(designs)`, alongside 
 
 About 3% of rows come back failed and a few land below the detection limit. `import_round` joins on the external reference table, averages replicates, keeps censored values as censored rather than dropping them, and only then writes the snapshot.
 
-**Version changes are bridged, not ignored.** The naive rule — never pool across assay versions — is correct, and it would also discard rounds 1 through 3 at exactly the moment the calibration panel is on screen. The batch composition already solves this. Every batch carries the parent and two replicates from the round before it, so consecutive rounds share designs, a per-round offset is estimable from them, and an assay version change is simply a larger offset. `import_round` fits it, records it on the snapshot along with the designs it came from, and pools only after correcting. If the bridging set is missing or its members disagree, it refuses to pool and says why. Refusing is the safe path; having a principled reason not to refuse is the better demo.
+**Version changes are bridged, not ignored.** The naive rule — never pool across assay versions — is correct, and it would also discard rounds 1 through 3 at exactly the moment the calibration panel is on screen. The batch composition already solves this. Every batch carries the parent and two replicates from the round before it, so consecutive rounds share designs and a per-round offset is estimable from them. `import_round` does not decide what to do about it: it reports the bridge and flags the round, and the diagnosis step decides whether the offset is an assay artifact or a real effect. If the bridging set is missing or its members disagree, the recommendation is to refuse to pool, and to say why.
 
 In the browser the same contract holds: the web app calls a Python shim with the identical signature instead of the MCP server. One code path, two transports.
 
@@ -247,7 +323,7 @@ In the browser the same contract holds: the web app calls a Python shim with the
 
 A template is a packaged optimization workflow: the unit that turns a general-purpose agent into a product surface. It is the answer to "why isn't this just a good prompt?"
 
-A prompt describes a task once. A template declares, ahead of any conversation, what the objectives schema looks like, which constraints are enforced, which model recipes are permitted, how batches are composed, and which panels the interface renders. The scientist then supplies three facts about their lead. Everything downstream — what the skill reads, what the optimizer is allowed to do, what the UI shows — follows from the template rather than from how well someone phrased a request.
+A prompt describes a task once. A template declares, ahead of any conversation, what the objectives schema looks like, which constraints are enforced, which model recipes are permitted, how batches are composed, which diagnostics may be run, and which panels the interface renders. The scientist then supplies three facts about their lead. Everything downstream follows from the template rather than from how well someone phrased a request.
 
 That is also what makes runs comparable. Two teams using the same template produce decision records with the same shape, so the calibration and improvement numbers mean the same thing across projects. An open-ended chat cannot give you that.
 
@@ -265,6 +341,9 @@ Templates are authored by whoever owns methodology for a group — a computation
   "constraints": { "max_mutations": 2, "forbidden_motifs": ["NG", "DG", "C"] },
   "batch": { "size": 48, "controls": 2, "replicates": 2, "exploration_slots": 2 },
   "model_recipes": ["ridge_onehot", "gp_pca64"],
+  "diagnostics": ["offset_from_controls", "residual_by_plate", "residual_by_mutation_class",
+                  "replicate_concordance", "calibration_by_region"],
+  "anomaly_flag": { "interval": 0.8, "expected_outside": 0.2, "trigger_above": 0.35 },
   "panels": ["setup", "batch_review", "progress"]
 }
 ```
@@ -274,62 +353,87 @@ Templates are authored by whoever owns methodology for a group — a computation
 | Objective schema and which properties are measured vs computed | The lead sequence and target name |
 | The constraint ruleset and forbidden motifs | The editable region and mutation budget |
 | The allowed model recipes | Nothing — recipe selection is automatic and reported |
+| The permitted diagnostics and the anomaly threshold | Nothing |
 | Batch composition policy: controls, replicates and exploration slots, all counted inside the batch size | Batch size, within limits the template sets |
 | Which panels render and in what order | Nothing |
 
 **Lifecycle.** Browse the library, pick a template, fill three fields, and a project directory exists with `project.json`, `objectives.json`, and an empty round history. From that moment the skill scripts, the MCP servers, and the web panels all read the same declarations. `project.json` records the template id and version, so a project keeps working when the template later changes.
 
-**What a template is not.** It is not a prompt, not a saved chat, and not a config file for the model. Nothing in it is advisory — the constraint ruleset is enforced by `core/candidates.py` before optimization runs, and a recipe absent from the template's list cannot be fitted even if the agent asks for it.
+**What a template is not.** It is not a prompt, not a saved chat, and not a config file for the model. Nothing in it is advisory — the constraint ruleset is enforced by `core/candidates.py` before optimization runs, a recipe absent from the template's list cannot be fitted even if the agent asks for it, and the anomaly threshold is evaluated in code.
 
-In the prototype, ship one working template and one stub. The stub exists in the picker, greyed out, purely so the audience sees that the abstraction is not single-purpose. Building it would cost an hour and prove nothing further.
+In the prototype, ship one working template and one stub. The stub exists in the picker, greyed out, purely so the audience sees that the abstraction is not single-purpose.
 
 ## Web app
 
-Vite plus React, static output, deployed to a default Netlify URL. One page, three panels, a persistent round timeline across the top. No router, no state library, no backend.
+Vite plus React, static output, deployed to a default Netlify URL. One page, three panels, a persistent round timeline across the top. No router, no state library, no backend beyond a single stateless function.
 
-On load: fetch the template list, load the committed demo project's state, boot Pyodide with numpy, fetch `core/*.py` into the Pyodide filesystem, fetch the three binary assets into numpy arrays. Show a progress line while this happens — it takes a few seconds and pretending otherwise looks broken.
+On load: fetch the template list, load the committed demo project's state, boot Pyodide with numpy, fetch `core/*.py` into the Pyodide filesystem, fetch the binary assets into numpy arrays. Show a progress line while this happens — it takes a few seconds and pretending otherwise looks broken.
 
 Pin the Pyodide version and serve the runtime and the numpy wheel from the site's own origin. A demo that depends on a third-party CDN and conference wifi at the same moment has a coin flip in it.
 
-**Panel 1, Setup.** Renders `objectives.json` as editable controls: editable region, mutation budget, per-objective direction and threshold, batch size. Collapsed by default once a project has rounds. Editing writes a new objectives version and marks downstream model runs stale, which is a small detail that says a lot about the product.
+**Panel 1, Setup.** Renders `objectives.json`: editable region, mutation budget, per-objective direction and threshold, batch size. Read-only in this build — editing objectives is the mechanic that a stop-or-widen recommendation would need, and that recommendation is not in scope for day one. Collapsed by default once a project has rounds.
 
-**Panel 2, Batch review.** The centerpiece. A table of the 48 selected designs with mutations, predicted value and interval per objective, selection rationale, and a badge for controls, replicates, and exploration picks. Beside it a Pareto scatter of predicted affinity against the developability score, with tested designs in one style and proposed ones in another. Every row has a checkbox and an override note field. One Approve button.
+**Panel 2, Batch review.** A table of the 48 selected designs with mutations, predicted value and interval per objective, selection rationale, and a badge for controls, replicates, and exploration picks. Beside it a Pareto scatter of predicted affinity against the developability score, with tested designs in one style and proposed ones in another. Every row has a checkbox and an override note field. One Approve button.
 
-**Panel 3, Progress.** Two charts. The proof chart — cumulative best observed pKD by round, model-guided against the random baseline's median and interquartile band. And calibration — predicted against observed for the previous batch, with the 80% interval coverage printed as a number.
+**Panel 3, Progress.** Two charts. The proof chart — cumulative best observed pKD by round, model-guided against the random baseline's median and interquartile band, plus the naive-pooling arm if it earned its place. And calibration — predicted against observed for the previous batch, with the 80% interval coverage printed as a number.
 
-**The interactive loop, entirely in-browser.** Approve a batch, and the app calls the simulated lab, runs `import_round`, `fit_surrogates`, `generate_candidates`, and `select_batch` through Pyodide, then re-renders with round N+1 proposed. Two to four seconds. This is what makes the deployed site demonstrable on its own: a visitor with no key and no install runs real rounds of real optimization.
+**The round timeline carries decisions.** A flagged round renders as a card in the timeline: *Round 4 flagged — 2 hypotheses, ruling pending*. Opening it shows each hypothesis, the diagnostic that tested it, the number it returned, any ad hoc analysis with its source, and the recommendation with its `if_wrong` line. The four ruling buttons sit at the bottom. This replaces walking individual batch rows as the governance beat, because approving a judgment is something a human can actually do and approving 48 rows is not.
 
-Rounds a visitor runs live in the Pyodide filesystem and in `localStorage`, so a reload keeps their progress and Reset clears it. Nothing is written back to the repository, and the page says so. The browser reads a committed copy of the project at load and owns its own bytes afterwards — worth stating plainly rather than letting someone work it out. The oracle also ships in the bundle, because the simulated lab has to run client-side, so anyone can download ground truth. Say that first. The claim is that `core/` never reads it, and that is checkable by reading six files.
+**The interactive loop, entirely in-browser.** Approve a batch, and the app calls the simulated lab, runs `import_round`, and — if the round is flagged — surfaces the decision card before advancing. Once ruled, it runs the correction, `fit_surrogates`, `generate_candidates`, and `select_batch` through Pyodide, then re-renders with round N+1 proposed. Two to four seconds.
 
-Ship the committed demo project at round three so a visitor lands mid-campaign with history already visible, and can run rounds four through six themselves. A Reset link restores it.
+Rounds a visitor runs live in the Pyodide filesystem and in `localStorage`, so a reload keeps their progress and Reset clears it. Nothing is written back to the repository, and the page says so. The oracle also ships in the bundle, because the simulated lab has to run client-side, so anyone can download ground truth. Say that first. The claim is that `core/` never reads it, and that is checkable by reading six files.
 
-## The explain panel
+Ship the committed demo project at round three so a visitor lands mid-campaign with history already visible, and can run rounds four through six themselves — round four being the one that flags. A Reset link restores it.
 
-One Netlify function, `/api/explain`. It takes the current batch JSON plus the last model run and a question, sends them to Claude with a short system prompt, and streams back prose. It is read-only — it never writes project state, which is the governance point made structural rather than promised.
+## The reasoning panel
 
-Questions it should handle well: why was this design selected, what is the model uncertain about, what changed since the last round, why was this candidate filtered out.
+One Netlify function, `netlify/functions/ask.ts`. This is no longer the last thing built or the first thing cut: it is where the agentic layer is visible in the browser, so it moves up the order and the site's honesty depends on its fallback being good.
 
-Guard it: cap at roughly 400 output tokens, hold the key in a Netlify environment variable, and add a simple per-session request cap so a public URL cannot run up a bill. If `ANTHROPIC_API_KEY` is absent, the panel falls back to rendering the rationale strings that `select_batch.py` already wrote into the batch file, labelled as precomputed. The site then still works end to end for anyone who forks it.
+**Context.** The panel receives the whole decision state, not just the current batch: the decision record, the diagnostic outputs, `rounds.json`, `objectives.json`, the active model run, the previous batch's eval, and a summarized batch table rather than all 48 rows with full rationale. That lands near 20k tokens, which is cached as a stable prefix with the visitor's question placed after the breakpoint.
 
-Build this last. It is the most impressive-to-least-essential ratio in the whole spec, and the demo survives without it.
+**Two tools, both read-only.** `run_diagnostic(test, round)` calls a named function from `core/diagnostics.py`. `execute_analysis(code)` runs model-written numpy in the Pyodide sandbox against the mounted snapshot arrays. Neither can write project state, and the model cannot name a test outside the template's list. When a scientist asks *is it really a batch effect*, the panel runs the test instead of speculating about it — that is the whole difference between a narrator and a colleague.
+
+**The tool loop lives in the browser.** Pyodide is where the data and the sandbox already are, and the key cannot go client-side, so the function is a stateless single-turn proxy over `messages.create` and React owns the `while stop_reason == "tool_use"` loop. Each function invocation is therefore one short model turn, which keeps every request inside Netlify's synchronous window. On the CLI path there is no function at all: Claude Code is the loop and Bash is the sandbox.
+
+**The function is not a proxy for the Claude API.** It builds the request itself from a fixed system prompt, the project state it loads server-side, and the visitor's question as a length-capped string. It must never accept a client-supplied `messages` array — that would publish a free Opus endpoint under your key. This is the single most important line in this section.
+
+**Model and cost.** `claude-opus-5` with `thinking: {type: "adaptive"}`, `output_config: {effort: "low"}`, streaming, and `max_tokens` around 400. Low effort is the cost lever that matters here; the panel reads small JSON and explains, it does not do hard reasoning. With the prefix cached, a question costs on the order of a cent.
+
+**Anyone can use it, until the budget says otherwise.** The key lives in a Netlify environment variable, so visitors supply nothing. A global daily spend cap and a per-IP counter live in Netlify Blobs. Under the cap, the panel calls Claude live. Over it, the site falls back — and the fallback is not a degraded mode, it is the default that live calls temporarily upgrade.
+
+**The fallback is verifiable, which is better than live.** With no key, over budget, or on a fork, the panel renders the committed decision record and re-runs its diagnostics in Pyodide, checking each returned number against the record. The badge reads *reasoning replayed · evidence recomputed · 5 of 5 values match*. A visitor at 2am gets a complete and honest experience, and the page always says which mode it is in.
 
 ## Build order
 
 Run these as separate Claude Code sessions with a clean context each. The gate at hour 3 is real: if the proof chart does not separate, stop and fix the science before building any interface.
 
-There is a second gate at hour 5. If Claude Code cannot complete a round through the skill and the connectors alone, the packaging claim fails, and that is worth an hour taken from the web app.
+There is a second gate at hour 5, and the simulated-only decision gives it teeth. It is no longer "the agent called five scripts in order" — it is whether the agent diagnosed an ambiguous round correctly from the skill and the connectors alone.
 
 | Phase | Deliverable | Done when |
 | --- | --- | --- |
-| 1 | Repo skeleton, synthetic oracle, project schema, one-hot encoder, dataset licence check | A project directory can be created from the template and round 1 designs written |
+| 1 | Repo skeleton, synthetic oracle, project schema, one-hot encoder, landscape parameters committed to DECISIONS.md | A project directory can be created from the template and round 1 designs written |
 | 2 | core/ surrogate, candidates, acquisition, plus simulate\_campaign.py | GATE: twenty seeds per arm, guided reaches the pre-registered threshold in fewer rounds, and the interquartile bands separate |
-| 3 | The five skill scripts and SKILL.md wrapping core/ | The same six rounds run through the CLI scripts, not just the library |
-| 4 | Both MCP servers, .mcp.json, one end-to-end run driven by Claude Code | Claude Code completes a round using only skill and connector calls |
-| 5 | Real data swap, then the ESM-2 feature build if the hour holds | Real measured affinities, and real embeddings only as upside |
-| 6 | Web app: Pyodide boot, three panels, the approve loop | Approving a batch advances the round in-browser in under five seconds |
-| 7 | Committed demo project at round 3, Netlify deploy, README | The public URL runs a round from a cold visit with no key |
-| 8 | The explain panel | Works with a key, degrades cleanly without one |
+| 3 | The five pipeline scripts and SKILL.md wrapping core/ | The same six rounds run through the CLI scripts, not just the library |
+| 4 | core/diagnostics.py, run\_diagnostic.py, record\_decision.py, the decision record schema | Each of the five tests returns a sane number on the round-4 snapshot |
+| 5 | Both MCP servers, .mcp.json, one end-to-end run driven by Claude Code | GATE: Claude Code diagnoses round 4 correctly using only skill and connector calls, and writes a decision record |
+| 6 | Web app: Pyodide boot, three panels, the approve loop, the decision card | Approving a batch advances the round in-browser in under five seconds, and round 4 stops for a ruling |
+| 7 | The reasoning panel: function, two tools, budget cap, verified fallback | Works with a key, degrades to verified replay without one |
+| 8 | Committed demo project at round 3, Netlify deploy, README with the staged table | The public URL runs a round and a ruling from a cold visit with no key |
 | 9 | Demo script, five-minute rehearsal, cut anything broken | You can run it start to finish without apologising |
+
+## After the demo works
+
+Attempt none of this until phase 9 passes. Each is a self-contained upgrade that changes one file and leaves the rest of the system alone.
+
+| Upgrade | Change | Why it is not on the day |
+| --- | --- | --- |
+| Real measured affinities | Swap the oracle adapter for a loader over [Absci trast-1](https://www.biorxiv.org/content/10.1101/2022.08.16.504181v1.full) (8,932 variants, two mutations across eight CDR-H3 positions) or the [AbCDR-Binding](https://zenodo.org/records/18762978) sets | A licence question or a parse failure at hour six sinks the build, and it upgrades the chart's claim rather than the system |
+| Real embeddings | `data/build_features.py` loads ESM-2 `esm2_t12_35M_UR50D`, mean-pools, fits a 64-component PCA, writes a second feature block | A 150 MB download and an inference pass for a recipe the one-hot model is expected to beat anyway |
+| Live provider backend | Wire `esm_live` in bioprovider\_server.py | Cannot run in the browser, so it proves the interface claim on the CLI only |
+| Stop / widen / confirm recommendations | A sixth decision type, plus making the Setup panel editable again | The mechanic is objectives amendment, which pulls in versioning and staleness across the UI |
+| Cross-round constraint learning | A query over all snapshots proposing a constraint amendment | Same dependency, and it is the strongest of the three — build it first if the list gets picked up |
+
+If the real data lands, one line changes in the README and one sentence changes on stage. That is the point of keeping the oracle behind an adapter.
 
 ## Acceptance and demo script
 
@@ -337,59 +441,65 @@ There is a second gate at hour 5. If Claude Code cannot complete a round through
 
 1. `simulate_campaign.py` produces a chart where guided selection reaches the pre-registered threshold in measurably fewer rounds than random, over twenty seeds per arm.
 2. Claude Code, given only the skill and the two MCP servers, completes one full round unaided.
-3. The deployed URL, opened cold in a private window with no key, runs a round to completion.
-4. Clicking any batch reaches the exact evidence snapshot hash that produced it.
-5. The registry connector cannot create a sample — demonstrable by reading its tool list.
-6. Switching the provider backend from `local` to `esm_live` changes no code outside `project.json`. This one is CLI-only; the live backend cannot run in the browser, and the README says so.
+3. Claude Code, given the round-4 snapshot, produces a decision record that identifies the offset, rejects the cliff hypothesis with the evidence that rejects it, and recommends the correction.
+4. The deployed URL, opened cold in a private window with no key, runs a round to completion and renders the round-4 ruling with its evidence recomputed and matching.
+5. Clicking any batch reaches the exact evidence snapshot hash that produced it.
+6. The registry connector cannot create a sample — demonstrable by reading its tool list.
 7. The CLI and the browser, given the same project state, select the same batch and print the same batch hash.
+
+The count is unchanged from the earlier spec because one criterion was struck and one added. Gone: switching the provider backend changes no code outside `project.json` — the second backend is not wired in this build, and a criterion with an asterisk is worth less than one fewer criterion. It lives in the staged table instead. New: criterion 3, which is the one that carries the agentic claim.
 
 **Five-minute demo.**
 
 1. **Thirty seconds.** Template picker. Pick antibody affinity maturation, name the lead, and a project exists. This is the part Claude Science has no answer for today.
-2. **One minute.** Setup panel. Editable region, mutation budget, three objectives, batch of 48. Note that affinity is measured and the rest are computed, and that the optimizer treats them differently.
-3. **Ninety seconds.** Batch review. Walk three rows: a high-confidence exploit pick, a high-uncertainty exploration pick, and a design that was filtered out for a liability motif. Override one, add a note, approve.
-4. **One minute.** The round advances live. Calibration updates. The proof chart extends. Say the number: fewer rounds to threshold than random.
+2. **Forty-five seconds.** Setup panel. Editable region, mutation budget, three objectives, batch of 48. Note that affinity is measured and the rest are computed, and that the optimizer treats them differently.
+3. **Ninety seconds.** Approve round 4. It comes back flagged. Open the decision card: two hypotheses, the diagnostic behind each, the numbers, and the `if_wrong` line. Ask the panel one question it has to run a test to answer. Rule on it.
+4. **Forty-five seconds.** The round advances. Calibration updates. The proof chart extends, with the naive-pooling arm visibly worse. Say the number, and say that the landscape is synthetic in the same breath.
 5. **One minute.** Drop to the terminal. Same round, same files, run through Claude Code with the skill and connectors. Put the two batch hashes side by side; they match. The web app was never the product — it is one surface over a decision layer that also works as a skill.
 
-That last beat is the whole pitch, so protect the time for it.
+Beat 3 replaces walking three batch rows, which was the weakest minute in the earlier script: it asked the audience to watch a rubber stamp. Beat 5 is the whole pitch, so protect the time for it.
 
 ## Risks and cutlines
 
-**The landscape saturates.** With at most two mutations across eight positions, the best variant may be found by round two and the proof chart flattens. Check this in hour two, not hour nine. Mitigations in order: shrink the batch to 24, start the campaign from a deliberately mediocre seed set rather than a random one, or move to the 71,830-variant SARS-CoV-2 set.
+**The landscape saturates.** With at most two mutations across eight positions, the best variant may be found by round two and the proof chart flattens. Check this in hour two, not hour nine. Mitigations in order: shrink the batch to 24, or start the campaign from a deliberately mediocre seed set. Both are changes to the protocol, recorded in `DECISIONS.md`, and neither is a change to the landscape after seeing a curve.
 
-**Pyodide is slower than expected.** Exact GP inference is cubic in observations; by round six with 48 per round that is a 288-by-288 solve, which is nothing. If the boot is the slow part, drop to numpy-only Pyodide and lazy-load. If it is genuinely unworkable, the fallback is precomputing all six rounds and having the approve button step through them — the loop looks identical and only you know the difference. Do not take that fallback before hour nine.
+**Tuning the landscape to make the gate pass.** The single largest credibility risk created by going synthetic-only, and the easiest one to commit without noticing. The guard is procedural: parameters committed before the first gate run, justified independently, and git history proving the order. If guided does not separate, the deliverable is a sentence saying it did not.
 
-**Dataset download fails or the license is unclear.** Ship synthetic, say so plainly in the README and on the page, and move on. A clearly labelled synthetic landscape costs less credibility than a vague provenance claim.
+**Overclaiming the chart.** A synthetic landscape supports "the loop works", not "this finds better antibodies". Every place the chart appears — README, page, slide, spoken line — carries the synthetic label in the same breath as the number.
 
-**The two metrics disagree.** If best-observed and best-landscape diverge, assay noise is doing work the model is not. Do not quietly adopt the flattering one. Show the diagnostic, say the noise level out loud, and let the calibration panel carry it. An audience that catches you choosing a metric stops believing the chart.
+**The agent diagnoses it wrong on stage.** A live model making a judgment call in front of an audience is a coin flip you do not control. The demo path uses the committed record with evidence recomputed live, and the terminal beat is where the live agent runs and can be retried. There is a braver reading available if it goes wrong anyway: a wrong recommendation that a human visibly rejects is a better governance demo than a right one, and the four ruling verbs are on screen to make that point.
+
+**Pyodide is slower than expected.** Exact GP inference is cubic in observations; by round six with 48 per round that is a 288-by-288 solve, which is nothing. If the boot is the slow part, drop to numpy-only Pyodide and lazy-load. If it is genuinely unworkable, the fallback is precomputing all six rounds and having the approve button step through them. Do not take that fallback before hour nine.
+
+**The public panel runs up a bill.** Covered by the daily cap and the per-IP counter, and by the function never accepting a caller-supplied message array. Verify both before the URL is shared, not after.
 
 **Scope creep into the LIMS.** The moment Claude Code starts writing sample or plate models, stop it. The absence is the argument.
 
-**Cut in this order if the day runs short:** the explain panel, the second template stub, the Pareto scatter (keep the table), the override note field. The ESM-2 build is not on this list because it is not on the critical path — build it if hour 5 is free, skip it otherwise. Never cut: the proof chart, the approve loop, the CLI path through the skill.
+**Cut in this order if the day runs short:** ad hoc code execution (keep the five library diagnostics), the second template stub, the Pareto scatter (keep the table), the override note field. **Never cut:** the proof chart, the approve loop, the round-4 decision record, the CLI path through the skill.
 
 ## What is real and what is staged
 
-This audience will ask. Put this table in the README and be able to recite it, because the credibility cost of being caught dressing up a mock is far higher than the cost of admitting a stub.
+This audience will ask. Put this table in the README and be able to recite it, because the credibility cost of being caught dressing up a mock is far higher than the cost of admitting a stub. Under the simulated-only decision the honest answer is that everything about the decision loop is real and everything about the laboratory is invented.
 
 | Component | Status |
 | --- | --- |
-| Surrogate fitting, calibration, constraint filtering, batch acquisition | Real. Runs on every round, in the browser and the CLI |
-| Measured affinity values | Real published experimental data, if the dataset swap lands. Clearly labelled synthetic otherwise |
-| Sequence embeddings | Real ESM-2, computed once offline and reduced to 64 dimensions, if the build ran. One-hot otherwise, and the interface names the block in use |
-| Developability and liability scores | Real deterministic calculations, not assay measurements, labelled as computed throughout the UI |
-| The wet lab | Staged. An oracle behind the registry server replays measured values with added noise, failures, and censoring |
-| The LIMS | Staged. A mock server with a deliberately narrow write path |
-| Structure prediction | Stubbed. Returns a cached result and says so |
-| Managed provider execution | Interface is real and swappable; only the local backend is wired by default |
-| Rounds run in the browser | Real. The same Python, on state held in the browser and never written back to the repository |
-| The proof chart's diagnostic line | Real published measurements on the real dataset. Invented, and labelled so, on the synthetic one |
-
-The framing for the demo: everything about the decision loop is real, and everything about the laboratory is replayed.
+| Surrogate fitting, calibration, constraint filtering, batch acquisition | **Real.** Pure numpy, runs every round, in the browser and the CLI |
+| The five diagnostics and the decision record | **Real.** The same code on both surfaces, with hashed inputs |
+| Both model recipes and the bake-off between them | **Real.** `ridge_onehot` against `gp_pca64` over the one-hot block, selected on held-out calibrated performance |
+| Developability and liability scores | **Real** deterministic calculations, not assay measurements, labelled as computed throughout the UI |
+| Affinity values | **Simulated.** A synthetic NK-style landscape with pre-registered parameters, labelled on every chart |
+| The wet lab | **Simulated.** An oracle behind the registry server adds noise, ~3% construct failure, censoring, and per-round offsets |
+| The LIMS | **Staged.** A mock server with a deliberately narrow write path |
+| Sequence embeddings | **Not built.** One-hot is the only feature block; the provider interface exists and `esm_live` is unwired |
+| Structure prediction | **Stubbed.** Returns a cached result and says so |
+| The agent's reasoning in the browser | **Real Claude** while the daily budget holds. Verified replay of a committed record otherwise, with the evidence recomputed live |
+| The agent's reasoning in the CLI | **Real.** Claude Code runs the diagnosis unaided; this is acceptance criterion 3 |
+| Rounds run in the browser | **Real.** The same Python, on state held in the browser and never written back to the repository |
 
 ## Packaging for Claude Science
 
 The skill and connectors should be installable, not merely described. Anthropic publishes a life-sciences marketplace of MCP servers and skills for Claude Code, so mirror that shape: a `marketplace.json` at the repo root declaring one plugin that bundles the `adaptive-optimization` skill and both MCP servers, plus a README section giving the one command to add it.
 
-The test that matters is criterion 2 in the acceptance list: someone installs the plugin, points it at a project directory, and completes a round by conversation alone. If that works, the claim that this is an extension of Claude Science rather than a separate application is demonstrated rather than argued.
+The test that matters is criterion 3 in the acceptance list: someone installs the plugin, points it at a project directory, hits a flagged round, and gets a defensible diagnosis by conversation alone. If that works, the claim that this is an extension of Claude Science rather than a separate application is demonstrated rather than argued.
 
-Keep `SKILL.md` under 150 lines. The scripts carry the procedure; the skill body carries only the state contract, the call order, and the three rules the agent must not break.
+Keep `SKILL.md` under 150 lines. The scripts carry the procedure; the skill body carries only the state contract, the call order, the diagnosis procedure, and the four rules the agent must not break.

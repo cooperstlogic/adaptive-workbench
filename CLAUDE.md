@@ -1,6 +1,7 @@
 # CLAUDE.md
 
-Project context and working rules. Read `SPEC.md` for full spec.
+Project context and working rules. Read `SPEC.md` for full spec and `DECISIONS.md` for
+every choice already settled.
 
 ## What this is
 
@@ -14,18 +15,27 @@ This is a pitch artifact aimed at Anthropic. The argument it makes: Claude Scien
 excellent at one-shot analyses, and the missing layer above it is **persistent decision
 state across experimental rounds** — a template that instantiates a project, skills that
 read and write that project's state, connectors that keep the LIMS authoritative, and a
-narrow surface for approving decisions rather than chatting about them.
+narrow surface for approving decisions rather than chatting about them. The reason that
+layer matters is that it is what lets a model exercise judgment across rounds instead of
+answering one question at a time.
 
 The audience is technically sophisticated and will poke at it. Optimize for a demo that
 survives scrutiny, not for feature count.
 
-## The proof artifact
+## The two proof artifacts
 
-One chart: cumulative best-observed affinity versus experimental round, model-guided
-selection against a random-selection baseline, on real measured data. Everything else
-exists to make that chart trustworthy and its decisions inspectable.
+1. **One chart:** cumulative best-observed affinity versus experimental round,
+   model-guided selection against a random-selection baseline.
+2. **One decision record:** round 4 comes back ambiguous, the agent forms competing
+   hypotheses, tests them with library diagnostics, and a named human rules on the
+   recommendation.
 
-## Two failure modes that matter more than missing features
+The chart shows the loop converges. The record shows something is reasoning inside it.
+Without the second, an Anthropic audience sees a scheduler calling five scripts in order
+and the pitch collapses within ninety seconds. Everything else exists to make both
+trustworthy and inspectable.
+
+## Three failure modes that matter more than missing features
 
 1. **A mock dressed up as real.** If something is stubbed, label it stubbed — in the UI
    and in the README. `SPEC.md` has a "What is real and what is staged" table; keep it
@@ -33,6 +43,9 @@ exists to make that chart trustworthy and its decisions inspectable.
 2. **The science implemented twice.** The same Python must run in Claude Science, from
    the CLI, and in the browser via Pyodide. Never port `core/` to JavaScript, even if it
    would be faster. That fork would undermine the entire demo.
+3. **Overclaiming a synthetic result.** The landscape is invented, so the chart proves
+   the machinery and not the chemistry. Say the word "synthetic" in the same breath as
+   the number, every time, in every surface.
 
 ## Non-negotiables
 
@@ -48,28 +61,47 @@ exists to make that chart trustworthy and its decisions inspectable.
 5. Never build sample inventory, plate design, or assay authoring. Their absence is the
    argument.
 6. Constraints declared in a template are enforced in code before optimization runs, not
-   suggested to the model.
+   suggested to the model. The same goes for the anomaly flag: deciding that a round
+   *looks wrong* is a threshold, deciding *why* is the agent's job.
+7. **The model produces no numbers.** Every value in a decision record traces to a named
+   `core/` function with hashed inputs. The model selects which test to run, in what
+   order, and what the results mean together. It may write code that produces a number —
+   but only ad hoc, only read-only against mounted snapshot arrays, only with the source
+   stored beside the result, and the number is evidence a human reads, never an input to
+   a code path. The moment an LLM is doing the statistics behind the chart, the demo is
+   dead.
+8. **Landscape parameters are pre-registered.** Epistasis order, ruggedness, noise scale,
+   cliff position and depth, and the detection limit are written into `DECISIONS.md` and
+   committed *before* `simulate_campaign.py` runs for the first time, justified on
+   grounds independent of the outcome. Git history proves the order. Never tune them
+   after seeing a curve.
 
 ## How to work
 
-- Build in the order of the hour table in `SPEC.md`, one block at a time. At the end of
+- Build in the order of the phase table in `SPEC.md`, one block at a time. At the end of
   each block, stop and show what works before continuing.
 - **The hour-3 gate is real.** `simulate_campaign.py` must show guided selection beating
   random on rounds-to-threshold, over 20 seeds per arm, against a threshold fixed before
   the first run. If it doesn't separate, stop and fix the science — do not start on
   skills or UI. Say plainly that it isn't separating rather than tuning until it looks
-  good, and never re-pick the threshold after seeing a curve.
+  good, and never re-pick the threshold or regenerate the landscape after seeing a curve.
+- **The hour-5 gate is real too.** Claude Code, given only the skill and the connectors,
+  must diagnose round 4 correctly and write a decision record. If it can't, the agentic
+  claim fails and that is worth an hour taken from the web app.
 - Prefer the boring implementation. Where the spec leaves a choice open, take the one
   with fewer moving parts and record it in `DECISIONS.md`.
 - If something in the spec is wrong, underspecified, or would blow its hour budget, say
   so before building it rather than working around it silently.
 - Don't add dependencies without asking. The dependency list is a design constraint, not
   an oversight.
+- Everything laboratory is simulated in this build: synthetic landscape, one-hot features
+  only, local provider backend. Real data, real embeddings and the live backend are
+  listed under "After the demo works" and are attempted only once phase 9 passes.
 
 ## Cut order if time runs short
 
-Explain panel → second template stub → Pareto scatter (keep the table) → override note
-field. ESM-2 features are not a cut: they are off the critical path by design, built
-only if hour 5 is free, with one-hot as the default feature block either way.
+Ad hoc code execution (keep the five library diagnostics) → second template stub →
+Pareto scatter (keep the table) → override note field.
 
-**Never cut:** the proof chart, the approve loop, the CLI path through the skill.
+**Never cut:** the proof chart, the approve loop, the round-4 decision record, the CLI
+path through the skill.
