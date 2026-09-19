@@ -25,10 +25,10 @@
   ],
   "enumerated": 10261,
   "feasible": 7294,
-  "hash": "sha256:d68013db7e62dc4109c9b800dea79711d431dc9bace9056e5f610381f9b81ed7",
+  "hash": "sha256:65a9390bcafc2252d15b0d04f5a641bedc3b8f7b02de94e627919c75d85333eb",
   "inputs": {
     "designs": "sha256:a8cfc96898cd8cf1d49eccd05482e605949c81a63303b3b45fafd4271615c051",
-    "objectives": "sha256:8ae096d4f819312e47981ae1453c90a8325d953829f61ff0ccced2bcd2360195"
+    "objectives": "sha256:e459b8c9eb21e34feda142cc7cae4c4695eaa5d915d42ea0907b095d87ac92c3"
   },
   "max_mutations": 2,
   "pool_fingerprint": "sha256:67969dda3b8ec30e63a12ba2b96b93d1f455d1b5099a7956de2891172e7335ad",

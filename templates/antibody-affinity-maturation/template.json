@@ -1,6 +1,6 @@
 {
   "id": "antibody-affinity-maturation",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "title": "Antibody affinity maturation",
   "description": "Design-test-learn rounds over a CDR window, optimizing measured binding affinity under enforced developability constraints.",
   "lead": {
@@ -70,6 +70,13 @@
     "replicate_concordance",
     "calibration_by_region"
   ],
+  "diagnostics_policy": {
+    "interval": 0.8,
+    "bridge_concordance_k": 2.0,
+    "replicate_outlier_k": 3.0,
+    "calibration_bins": 4,
+    "note": "Tolerances for the diagnostic library, declared by the template rather than chosen while reading a round. The bridge is the same molecules measured twice, so its members should differ only by read noise: a spread wider than 2.0 x the round's own read-noise scale means they are telling different stories and there is no single number to correct by. 3.0 x that scale flags a construct whose two reads disagree, which over a batch of 48 expects about one false flag every eight rounds. Coverage is split into 4 bins and not deciles because a coverage estimate needs enough designs per bin to tell 0.8 from 0.5: at a batch of 48, quartiles give about twelve designs each, while deciles give five and quantize coverage to multiples of 0.2."
+  },
   "anomaly_flag": {
     "statistic": "mean_signed_residual",
     "scope": "fresh_designs",

@@ -22,7 +22,7 @@ dependency, used by `plot_campaign.py` and nothing on a product path.
 ```bash
 python3.12 -m venv .venv
 .venv/bin/pip install numpy matplotlib
-.venv/bin/python check.py      # 73 invariant checks, all should pass
+.venv/bin/python check.py      # 103 invariant checks, all should pass
 ```
 
 `.venv/` is gitignored. Everything else needed — including the generated landscape — is
@@ -36,24 +36,37 @@ committed, so a fresh clone plus the two commands above reproduces the current s
 .venv/bin/python -m data.build_oracle        # regenerate the landscape (deterministic)
 .venv/bin/python simulate_campaign.py        # the evaluator: 20 seeds, 3 arms, chart, ~35 s
 .venv/bin/python plot_campaign.py            # re-render the chart alone, ~1 s
-.venv/bin/python check.py                    # verify every documented invariant, ~20 s
+.venv/bin/python check.py                    # verify every documented invariant, ~22 s
 ```
 
 And the product path, which is the same science through the CLI:
 
 ```bash
 .venv/bin/python init_project.py --name demo-trastuzumab --team d.webster --force
-.venv/bin/python run_rounds.py --rounds 4 --ignore-flags --approved-by d.webster
+.venv/bin/python run_rounds.py --rounds 4 --approved-by d.webster
 .venv/bin/python lims.py tools               # the LIMS write path, which is the boundary claim
 ```
 
 `run_rounds.py` is a deliberately dumb scheduler over the five pipeline scripts. It prints
 every command it runs and **stops** the moment a round is flagged, because that is where
-the judgment is. `--ignore-flags` carries on without a ruling.
+the judgment is. It stops twice in four rounds, and it prints the commands that resume it.
+`--ignore-flags` carries on without a ruling, which is the naive-pooling arm of the chart.
 
-`check.py` runs 73 checks in about twenty seconds and is the handoff contract. Every check in it corresponds to a rule in
-`CLAUDE.md` or a number recorded in `DECISIONS.md`, so a failure means the state has
-drifted from what is documented.
+And the part a scheduler cannot do, which is what the skill is for:
+
+```bash
+S=skills/adaptive-optimization/scripts
+.venv/bin/python $S/run_diagnostic.py  --project projects/demo-trastuzumab --round 4 \
+    --test calibration_by_region --offset bridge          # read-only, writes nothing
+.venv/bin/python $S/record_decision.py --project projects/demo-trastuzumab --round 2 \
+    --propose diagnosis.json                              # the agent proposes
+.venv/bin/python $S/record_decision.py --project projects/demo-trastuzumab --round 2 \
+    --rule accepted --by d.webster --note "..."           # a named human disposes
+```
+
+`check.py` runs 103 checks in about twenty seconds and is the handoff contract. Every
+check in it corresponds to a rule in `CLAUDE.md` or a number recorded in `DECISIONS.md`,
+so a failure means the state has drifted from what is documented.
 
 ## Build status
 
@@ -62,8 +75,8 @@ drifted from what is documented.
 | 1 | Repo skeleton, synthetic oracle, project schema, one-hot encoder, pre-registered parameters | **Done** |
 | 2 | `core/surrogate.py`, `acquisition.py`, `reconcile.py`, `simulate_campaign.py` | **Done — gate passed** |
 | 3 | The five pipeline scripts, `SKILL.md`, the mock LIMS | **Done** |
-| 4 | `core/diagnostics.py`, `run_diagnostic.py`, `record_decision.py`, decision records | **Next** |
-| 5 | Both MCP servers, end-to-end run driven by an agent | Not started |
+| 4 | `core/diagnostics.py`, `run_diagnostic.py`, `record_decision.py`, decision records | **Done** |
+| 5 | Both MCP servers, end-to-end run driven by an agent | **Next — the hour-5 gate** |
 | 5b | The plugin installed into Claude Science, the gate re-run there, and the gap audit written | Not started — beta access confirmed, so this is a deliverable rather than a maybe |
 | 6 | Web app: Pyodide boot, the Claude Science-shaped shell, artifact tabs, approve loop | Not started |
 | 7 | The agent in the session: tool-call stream, two tools, push-back round trip, budget cap, verified replay | Not started |
@@ -191,29 +204,105 @@ so it is **not** the cliff. Whatever remains is the model, and a diagnosis that 
 the offset and stops there will be wrong about half the round. That is a better artifact
 than a single-cause round, and it is what phase 4 has to get right.
 
-### Before starting phase 4
+### Phase 4 results — the diagnostics, and the first ruling
+
+**All five tests return a number on the round-4 snapshot**, which is phase 4's
+done-condition, and between them they say something a single statistic cannot.
+
+| Round 4, `projects/demo-trastuzumab` | |
+| --- | --- |
+| `offset_from_controls` | **−1.014 pKD**, se 0.059, bridge of 3. The three shared designs sit 0.102 apart against a 0.342 tolerance, so they **agree**: there is a correction available |
+| `residual_by_plate` | R4P1 −1.872 over 23 designs, R4P2 −2.011 over 23. A gap of 0.139 pKD, 0.62 standard errors. **Not a plate** |
+| `replicate_concordance` | read-noise scale 0.171 pKD, 45 designs with two usable reads, **none** above the 0.514 tolerance. **Not an unstable read** |
+| `residual_by_mutation_class` | the cliff's own position, VH 103, sits **+0.214 pKD from every other class** over 10 designs — against a cliff depth of −1.50. **Not the cliff** |
+| `calibration_by_region` | coverage **0.065** against 0.80 nominal. Correcting by the bridge takes it to **0.565**, still short, and leaves **−0.927 pKD** unexplained |
+
+That last line is the round in one number. The offset is real, the bridge is clean, and
+applying it accounts for about half of what came back. **A diagnosis that corrects the
+offset and stops is wrong about the other half**, and the test that proves it is the
+counterfactual: `calibration_by_region --offset bridge` scores the coverage a correction
+of exactly that size would leave. Round 4's record is phase 5's gate and is deliberately
+**not** written yet.
+
+**Round 2 is ruled, and it is the same statistic reaching the opposite answer.** The
+committed demo project now stops at round 2, carries a decision record, and continues.
+
+| Round 2 | |
+| --- | --- |
+| Flag | **+0.765 pKD** — it came back *better* than forecast, and the loop stops for that too |
+| `offset_from_controls` | −0.167, se 0.064, concordant — the **wrong sign** and an eighth of the size |
+| `residual_by_plate` | +0.806 and +0.637; a 0.169 gap at 0.78 se, and both plates high |
+| `residual_by_mutation_class --by position` | the two classes large enough to matter sit on the mean: 101 at +0.736 over 36, 100 at +0.618 over 21 |
+| `residual_by_mutation_class --by n_mutations` | the 42 **doubles** came back +0.765; the 3 **singles** came back +0.080, on target |
+| `calibration_by_region` | 0.333 against 0.76 held out at fit time, worst in the top quarter of predicted values at 0.18 |
+| Counterfactual | applying the bridge estimate takes coverage from 0.333 **down** to 0.267 |
+| Ad hoc | across the 42 picks the model's predictions span **0.009 pKD** while its own predictive sd averages 0.406 |
+| Ruling | `refit_only`, **accepted** by d.webster |
+
+The model was fit on a single-mutant scan and round 2 is the first batch of doubles it has
+ever been asked about; the ad hoc cut is the sharpest version of that — it was not
+discriminating between those designs at all, it was reporting the parent value with wide
+error bars. Nothing is wrong with the data, so nothing is done to it. The record says so,
+names the confound it cannot resolve yet (those three singles are also the designs the
+model trained on), and states what would falsify it.
+
+**Four things worth knowing about how it is enforced.**
+
+1. **The writer accepts no numbers.** A proposal names which test supports which
+   hypothesis; `record_decision.py` runs that test itself and writes what it got back. A
+   payload carrying its own `result` is refused. There is no channel through which a
+   number the model produced can reach a decision record, except `ad_hoc`, which is
+   stored with its source inlined and labelled one-off and unversioned.
+2. **It refuses four things outright**: a test outside the template's list, a correction
+   with no concordant bridge behind it, a recommendation with an empty `if_wrong`, and a
+   second pass that ignores the test a ruling asked for. Each is a rule that was
+   previously written down and is now enforced.
+3. **A correction cannot cite a ruling that said something else.** `import_round.py
+   --authority decision_NNN` loads the record and checks that it exists, is ruled, and
+   recommends the action being taken. `decision_002` says `refit_only`, so it authorizes
+   no change to any measurement, and the import refuses.
+4. **Ruled-ness is a property of the record, not of the frame.** The commonest correct
+   ruling on a flagged round changes no data, so it moves no frame; the snapshot still
+   reads `authority: unruled` and that is accurate about the frame. `check.py` verifies
+   both halves.
+
+The push-back round trip is exercised in `check.py` rather than committed: propose, rule
+`more_evidence_requested` naming a test, watch a pass that ignores it get refused, run it,
+revise, rule again. Both passes are kept in the record. That is acceptance criterion 8's
+mechanism, and criterion 8 itself lands in the browser in phase 7.
+
+**Two things phase 4 found that were not diagnostics.** `init_project.py --force`
+overwrote the four top-level files and left every numbered artifact where it was, so
+rebuilding a project silently mixed the new rounds with the old ones — it now clears them
+and says how many. And `run_rounds.py` stopped on a flagged round without saying how to
+resume, so the obvious `--start N` re-ran the round from candidate generation and
+resubmitted it to the LIMS; it now prints the exact commands.
+
+### Before starting phase 5
 
 - **The threshold is 10.762 pKD and it is already fixed.** Do not recompute it, do not
   re-pick it, and do not adjust it. Do not change the landscape or its parameters.
 - `simulate_campaign.py` remains the one and only thing permitted to read landscape
   values. Nothing on a product path may.
-- The five diagnostics go in `core/diagnostics.py` as pure numpy, read-only, each under
-  twenty lines. `run_diagnostic.py` prints one of them and writes nothing.
-  `record_decision.py` is a dumb writer with no logic of its own.
-- **Two rounds in the demo project are flagged, not one**, and they want different
-  rulings. Round 2 flags *positively*: a model fit on single mutants under-predicts the
-  first double mutants, so the right action is `refit_only` and nothing to the data. Round
-  4 flags negatively and wants `apply_offset_correction` — partially. The same statistic,
-  two correct answers.
-- Round 4's discrepancy is **not** fully explained by its offset. `residual_by_mutation_class`
-  should come back flat, which is the evidence that rules the cliff out; the remaining gap
-  is the model, and `calibration_by_region` is the test that shows it.
-- Applying a ruling is `import_round.py --offset always --authority decision_NNN`, which
-  rewrites that round's snapshot in the corrected frame. Correcting round 4 makes rounds 5
+- **Round 4's decision record is the gate and it is deliberately unwritten.** An agent
+  given only `SKILL.md` and the connectors has to produce it: identify the offset, reject
+  the cliff with the evidence that rejects it, and say what the offset does not account
+  for. Writing it by hand first would make the gate a formality. `decision_002` is the
+  worked example of the shape it should take.
+- The correct round-4 recommendation is a **partial** correction plus a statement about
+  calibration. The bridge is clean and worth applying; it leaves −0.927 pKD. An agent
+  that corrects and stops has got half the round, and `if_wrong` is where that shows.
+- Applying the ruling is `import_round.py --offset always --authority decision_004`,
+  which rewrites that round's snapshot in the corrected frame — and refuses unless
+  `decision_004` is ruled and recommends exactly that. Correcting round 4 makes rounds 5
   and 6 go quiet, and `check.py` verifies that.
+- Round 4 has **no `models/run_004.json`**, because the loop stopped before fitting it.
+  That is the flagged-round contract working, not a missing file.
 - The batch is 48 inclusive: 2 controls, 2 replicates, 2 exploration slots, 42 fresh
   picks. Only 3 of the re-measured designs are the bridge; the best-so-far control is
   re-run to confirm it and is deliberately excluded from the offset estimate.
+- Decision 71 asks for a `main(argv)` on every pipeline script, checked at the start of
+  5b. All seven have one.
 
 ## Repo map
 
@@ -227,6 +316,7 @@ than a single-cause round, and it is what phase 4 has to get right.
 | `core/surrogate.py` | The two recipes, their cross-validation, and the bake-off between them |
 | `core/acquisition.py` | Expected improvement, diversity-penalized selection, batch composition |
 | `core/reconcile.py` | Replicates, censoring, bridging offsets, the anomaly flag |
+| `core/diagnostics.py` | The five library tests a flagged round is read with. Read-only, and none of them decides anything |
 | `core/project.py` | Template instantiation and project-state accessors |
 | `data/` | The simulated laboratory. Never imported by `core/` |
 | `data/synthetic.py` | The landscape: additive site effects + pairwise epistasis + one cliff |
@@ -236,14 +326,14 @@ than a single-cause round, and it is what phase 4 has to get right.
 | `projects/demo-trastuzumab/` | The committed demo project |
 | `init_project.py` | Template → project directory. Writes no designs; not part of the round loop |
 | `skills/adaptive-optimization/SKILL.md` | The skill: state contract, the round loop, the diagnosis procedure, four rules |
-| `skills/adaptive-optimization/scripts/` | The five pipeline scripts. Thin wrappers over `core/`, no network, no lab |
+| `skills/adaptive-optimization/scripts/` | The five pipeline scripts plus `run_diagnostic.py` and `record_decision.py`. Thin wrappers over `core/`, no network, no lab |
 | `lims.py` | The mock LIMS. Mints identifiers, owns the plate layout, holds the oracle |
 | `run_rounds.py` | A dumb scheduler over the five scripts. Stops on a flagged round |
 | `lims_store/` | The registry's own records, outside the project. Exports are gitignored |
 | `simulate_campaign.py` | The evaluator. The only thing permitted to read landscape values |
 | `web/public/assets/campaign.json` | The proof chart's data, written by the evaluator |
 | `plot_campaign.py` | Renders the proof chart from `campaign.json`. matplotlib lives here, never in `core/` |
-| `check.py` | Invariant verification, 73 checks. Run it after any phase |
+| `check.py` | Invariant verification, 103 checks. Run it after any phase |
 
 ## What is real and what is staged
 
@@ -251,7 +341,10 @@ than a single-cause round, and it is what phase 4 has to get right.
 | --- | --- |
 | Surrogate fitting, calibration, constraint filtering, batch acquisition | **Real.** Pure numpy, every round, browser and CLI |
 | The five pipeline scripts and the round graph | **Real.** Six rounds through the CLI, selecting the same wells as the evaluator |
-| The five diagnostics and the decision record | **Not built.** Phase 4. `SKILL.md` names them and says they cannot be run |
+| The five diagnostics | **Real.** Pure numpy, read-only, run from the CLI over the committed project |
+| The decision record | **Real, and exercised once.** Round 2 carries a full record with a ruling. Round 4's is phase 5's gate and is deliberately unwritten |
+| The push-back round trip | **Real in code, not yet committed.** `check.py` drives a two-pass record end to end; the committed one lands with round 4 |
+| `drop_wells` | **Real, exercised in `check.py` and not in the demo.** `import_round.py --drop-plate` runs under a ruling that recommends it, and refuses without one. No round in this campaign needs it |
 | Both model recipes and the bake-off between them | **Real.** `ridge_onehot` against `gp_pca64` over the one-hot block |
 | Developability and liability scores | **Real** deterministic calculations, labelled computed throughout |
 | Affinity values | **Simulated.** Synthetic landscape with pre-registered parameters |

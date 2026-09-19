@@ -1,6 +1,6 @@
 {
   "approval": {
-    "at": "2026-09-19T16:43:27+00:00",
+    "at": "2026-09-19T17:53:24+00:00",
     "by": "d.webster",
     "note": "",
     "status": "approved"
@@ -164,19 +164,19 @@
     "f3b120afcfcb",
     "669003b34ff7"
   ],
-  "hash": "sha256:4c974764005adab40ab3fbab8f2b814006d85452bf3901fad0c936173f91a2f0",
+  "hash": "sha256:0783c299dc52b513a4f5595b41eb9f4995bac19bcb31fe9215cd91c3ff654fda",
   "incumbent": 11.076553,
   "inputs": {
     "designs": "sha256:1c2267aae544a4e9c3c561b759388dad7219cb7f6785a9676c608cb483a49b65",
-    "model_run": "sha256:902dfe0e774522f3adb0365a439daae52945618230bcdb8894c0361871ec6e4c",
-    "objectives": "sha256:8ae096d4f819312e47981ae1453c90a8325d953829f61ff0ccced2bcd2360195",
-    "pool": "sha256:d6b5dbd34d50866458b93a35e0622b3362bf24ca2597a40027307ba4baae4dc4"
+    "model_run": "sha256:2bbcf7a19bbdd3fac826f65c09dc6e5a1bab2486cfb563eeffab38bc505b8d0f",
+    "objectives": "sha256:e459b8c9eb21e34feda142cc7cae4c4695eaa5d915d42ea0907b095d87ac92c3",
+    "pool": "sha256:8050c26301fa5764cccc04c7e6688fc2f4345b120fc4792b86e8028035ad33b9"
   },
   "min_pairwise_distance": 1.0,
   "mode": "guided",
   "model_run": {
     "file": "models/run_002.json",
-    "hash": "sha256:902dfe0e774522f3adb0365a439daae52945618230bcdb8894c0361871ec6e4c"
+    "hash": "sha256:2bbcf7a19bbdd3fac826f65c09dc6e5a1bab2486cfb563eeffab38bc505b8d0f"
   },
   "model_winner": "ridge_onehot",
   "n_observed": 87,

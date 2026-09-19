@@ -488,3 +488,76 @@ non-optional.
 finds that two of the four claimed gaps are already covered by Files and artifact history,
 the deliverable is a shorter list built properly, not the same list argued harder. That
 sentence is in SPEC.md's risk section so it is read before phase 6 rather than after.
+
+### Phase 4: the diagnostics, the decision record, and what the writer refuses
+
+The five tests, `run_diagnostic.py` and `record_decision.py`, plus a first ruling in the
+committed demo project. Nothing here touches the landscape, the threshold, the
+parameters, the seed or any published number; the campaign was re-run and round 2 still
+flags at +0.765, round 3 is still clear at +0.048, and round 4 still flags at −2.046 with
+a bridge of −1.014 (se 0.059).
+
+| # | Decision | Reasoning |
+| --- | --- | --- |
+| 72 | `offset_from_controls` reads the bridge estimate the snapshot already carries rather than estimating its own, and adds only the concordance test | `import_round` computed it with `reconcile.offset_from_bridge` and hashed it into the snapshot. A diagnostic that recomputed the same quantity by a second route could disagree with the evidence record about a number they both claim to hold, which is the fork non-negotiable 2 forbids, one level down from the science |
+| 73 | The concordance test compares the spread of the bridge deltas against the round's **own** read-noise scale, estimated from the replicate reads, not against a pre-registered constant | The shared designs are the same molecules measured twice, so their deltas should differ only by read noise. Estimating that noise from the round in hand means the test inherits no number nobody checked, and it degrades gracefully if the assay's noise changes — which, in a round that flagged because the assay version changed, is exactly the case that matters |
+| 74 | Tolerances go in the template as `diagnostics_policy`, not in the code as defaults: `bridge_concordance_k` 2.0, `replicate_outlier_k` 3.0, `calibration_bins` 4, interval 0.80. Template bumped to 1.1.0 | They decide whether a round may be corrected at all, which makes them triggers, and the anomaly trigger is already a template declaration for the same reason. Declared ahead of any conversation is the template thesis; chosen while reading a round is the thing the thesis is against. Justified in the template's own note, on grounds independent of what round 4 does |
+| 75 | `calibration_by_region` takes a **counterfactual offset**, and the offset is a named source (`bridge`) rather than a number | It is the test that separates "an assay shift" from "an assay shift plus something else", and it answers the question a correction is actually making: if this round were only the shift, correcting by it would restore coverage. Accepting a free float would let a number the model typed enter a code path, so the argument names where the number comes from and `core/` fetches it |
+| 76 | `residual_by_mutation_class` takes `--by position` or `--by n_mutations`, and nothing finer | Position is the granularity a structure-activity cliff lives at, and it is the cut that rules the cliff out. Mutation count is the cut that shows a model extrapolating past its training set, which is what round 2 turned out to be and what nothing else in the library could see. A per-substitution cut would produce classes of one or two, which invites over-reading noise; that question is the documented ad hoc example instead |
+| 77 | `calibration_by_region` uses four bins, not the deciles SPEC.md asked for | A coverage estimate needs enough designs per bin to tell 0.8 from 0.5. At a batch of 48 quartiles give about twelve each; deciles give five, which quantizes coverage to multiples of 0.2 and reports noise as structure. SPEC.md is wrong on this and the rule is to say so rather than build it and hedge |
+| 78 | Every test reports `n` and `n_fresh` beside every mean, and `residual_by_mutation_class` reports the size of the *other* side of each comparison | Round 4's position-102 class holds 43 of 46 designs, so "that class against the rest" is a comparison against three. A cause that could explain a whole round has to appear in a class large enough to move it, and the only way to make that readable rather than a trap is to print the counts next to the means. It is also how the in-sample confound in round 2 stays visible |
+| 79 | `record_decision.py` **runs the diagnostics itself** and refuses a payload that supplies its own `result` | Non-negotiable 7 said the model produces no numbers, and until now that was a rule in a file. Making the writer the thing that computes closes the channel: the agent names hypotheses, tests and readings, and there is no field through which a number it produced can reach a decision record. `ad_hoc` is the exception and is labelled one-off and unversioned, exactly as specified |
+| 80 | The writer refuses four more things: a test outside the template's list, a correction with no concordant bridge, an empty `if_wrong`, and a second pass that ignores the test a ruling asked for | Each was already written down. A rule that is written down and not enforced is a rule the demo has to be trusted about; a rule that returns exit code 2 is one the audience can test. The bridge refusal in particular is SKILL.md rule 2, and refusing to correct when the shared designs disagree is the behaviour SPEC.md calls the better product |
+| 81 | `import_round.py --authority decision_NNN` validates the record: it must exist, be ruled, and recommend the action being taken. A policy authority is still taken at its word | "No action is taken on an unruled record" was a sentence. Now a correction cannot cite a ruling that said `refit_only`. Policy authorities stay unchecked because they cover the rounds nobody had to think about — and a policy never makes a flagged round ruled, which is the distinction `project.names_decision` exists to hold in one place |
+| 82 | Ruled-ness is a property of the decision record, not of the snapshot's `frame.authority` | The commonest correct ruling on a flagged round — refit and touch nothing — changes no measurement, so it moves no frame and there is nothing for a re-import to record. Deriving it from the frame would mean either leaving round 2 permanently blocked or re-importing it to write a field, which rewrites a snapshot to record that nothing happened. `frame.authority` describes the frame and keeps saying `unruled`, which is true; `project.is_ruled` describes the round |
+| 83 | `drop_wells` is implemented as `--drop-plate`, exercised in `check.py` and in no demo round | An enumerated action bound to a code path is worth nothing if one of the four verbs has no code path — that is failure mode 1 inside the governance surface. Plates are the granularity the plate hypothesis is about, and filtering rows before the join is ten lines. No round in this campaign needs it, and the staged table says so rather than implying a demo beat that does not exist |
+| 86 | `residual_by_plate` groups by plate only, and the "and by well position" in SPEC.md is struck | The snapshot averages the replicate reads into one record per design and does not carry wells, and the simulated lab has a per-plate offset term and no well-position term at all. A well-position panel over this data is a test that cannot find anything, dressed as a test that could — failure mode 1, inside the diagnostic library. Keeping wells through reconciliation to serve it would change the evidence schema for a result known in advance to be empty |
+| 84 | Round 2 is diagnosed and ruled in phase 4; round 4 is deliberately left unwritten | Round 4's record is the hour-5 gate. Writing it by hand now would make the gate a test of whether an agent can reproduce an answer already sitting in the repo. Round 2 is the easier case, wants the opposite ruling, and proves the whole apparatus end to end — so the machinery is exercised and the gate stays a gate |
+| 85 | The demo project was rebuilt so the loop actually stops at round 2, rather than being driven past it with `--ignore-flags` | The committed state is now what the product does: stop, diagnose, rule, continue, stop again. Round 4 has no `models/run_004.json` at all, because the loop stopped before fitting it, and that absence is the flagged-round contract rather than a missing file |
+
+**What round 2 turned out to be, which was not what was expected.** Decision 39 recorded
+the positive flag as "a model fit on single mutants under-predicts the first double
+mutants", and that is right as far as it goes. What the diagnostics show is sharper: over
+the 42 fresh picks the model's predictions span **0.009 pKD** while its own predictive
+standard deviation averages **0.406**. It was not under-predicting the doubles so much as
+declining to distinguish between them — reporting the parent value with wide error bars —
+and the +0.765 surprise is what happens when a batch chosen that way turns out to contain
+real improvements. No library test reports the spread of the predictions themselves, so
+that number is in the record as an ad hoc result with its source inlined, which is the
+escape hatch working as designed on its first real use.
+
+The record also names a confound it cannot resolve: the three single mutants that came
+back on target are also the designs carried over from round 1, so they were in the
+training set, and "the model handles singles" and "the model handles what it has seen"
+are not separable from round 2 alone. Round 3 separates them. Saying so in `if_wrong`
+is worth more than picking one.
+
+**Two things phase 4 found that were not diagnostics at all.**
+
+`init_project.py --force` rewrote the four top-level files and reset the round graph, and
+left every numbered artifact where it was. Rebuilding the demo project therefore produced
+a chimera: rounds 1 and 2 from the new build, rounds 3 and 4 inherited from the old one,
+under a round graph that had never heard of them. The scripts read artifacts by filename,
+so the stale ones were found and used. `--force` now clears the five artifact directories
+and prints how many it removed. It is the only thing in the build that deletes anything.
+
+`run_rounds.py` stopped on a flagged round and said to record a ruling, but not how to
+resume. The obvious `--start N` re-runs round N from candidate generation and resubmits it
+to the LIMS. The stop now prints the exact commands, including the distinction that
+matters: a ruling that changes no data goes straight to `fit_surrogates.py`, and only one
+that moves the frame needs a re-import.
+
+**On "each under twenty lines".** Three of the five are, counting their arithmetic and
+their returned record together. `residual_by_mutation_class` and `calibration_by_region`
+run to about thirty, and almost all of the excess is the dictionary they return — the
+per-class counts, the comparison against the other classes, the note that gives a number
+its scale. The computation in each is under ten lines. The rule's purpose is that an
+audience can read them, and padding the count by moving the output into a helper would
+serve the number rather than the purpose.
+
+**Checks went from 73 to 103.** The new ones cover the phase-4 done-condition, that
+`run_diagnostic.py` writes nothing, each of the five refusals, the two-pass push-back
+round trip end to end, that every number in a written record reproduces when its test is
+re-run against the hashed inputs, that both halves of the fourth verb work — a ruling can
+drop a plate's wells and nothing can drop them without one — and that round 2 is ruled
+while having moved nothing.

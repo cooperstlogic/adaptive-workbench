@@ -25,7 +25,7 @@
     ],
     "max_mutations": 2
   },
-  "created": "2026-09-19T16:43:23+00:00",
+  "created": "2026-09-19T17:52:59+00:00",
   "diagnostics": [
     "offset_from_controls",
     "residual_by_plate",
@@ -33,11 +33,18 @@
     "replicate_concordance",
     "calibration_by_region"
   ],
+  "diagnostics_policy": {
+    "bridge_concordance_k": 2.0,
+    "calibration_bins": 4,
+    "interval": 0.8,
+    "note": "Tolerances for the diagnostic library, declared by the template rather than chosen while reading a round. The bridge is the same molecules measured twice, so its members should differ only by read noise: a spread wider than 2.0 x the round's own read-noise scale means they are telling different stories and there is no single number to correct by. 3.0 x that scale flags a construct whose two reads disagree, which over a batch of 48 expects about one false flag every eight rounds. Coverage is split into 4 bins and not deciles because a coverage estimate needs enough designs per bin to tell 0.8 from 0.5: at a batch of 48, quartiles give about twelve designs each, while deciles give five and quantize coverage to multiples of 0.2.",
+    "replicate_outlier_k": 3.0
+  },
   "editable_region": [
     99,
     107
   ],
-  "hash": "sha256:8ae096d4f819312e47981ae1453c90a8325d953829f61ff0ccced2bcd2360195",
+  "hash": "sha256:e459b8c9eb21e34feda142cc7cae4c4695eaa5d915d42ea0907b095d87ac92c3",
   "model_recipes": [
     "ridge_onehot",
     "gp_pca64"

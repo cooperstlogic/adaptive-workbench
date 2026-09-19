@@ -37,6 +37,14 @@ round is one where an assay shift and a real structure-activity cliff produce
 the same first look and correcting the wrong one erases the finding. Moving
 such a round takes ``--offset always`` and an authority that names the
 decision record.
+
+An authority that names a decision record is checked against it. The record
+has to exist, to have been ruled on by a named human, and to recommend the
+action being taken -- so a correction cannot cite a ruling that says something
+else, and ``--drop-plate`` cannot cite one that never mentioned dropping
+anything. An authority naming a standing policy is taken at its word, because
+a policy covers the rounds nobody had to think about; a flagged round is not
+one of those and a policy never makes it ruled.
 """
 
 import argparse
@@ -70,6 +78,35 @@ def read_results(path):
     return rows
 
 
+def check_authority(state, authority, apply_offset, dropping):
+    """-> a reason to stop, or None.
+
+    An enumerated action bound to a code path is only worth something if the
+    code path insists on the ruling. This is where it insists.
+    """
+    named = project.names_decision(authority)
+    if named is None:
+        return None
+    record = project.read_decision(state, int(named.split("_")[1]))
+    if record is None:
+        return "%s does not exist in this project" % named
+    if record["status"] != "ruled":
+        return ("%s is %s, not ruled. No action is taken on an unruled record"
+                % (named, record["status"]))
+    verdict = record["ruling"]["verdict"]
+    if verdict not in ("accepted", "accepted_with_modification"):
+        return "%s was %s by %s; nothing about it authorizes a change" % (
+            named, verdict, record["ruling"]["by"])
+    action = record["recommendation"]["action"]
+    if apply_offset and action != "apply_offset_correction":
+        return ("%s recommends %s, which is not a correction to the frame. Citing it for "
+                "one would put a change in the project that nobody ruled on"
+                % (named, action))
+    if dropping and action != "drop_wells":
+        return "%s recommends %s, not drop_wells" % (named, action)
+    return None
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -79,6 +116,10 @@ def main(argv=None):
     ap.add_argument("--offset", choices=("never", "if-clear", "always"), default="never",
                     help="when to move this round into the project frame by its bridge "
                          "estimate (default: never)")
+    ap.add_argument("--drop-plate", action="append", default=[], metavar="PLATE",
+                    dest="drop_plate",
+                    help="discard every well on this plate before reconciling, under a "
+                         "ruling that recommended drop_wells. Repeatable")
     ap.add_argument("--authority", default=None, metavar="TEXT",
                     help="what authorizes the correction: a decision record id, or the "
                          "named policy that applies to rounds nobody had to rule on")
@@ -88,8 +129,18 @@ def main(argv=None):
         print("--offset %s needs --authority: a correction with nothing standing behind it "
               "is not recorded" % args.offset, file=sys.stderr)
         return 2
+    if args.drop_plate and not args.authority:
+        print("--drop-plate needs --authority: discarding wells is an action, and no action "
+              "is taken on an unruled record", file=sys.stderr)
+        return 2
 
     state = project.load(args.project)
+    problem = check_authority(state, args.authority,
+                              apply_offset=args.offset != "never",
+                              dropping=bool(args.drop_plate))
+    if problem:
+        print(problem, file=sys.stderr)
+        return 2
     obj = state["objectives"]
     batch = project.read_artifact(state, "batches", args.round)
     if batch is None:
@@ -97,6 +148,15 @@ def main(argv=None):
         return 2
 
     rows = read_results(args.results)
+
+    # Dropping comes before the join, because a plate artifact is a property
+    # of the wells and not of the designs that happened to sit on them.
+    dropped = [r for r in rows if r["plate"] in set(args.drop_plate)]
+    if args.drop_plate and not dropped:
+        print("--drop-plate %s matched no wells in this export"
+              % ", ".join(args.drop_plate), file=sys.stderr)
+        return 2
+    rows = [r for r in rows if r["plate"] not in set(args.drop_plate)]
 
     # The join. The registry's sample id is the only way back to a design, so
     # reconciliation is real work rather than a lookup by sequence.
@@ -174,7 +234,10 @@ def main(argv=None):
         authority, frame_note = "unruled", (
             "raw assay frame. The bridge estimate is recorded and not applied: this round "
             "is flagged, and an assay shift and a real structure-activity cliff produce the "
-            "same first look, so correcting the wrong one would erase the finding")
+            "same first look, so correcting the wrong one would erase the finding. This "
+            "field describes the frame, not the round: a ruling that changes no data -- "
+            "which is the right answer to a flagged round more often than not -- leaves it "
+            "exactly here, and the round's decision record is what says it was ruled")
     else:
         authority, frame_note = "not_applied", (
             "raw assay frame; the caller asked for no correction")
@@ -219,13 +282,15 @@ def main(argv=None):
         "source": {
             "kind": state["project"]["sources"]["registry"]["kind"],
             "file": os.path.basename(args.results),
-            "rows": len(rows),
+            "rows": len(rows) + len(dropped),
         },
         "reconciliation": {
             "rows": len(rows),
             "samples": len({r["sample_id"] for r in joined}),
             "designs": len(measurements),
             "unreconciled_rows": 0,
+            "dropped": {"plates": sorted(set(args.drop_plate)), "rows": len(dropped),
+                        "authority": args.authority if dropped else None},
             "approved_not_returned": absent,
             "returned_not_approved": extra,
             "n_ok": n_ok,
@@ -264,6 +329,9 @@ def main(argv=None):
              "%+.3f)" % known))
     print("rows            %d joined to %d designs through the reference table"
           % (len(rows), len(measurements)))
+    if dropped:
+        print("dropped         %d wells on plate %s, under authority %r"
+              % (len(dropped), ", ".join(sorted(set(args.drop_plate))), args.authority))
     print("returned        %d usable, %d censored at the limit, %d construct failures"
           % (n_ok, n_cens, n_failed))
     if absent:

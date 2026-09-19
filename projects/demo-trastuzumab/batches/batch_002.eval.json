@@ -56,7 +56,7 @@
       "rmse": 1.018606
     }
   },
-  "hash": "sha256:5a05abf8e9457fb81e44cb4b97bc9fb14ff2eb7fb51c516d794ed9ce9053253e",
+  "hash": "sha256:3b0db3dabf9dbb99d82598a814eb754645244ce591895d6e93710ea639d480e5",
   "improvement": {
     "best_fresh_this_round": 11.076553,
     "best_this_round": 11.076553,
@@ -65,9 +65,9 @@
     "mean_fresh": 9.837167
   },
   "inputs": {
-    "batch": "sha256:941ce644042a96fb7e4c4869144ec5485b781f9cf60f9035f83079d7a7c9ece2",
-    "model_run": "sha256:173ad41534c8242db72eb081d9beb2f3704df718aa9f67c7f1f3b47ca61bdf18",
-    "snapshot": "sha256:b6fb78ca0627d17061859281d8930593d835c57c44883687a034857181805cb9"
+    "batch": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81",
+    "model_run": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d",
+    "snapshot": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d"
   },
   "model_run": 1,
   "model_winner": "ridge_onehot",

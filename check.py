@@ -10,8 +10,11 @@ not that a test is being fussy.
 """
 
 import ast
+import hashlib
+import json
 import math
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -293,9 +296,11 @@ def main():
     skill_dir = os.path.join(REPO, "skills", "adaptive-optimization")
     scripts_dir = os.path.join(skill_dir, "scripts")
     expected = ["evaluate_prior.py", "fit_surrogates.py", "generate_candidates.py",
-                "import_round.py", "select_batch.py"]
+                "import_round.py", "record_decision.py", "run_diagnostic.py",
+                "select_batch.py"]
     present = sorted(f for f in os.listdir(scripts_dir) if f.endswith(".py"))
-    check("the five pipeline scripts are present", present == expected, ", ".join(present))
+    check("the five pipeline scripts and the two diagnosis scripts are present",
+          present == expected, ", ".join(present))
 
     # Same method as the core boundary check above: read the imports rather than
     # grep the prose, because a docstring is allowed to name the oracle.
@@ -337,9 +342,9 @@ def main():
     check("SKILL.md carries all four rules the agent may not break",
           all(r in flat for r in rules),
           "%d of 4 present" % sum(1 for r in rules if r in flat))
-    check("SKILL.md labels the two phase-4 scripts as not built",
-          skill_md.count("**Not built yet**") == 2 and "Do not simulate them." in skill_md,
-          "CLAUDE.md failure mode 1: if something is stubbed, label it stubbed")
+    check("SKILL.md no longer labels anything in the round loop as unbuilt",
+          "**Not built yet**" not in skill_md and "Do not simulate them." not in skill_md,
+          "the two diagnosis scripts landed in phase 4")
 
     print("\nPhase 3: six rounds through the CLI (phase 3 done-condition)")
     camp_naive = camp["runs"]["guided_naive"][0]
@@ -481,9 +486,302 @@ def main():
           % (eval4["calibration"]["realized_coverage"],
              eval4["calibration"]["held_out_coverage_at_fit"]))
     check("the unruled round is visible to the next fit rather than silently pooled",
-          4 in project.read_artifact(demo, "models", 4)["unruled_flagged_rounds"],
-          "run_004 records unruled flagged rounds %s"
-          % project.read_artifact(demo, "models", 4)["unruled_flagged_rounds"])
+          project.read_artifact(demo, "models", 4) is None
+          and project.unruled_flagged_rounds(demo) == [4],
+          "round 4 has no model run at all: the loop stopped before fitting it, which is "
+          "what a flagged round is supposed to do")
+
+    print("\nPhase 4: the diagnostics, and the decision record")
+    from core import diagnostics
+
+    scripts = os.path.join(REPO, "skills", "adaptive-optimization", "scripts")
+
+    def cli(script, *args, **kw):
+        return subprocess.run([sys.executable, os.path.join(scripts, script)] + list(args),
+                              cwd=REPO, capture_output=True, text=True, **kw)
+
+    def tree_hash(root):
+        """Every byte under a project directory, so 'writes nothing' is checked."""
+        out = {}
+        for r, _, fs in os.walk(root):
+            for f in sorted(fs):
+                p = os.path.join(r, f)
+                out[os.path.relpath(p, root)] = hashlib.sha256(open(p, "rb").read()).hexdigest()
+        return out
+
+    demo_root = demo["paths"]["root"]
+    check("the template permits exactly the five diagnostics the library implements",
+          tuple(demo["objectives"]["diagnostics"]) == diagnostics.TESTS,
+          ", ".join(diagnostics.TESTS))
+    check("the template declares the tolerances the tests measure against",
+          all(k in demo["objectives"]["diagnostics_policy"] for k in diagnostics.DEFAULT_POLICY),
+          "declared ahead of any conversation, not chosen while reading a round")
+
+    before = tree_hash(demo_root)
+    results, failed = {}, []
+    for test in diagnostics.TESTS:
+        r = cli("run_diagnostic.py", "--project", demo_root, "--round", "4", "--test", test)
+        if r.returncode != 0:
+            failed.append("%s: %s" % (test, r.stderr.strip()[-120:]))
+            continue
+        results[test] = json.loads(r.stdout)["result"]
+    check("PHASE 4 DONE-CONDITION: all five tests return a number on the round-4 snapshot",
+          not failed and len(results) == 5, "; ".join(failed) or "five for five")
+    check("run_diagnostic.py writes nothing", tree_hash(demo_root) == before,
+          "reading a round is not a decision, so nothing about the project changed")
+
+    if len(results) == 5:
+        off = results["offset_from_controls"]
+        cal = results["calibration_by_region"]
+        plate = results["residual_by_plate"]
+        rep = results["replicate_concordance"]
+        finite = all(isinstance(v, float) and math.isfinite(v) for v in
+                     (off["offset_pkd"], off["se"], off["delta_sd"], cal["coverage"],
+                      plate["max_gap"], rep["read_noise_scale"]))
+        check("the numbers they return are finite and carry their own scale", finite,
+              "offset %+.3f se %.3f, coverage %.2f, plate gap %.3f, noise scale %.3f"
+              % (off["offset_pkd"], off["se"], cal["coverage"], plate["max_gap"],
+                 rep["read_noise_scale"]))
+        check("the bridge members agree, so the round has a correction available at all",
+              off["concordant"] is True and off["n_bridge"] >= 3,
+              "%d designs, spread sd %.3f inside a tolerance of %.3f"
+              % (off["n_bridge"], off["delta_sd"], off["concordance_tolerance"]))
+        check("the plates do not separate, so round 4 is not a plate artifact",
+              abs(plate["z_of_gap"]) < 2.0,
+              "gap %+.3f pKD, %.2f standard errors" % (plate["max_gap"], plate["z_of_gap"]))
+        check("no construct's replicates disagree, so round 4 is not an unstable read",
+              rep["n_flagged"] == 0,
+              "%d designs with two reads, none above %.3f"
+              % (rep["n_with_replicates"], rep["tolerance"]))
+
+        r = cli("run_diagnostic.py", "--project", demo_root, "--round", "4",
+                "--test", "residual_by_mutation_class", "--scope", "fresh")
+        classes = json.loads(r.stdout)["result"]["classes"]
+        cliff = classes.get(str(man["derived"]["cliff_position"]))
+        check("the cliff position is flat, which is the evidence that rules the cliff out",
+              cliff is not None and abs(cliff["vs_other_classes"]) < 0.5,
+              "position %d sits %+.3f pKD from the other classes over %d designs, against a "
+              "cliff depth of %.2f"
+              % (man["derived"]["cliff_position"], cliff["vs_other_classes"], cliff["n"],
+                 man["params"]["cliff_depth"]))
+
+        r = cli("run_diagnostic.py", "--project", demo_root, "--round", "4",
+                "--test", "calibration_by_region", "--offset", "bridge")
+        corrected = json.loads(r.stdout)["result"]
+        check("correcting round 4 by its bridge does not account for the round",
+              cal["coverage"] < 0.2 and 0.3 < corrected["coverage"] < 0.75
+              and abs(corrected["mean_residual"]) > 0.5,
+              "coverage %.2f raw, %.2f after a %+.3f correction, against %.2f nominal, and "
+              "%+.3f pKD of discrepancy still unexplained"
+              % (cal["coverage"], corrected["coverage"], corrected["offset_applied"],
+                 corrected["nominal_coverage"], corrected["mean_residual"]))
+
+    print("\nPhase 4: what the decision writer refuses")
+    with tempfile.TemporaryDirectory() as tmp:
+        sandbox = os.path.join(tmp, "demo-trastuzumab")
+        shutil.copytree(demo_root, sandbox)
+        # The exports are gitignored and regenerable from the committed store,
+        # so this pulls its own copy rather than assuming one is lying about.
+        store = os.path.join(tmp, "store.json")
+        shutil.copyfile(os.path.join(REPO, "lims_store", "demo-trastuzumab.json"), store)
+        results4 = os.path.join(tmp, "round4.csv")
+        subprocess.run([sys.executable, os.path.join(REPO, "lims.py"), "pull",
+                        "--project", sandbox, "--round", "R4", "--out", results4,
+                        "--store", store], cwd=REPO, capture_output=True, text=True)
+
+        def propose(payload, round_id=4):
+            path = os.path.join(tmp, "payload.json")
+            with open(path, "w") as fh:
+                json.dump(payload, fh)
+            return cli("record_decision.py", "--project", sandbox,
+                       "--round", str(round_id), "--propose", path)
+
+        def hypothesis(**kw):
+            base = {"claim": "the assay moved", "diagnostic": "offset_from_controls",
+                    "reading": "supported"}
+            base.update(kw)
+            return base
+
+        def payload(**kw):
+            base = {
+                "hypotheses": [hypothesis()],
+                "recommendation": {
+                    "action": "apply_offset_correction", "confidence": "high",
+                    "rationale": "the bridge is clean", "alternative_considered": "the cliff",
+                    "if_wrong": "the shared designs would not carry it",
+                },
+            }
+            base.update(kw)
+            return base
+
+        r = propose(payload(hypotheses=[hypothesis(result={"offset_pkd": -0.81})]))
+        check("it refuses a payload that supplies its own number",
+              r.returncode != 0 and "Results come from the diagnostic" in r.stderr,
+              "CLAUDE.md non-negotiable 7: the model produces no numbers")
+        r = propose(payload(hypotheses=[hypothesis(diagnostic="check_the_vibes")]))
+        check("it refuses a hypothesis naming a test outside the template's list",
+              r.returncode != 0 and "does not permit" in r.stderr,
+              "the permitted diagnostics are a template declaration, enforced in code")
+        r = propose(payload(hypotheses=[hypothesis(diagnostic="residual_by_plate")]))
+        check("it refuses a correction with no bridge test behind it",
+              r.returncode != 0 and "offset_from_controls" in r.stderr,
+              "SKILL.md rule 2: never pool across assay versions without a bridging set")
+        rec = dict(payload()["recommendation"], if_wrong="")
+        r = propose(payload(recommendation=rec))
+        check("it refuses a recommendation that will not say what would falsify it",
+              r.returncode != 0 and "if_wrong" in r.stderr,
+              "the field a sceptical scientist reads first is not optional")
+        rec = dict(payload()["recommendation"], confidence="refuses")
+        r = propose(payload(recommendation=rec))
+        check("it refuses a refusal that recommends an action anyway",
+              r.returncode != 0 and "no_action" in r.stderr,
+              "confidence 'refuses' pairs with no_action and nothing else")
+
+        # The push-back round trip, which is acceptance criterion 8 in miniature.
+        r = propose(payload())
+        ok = r.returncode == 0
+        r = cli("record_decision.py", "--project", sandbox, "--round", "4",
+                "--rule", "more_evidence_requested", "--by", "check.py",
+                "--request", "calibration_by_region", "--note", "show me coverage")
+        ok = ok and r.returncode == 0
+        rec4 = schema.read_json(os.path.join(sandbox, "decisions", "decision_004.json"))
+        check("a ruling can hand the work back, naming the test it wants",
+              ok and rec4["status"] == "awaiting_evidence"
+              and rec4["ruling"]["requested"]["diagnostic"] == "calibration_by_region",
+              "status %r, asked for %s"
+              % (rec4["status"], rec4["ruling"]["requested"]["diagnostic"]))
+        r = propose(payload())
+        check("it refuses a second pass that ignores what the ruling asked for",
+              r.returncode != 0 and "does not run it" in r.stderr,
+              "answering a push-back means running what was asked for")
+        r = propose(payload(hypotheses=[
+            hypothesis(),
+            hypothesis(claim="the offset does not restore coverage",
+                       diagnostic="calibration_by_region", args={"offset": "bridge"},
+                       reading="not supported")]))
+        ok = r.returncode == 0
+        r = cli("record_decision.py", "--project", sandbox, "--round", "4",
+                "--rule", "accepted_with_modification", "--by", "check.py",
+                "--note", "correct the offset, and widen exploration next round")
+        rec4 = schema.read_json(os.path.join(sandbox, "decisions", "decision_004.json"))
+        check("the second pass, its extra test and the final ruling are all kept",
+              ok and r.returncode == 0 and rec4["n_passes"] == 2
+              and rec4["status"] == "ruled"
+              and rec4["passes"][0]["ruling"]["verdict"] == "more_evidence_requested"
+              and rec4["passes"][1]["answering"] == "calibration_by_region",
+              "%d passes, %s then %s" % (rec4["n_passes"],
+                                         rec4["passes"][0]["ruling"]["verdict"],
+                                         rec4["passes"][1]["ruling"]["verdict"]))
+
+        # Every number in the record has to come back the same when re-run.
+        sb = project.load(sandbox)
+        drifted = []
+        for h in rec4["hypotheses"]:
+            again = diagnostics.run(
+                h["diagnostic"], project.read_artifact(sb, "evidence", 4),
+                project.read_artifact(sb, "batches", 4), project.designs_by_id(sb),
+                policy=sb["objectives"]["diagnostics_policy"], args=dict(h["args"]))
+            if schema.content_hash(again) != schema.content_hash(h["result"]):
+                drifted.append(h["diagnostic"])
+        check("every number in the record reproduces when its test is re-run",
+              not drifted, "%d results recomputed from the hashed inputs"
+              % len(rec4["hypotheses"]))
+
+        r = cli("import_round.py", "--project", sandbox, "--round", "4", "--results",
+                results4,
+                "--offset", "always", "--authority", "decision_004")
+        check("a ruling that authorizes the correction lets the frame move",
+              r.returncode == 0 and schema.read_json(
+                  os.path.join(sandbox, "evidence", "snapshot_004.json")
+              )["frame"]["authority"] == "decision_004",
+              "and CLAUDE.md non-negotiable 6: the action runs in code, after the ruling")
+        r = cli("import_round.py", "--project", sandbox, "--round", "4", "--results",
+                results4,
+                "--offset", "always", "--authority", "decision_002")
+        check("a correction cannot cite a ruling that recommended something else",
+              r.returncode != 0 and "refit_only" in r.stderr,
+              "decision_002 ruled refit_only, so it authorizes no change to the data")
+
+    # The fourth verb, in its own sandbox because a record is closed once ruled.
+    with tempfile.TemporaryDirectory() as tmp:
+        sandbox = os.path.join(tmp, "demo-trastuzumab")
+        shutil.copytree(demo_root, sandbox)
+        store = os.path.join(tmp, "store.json")
+        shutil.copyfile(os.path.join(REPO, "lims_store", "demo-trastuzumab.json"), store)
+        results4 = os.path.join(tmp, "round4.csv")
+        subprocess.run([sys.executable, os.path.join(REPO, "lims.py"), "pull",
+                        "--project", sandbox, "--round", "R4", "--out", results4,
+                        "--store", store], cwd=REPO, capture_output=True, text=True)
+        path = os.path.join(tmp, "payload.json")
+        with open(path, "w") as fh:
+            json.dump({"hypotheses": [{"claim": "plate R4P2 ran low",
+                                       "diagnostic": "residual_by_plate",
+                                       "reading": "supported"}],
+                       "recommendation": {"action": "drop_wells", "confidence": "medium",
+                                          "parameters": {"plates": ["R4P2"]},
+                                          "rationale": "the plate, not the molecules",
+                                          "alternative_considered": "an offset correction",
+                                          "if_wrong": "the remaining plate would read low too"}},
+                      fh)
+        ok = cli("record_decision.py", "--project", sandbox, "--round", "4",
+                 "--propose", path).returncode == 0
+        ok = ok and cli("record_decision.py", "--project", sandbox, "--round", "4",
+                        "--rule", "accepted", "--by", "check.py",
+                        "--note", "drop it").returncode == 0
+        r = cli("import_round.py", "--project", sandbox, "--round", "4",
+                "--results", results4, "--drop-plate", "R4P2",
+                "--authority", "decision_004")
+        snap = schema.read_json(os.path.join(sandbox, "evidence", "snapshot_004.json"))
+        dropped = snap["reconciliation"]["dropped"]
+        check("the fourth verb runs too: a ruling can drop a plate's wells",
+              ok and r.returncode == 0 and dropped["rows"] == 48
+              and dropped["authority"] == "decision_004"
+              and sorted({p for m in snap["measurements"] for p in m["plates"]}) == ["R4P1"],
+              "%d wells on %s discarded before the join, %d designs left"
+              % (dropped["rows"], ", ".join(dropped["plates"]),
+                 snap["reconciliation"]["designs"]))
+        r = cli("import_round.py", "--project", sandbox, "--round", "4",
+                "--results", results4, "--drop-plate", "R4P2")
+        check("and it cannot be done without one",
+              r.returncode != 0 and "no action is taken on an unruled record" in r.stderr,
+              "discarding wells is an action, and actions need a ruling")
+
+    print("\nPhase 4: round 2 in the committed demo project")
+    dec2 = project.read_decision(demo, 2)
+    snap2 = project.read_artifact(demo, "evidence", 2)
+    check("round 2 flags in the opposite direction to round 4",
+          snap2["flagged"] and snap2["anomaly"]["mean_signed_residual"] > 0.5
+          and snap4["anomaly"]["mean_signed_residual"] < -0.5,
+          "round 2 %+.3f, round 4 %+.3f pKD -- the same statistic, two correct answers"
+          % (snap2["anomaly"]["mean_signed_residual"],
+             snap4["anomaly"]["mean_signed_residual"]))
+    check("round 2 is ruled, and the ruling changed no measurement",
+          dec2 is not None and dec2["status"] == "ruled"
+          and dec2["recommendation"]["action"] == "refit_only"
+          and snap2["frame"]["offset_applied"] == 0.0
+          and all(m["value"] == m["raw_value"] for m in snap2["measurements"]
+                  if m["value"] is not None),
+          "%s, %s by %s" % (dec2["recommendation"]["action"], dec2["ruling"]["verdict"],
+                            dec2["ruling"]["by"]))
+    check("ruled-ness is read from the decision record, not from the frame",
+          project.is_ruled(demo, 2) and snap2["frame"]["authority"] == "unruled",
+          "a ruling that changes no data moves no frame, and round 2 is still ruled")
+    check("the ruling unblocked the loop and round 4 is where it stops now",
+          project.unruled_flagged_rounds(demo) == [4]
+          and project.read_artifact(demo, "models", 2) is not None,
+          "rounds still waiting on a human: %s" % project.unruled_flagged_rounds(demo))
+    check("its hypotheses cover every explanation, including the ones rejected",
+          len({h["diagnostic"] for h in dec2["hypotheses"]}) == 5
+          and sum(1 for h in dec2["hypotheses"] if h["reading"] == "not supported") >= 3,
+          "%d hypotheses over all five tests, %d of them unsupported"
+          % (len(dec2["hypotheses"]),
+             sum(1 for h in dec2["hypotheses"] if h["reading"] == "not supported")))
+    check("its ad hoc analysis is labelled one-off and carries its own source",
+          all(a["code"] and "one-off, unversioned" in a["note"] for a in dec2["ad_hoc"]),
+          "%d ad hoc results, none of them an input to a code path" % len(dec2["ad_hoc"]))
+    check("every hypothesis in it points at the snapshot and batch it was computed from",
+          all(h["inputs"]["snapshot"] == snap2["hash"] for h in dec2["hypotheses"]),
+          "snapshot %s" % schema.short_hash(snap2["hash"]))
 
     if FAILS:
         print("\n%d of %d checks FAILED:" % (len(FAILS), TOTAL))

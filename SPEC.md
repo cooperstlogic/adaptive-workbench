@@ -1,7 +1,5 @@
 # Adaptive Optimization Workbench — One-Day Prototype Spec
 
-2026-09-18 · @Someone
-
 ## Purpose and thesis
 
 The prototype exists to show Anthropic one thing: Claude Science is a workbench for analyses, and the missing layer above it is **persistent decision state across experimental rounds** — and the reason that layer matters is that it is what lets a model exercise judgment across rounds rather than answer one question at a time.
@@ -176,10 +174,10 @@ Rows one and four produce the same first look and opposite actions. Telling them
 | Test | Returns |
 | --- | --- |
 | offset\_from\_controls | Additive per-round offset estimated from designs shared with earlier rounds, its standard error, the bridge size, and whether the bridge members agree with each other |
-| residual\_by\_plate | Mean prediction residual grouped by plate and by well position, with spread |
+| residual\_by\_plate | Mean prediction residual grouped by plate, with spread, and the largest gap between plates against its standard error |
 | residual\_by\_mutation\_class | Mean residual grouped by which position was mutated, and each class against the rest |
 | replicate\_concordance | Spread between replicate rows for the same sample, flagging designs whose replicates disagree beyond assay noise |
-| calibration\_by\_region | Coverage of the 80% interval overall and within predicted-value deciles |
+| calibration\_by\_region | Coverage of the 80% interval overall and within predicted-value bins, and the coverage a correction of a named size would leave |
 
 **The corrections are code too.** The agent never transforms data. It names an action — `apply_offset_correction`, `drop_wells`, `refit_only`, `no_action` — and a `core/` function performs it once a human has ruled.
 

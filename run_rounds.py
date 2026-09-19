@@ -113,9 +113,9 @@ def main(argv=None):
 
         state = project.load(proj)
         snap = project.read_artifact(state, "evidence", r)
-        if snap["flagged"] and snap["frame"]["authority"] == "unruled":
+        if snap["flagged"] and not project.is_ruled(state, r):
             print("\n" + "-" * 72)
-            print("ROUND %d IS FLAGGED AND UNRULED" % r)
+            print("ROUND %d IS FLAGGED AND HAS NO RULING" % r)
             print("-" * 72)
             print("  %s" % snap["anomaly"]["statistic"])
             print("  mean signed residual %+.3f %s over %d fresh designs, trigger %.2f"
@@ -129,9 +129,24 @@ def main(argv=None):
                   % (snap["frame"]["offset_estimate"]["offset"], snap["unit"],
                      snap["frame"]["offset_estimate"]["n"]))
             if not args.ignore_flags:
-                print("\n  A scheduler cannot decide what this means. Diagnose the round and")
-                print("  record a ruling, then re-import with --apply-offset --authority, or")
-                print("  re-run with --ignore-flags to pool the raw frame as returned.")
+                print("\n  A scheduler cannot decide what this means. The round is imported")
+                print("  and scored; what is missing is a ruling. To carry on:")
+                print("")
+                print("    run_diagnostic.py  --project %s --round %d --test ..." % (proj, r))
+                print("    record_decision.py --project %s --round %d --propose ..." % (proj, r))
+                print("    record_decision.py --project %s --round %d --rule ... --by ..."
+                      % (proj, r))
+                print("")
+                print("  If the ruling moves the data, re-import it first:")
+                print("    import_round.py --project %s --round %d --results %s \\"
+                      % (proj, r, csv_path))
+                print("        --offset always --authority decision_%03d" % r)
+                print("")
+                print("  Then fit this round and resume from the next one:")
+                print("    fit_surrogates.py --project %s --round %d" % (proj, r))
+                print("    run_rounds.py --start %d --rounds %d" % (r + 1, args.rounds))
+                print("")
+                print("  Or re-run with --ignore-flags to pool the raw frame as returned.")
                 print("\nstopped at round %d of %d" % (r, args.rounds))
                 return 3
             print("\n  --ignore-flags: pooling the raw frame as returned, which is the")

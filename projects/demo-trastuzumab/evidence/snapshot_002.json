@@ -21,7 +21,7 @@
   "frame": {
     "authority": "unruled",
     "known_version_offset": 0.0,
-    "note": "raw assay frame. The bridge estimate is recorded and not applied: this round is flagged, and an assay shift and a real structure-activity cliff produce the same first look, so correcting the wrong one would erase the finding",
+    "note": "raw assay frame. The bridge estimate is recorded and not applied: this round is flagged, and an assay shift and a real structure-activity cliff produce the same first look, so correcting the wrong one would erase the finding. This field describes the frame, not the round: a ruling that changes no data -- which is the right answer to a flagged round more often than not -- leaves it exactly here, and the round's decision record is what says it was ruled",
     "offset_applied": 0.0,
     "offset_estimate": {
       "designs": [
@@ -48,11 +48,11 @@
     },
     "offset_policy": "if-clear"
   },
-  "hash": "sha256:b6fb78ca0627d17061859281d8930593d835c57c44883687a034857181805cb9",
+  "hash": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d",
   "inputs": {
-    "batch": "sha256:941ce644042a96fb7e4c4869144ec5485b781f9cf60f9035f83079d7a7c9ece2",
+    "batch": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81",
     "designs": "sha256:865d6c2a972acf1a3e8ce82fa3038067b4e050a1eb23a0244c8a57c4910d8f3c",
-    "objectives": "sha256:8ae096d4f819312e47981ae1453c90a8325d953829f61ff0ccced2bcd2360195"
+    "objectives": "sha256:e459b8c9eb21e34feda142cc7cae4c4695eaa5d915d42ea0907b095d87ac92c3"
   },
   "measurements": [
     {
@@ -1164,6 +1164,11 @@
     "approved_not_returned": [],
     "censoring_rule": "kept as censored at the detection limit, carrying the flag",
     "designs": 48,
+    "dropped": {
+      "authority": null,
+      "plates": [],
+      "rows": 0
+    },
     "n_censored": 0,
     "n_failed": 3,
     "n_ok": 45,

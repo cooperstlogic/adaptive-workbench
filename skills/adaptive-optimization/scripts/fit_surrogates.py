@@ -79,8 +79,11 @@ def main(argv=None):
                                    recipes=tuple(obj["model_recipes"]))
     summary = surrogate.run_summary(run)
 
-    unruled = [s["round"] for s in snaps
-               if s["flagged"] and s["frame"]["authority"] == "unruled"]
+    # A flagged round is settled by a ruling and not by a frame move: the
+    # commonest correct ruling -- refit and touch nothing -- changes no
+    # measurement, so the snapshot it leaves behind still says its frame was
+    # never moved. Whether a human has ruled is read from the decision record.
+    unruled = project.unruled_flagged_rounds(state, through=args.round)
 
     record = schema.stamp({
         "schema_version": schema.SCHEMA_VERSION,
@@ -95,8 +98,8 @@ def main(argv=None):
         "rounds_included": [int(s["round"]) for s in snaps],
         "unruled_flagged_rounds": unruled,
         "pooling_note": ("measurements are pooled across %d rounds and %d assay versions; "
-                         "rounds %s are flagged and unruled, so their raw frame is being "
-                         "pooled as returned"
+                         "rounds %s are flagged and have no ruling, so their raw frame "
+                         "is being pooled as returned"
                          % (len(snaps), len({s["assay_version"] for s in snaps}), unruled)
                          if unruled else
                          "measurements are pooled across %d rounds; every flagged round has "
@@ -134,8 +137,8 @@ def main(argv=None):
                  "   <- winner" if name == record["winner"] else ""))
     print("selection       %s" % record["selection_rule"])
     if unruled:
-        print("pooling         rounds %s are flagged and unruled; their raw frame is pooled "
-              "as returned" % unruled)
+        print("pooling         rounds %s are flagged with no ruling; their raw frame is "
+              "pooled as returned" % unruled)
     print("predictions     %d pool members, written at %d decimals"
           % (record["pool_size"], PREDICTION_DECIMALS))
     print("wrote           %s" % os.path.relpath(path, args.project))

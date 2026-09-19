@@ -1,12 +1,12 @@
 {
   "censored_rule": "entered at the detection limit with a flag; biases them slightly upward, and a Tobit likelihood is the correct alternative",
   "feature_block": "onehot",
-  "hash": "sha256:902dfe0e774522f3adb0365a439daae52945618230bcdb8894c0361871ec6e4c",
+  "hash": "sha256:2bbcf7a19bbdd3fac826f65c09dc6e5a1bab2486cfb563eeffab38bc505b8d0f",
   "incumbent": 11.076553,
   "inputs": {
-    "objectives": "sha256:8ae096d4f819312e47981ae1453c90a8325d953829f61ff0ccced2bcd2360195",
-    "pool": "sha256:138cecb7dd999b59e07935cc406b4d24099cc9863f7aff1f234bd9fe0cafa3ca",
-    "snapshots": "sha256:9be1780cb5865ece16cdb15493c36d55bdf7929e279ff91ba7a47edf798a7809"
+    "objectives": "sha256:e459b8c9eb21e34feda142cc7cae4c4695eaa5d915d42ea0907b095d87ac92c3",
+    "pool": "sha256:2efb37ab59a03173ebba1bce8dc15145606ed893f03093274e82d8f7fdb56ddf",
+    "snapshots": "sha256:0117d2b88d63273d300e003ac9e145d6893afdd07210ae49fa63ff557604117d"
   },
   "n_censored": 0,
   "n_components": 64,
@@ -14605,7 +14605,7 @@
     0.63887
   ],
   "pool_size": 7294,
-  "pooling_note": "measurements are pooled across 2 rounds and 1 assay versions; rounds [2] are flagged and unruled, so their raw frame is being pooled as returned",
+  "pooling_note": "measurements are pooled across 2 rounds; every flagged round has a ruling",
   "prediction_decimals": 6,
   "recipes": {
     "gp_pca64": {
@@ -14654,8 +14654,6 @@
   "schema_version": 1,
   "selection_rule": "lowest held-out nlpd, ties to lower rmse",
   "unit": "pKD",
-  "unruled_flagged_rounds": [
-    2
-  ],
+  "unruled_flagged_rounds": [],
   "winner": "ridge_onehot"
 }

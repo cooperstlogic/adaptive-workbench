@@ -23,6 +23,29 @@ from core import project, schema
 REPO = os.path.dirname(os.path.abspath(__file__))
 
 
+def clear_artifacts(root):
+    """Empty the numbered artifacts so --force rebuilds rather than overlays.
+
+    Instantiating rewrites the four top-level files and resets the round
+    graph, but the snapshots, batches, pools, models and decisions are
+    numbered per round and would otherwise survive. A project that carried
+    round 4 from a previous build under a round graph that has never heard of
+    it is a chimera: the pipeline reads artifacts by filename, so the stale
+    ones are found, used, and silently mixed with the new. Nothing else in the
+    build deletes anything, which is why this says how many it removed.
+    """
+    removed = 0
+    for sub in schema.SUBDIRS:
+        d = os.path.join(root, sub)
+        if not os.path.isdir(d):
+            continue
+        for name in sorted(os.listdir(d)):
+            if name.endswith(".json"):
+                os.remove(os.path.join(d, name))
+                removed += 1
+    return removed
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--template", default="antibody-affinity-maturation")
@@ -49,6 +72,8 @@ def main(argv=None):
         print("project already exists at %s (use --force)" % root, file=sys.stderr)
         return 2
 
+    cleared = clear_artifacts(root) if args.force else 0
+
     team = [t.strip() for t in args.team.split(",") if t.strip()]
     project.create(root, tpl, lead_name=args.lead, target=args.target,
                    team=team, batch_size=args.batch_size)
@@ -70,6 +95,8 @@ def main(argv=None):
     print("recipes         %s" % ", ".join(obj["model_recipes"]))
     print("diagnostics     %s" % ", ".join(obj["diagnostics"]))
     print("designs         0 -- run generate_candidates.py then select_batch.py for round 1")
+    if cleared:
+        print("cleared         %d artifacts from a previous build of this project" % cleared)
     print("objectives hash %s" % obj["hash"])
     return 0
 

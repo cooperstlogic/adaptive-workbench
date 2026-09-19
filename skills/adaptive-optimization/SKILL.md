@@ -61,14 +61,10 @@ has a ruling. Read the diagnosis procedure below.
 
 Two more scripts serve that case:
 
-| Script | Does | State |
-| --- | --- | --- |
-| `run_diagnostic.py` | Runs one named test from `core/diagnostics.py` and prints its result. Read-only, writes nothing | **Not built yet** |
-| `record_decision.py` | Writes hypotheses, evidence, recommendation and ruling into `decisions/`. A dumb writer with no logic of its own | **Not built yet** |
-
-Those two and `core/diagnostics.py` land in phase 4. Until they do, the
-diagnosis procedure below describes what to do and the tests it names cannot
-be run. Do not simulate them.
+| Script | Does |
+| --- | --- |
+| `run_diagnostic.py` | Runs one named test from `core/diagnostics.py` and prints its result as JSON. Read-only, writes nothing |
+| `record_decision.py` | Writes hypotheses, evidence, recommendation and ruling into `decisions/`. Adds no arithmetic of its own, and accepts none |
 
 ## Diagnosing a flagged round
 
@@ -89,36 +85,100 @@ them apart means conditioning on the designs shared with earlier rounds
 rather than on the new ones, checking whether those shared designs agree with
 each other at all, and refusing to correct when they do not.
 
-Procedure:
+### The five tests
+
+Each returns numbers and never a verdict. `supported` and `not supported` are
+your words, written into the record; the tests do not contain them.
+
+| Test | Returns | Arguments |
+| --- | --- | --- |
+| `offset_from_controls` | The bridge offset `import_round` recorded, its standard error and bridge size, plus whether the shared designs agree with each other | — |
+| `residual_by_plate` | Mean residual by plate, the largest gap between plates and its standard error | — |
+| `residual_by_mutation_class` | Mean residual by class, each class against the rest, with `n` and `n_fresh` for both sides | `--by position` (default) or `--by n_mutations` |
+| `replicate_concordance` | The round's own read-noise scale, and any design whose two reads disagree by more than the template's tolerance | — |
+| `calibration_by_region` | Coverage of the 80% interval overall and by predicted-value bin | `--offset bridge` scores the counterfactual |
+
+`--scope fresh` restricts any of them to the round's fresh designs, which is
+the population the flag was computed over. The default is every design the
+round both predicted and measured, so the designs carried over from earlier
+rounds are visible beside the new ones.
+
+`--offset bridge` is the test that separates the first hypothesis from the
+rest, and it is worth understanding rather than copying: it asks what coverage
+*would* be if this round were nothing but the assay shift the bridge measured.
+If the shift is the whole story, correcting by it restores coverage. Whatever
+is still missing afterwards is not the assay. The shift is always the recorded
+bridge estimate and never a number you supply, which is the same rule as rule
+4 below wearing different clothes.
+
+### Procedure
 
 1. Read the snapshot's `anomaly` block and its `frame.offset_estimate`. Note
-   the assay version and whether the project had already characterized it.
+   the assay version and whether the project had already characterized it, and
+   note the **sign**: a round can flag for coming back better than forecast,
+   and that is a different diagnosis with a different action.
 2. Run `offset_from_controls` first. It is the only test that can separate a
    run offset from a property of the new designs, because the shared designs
    are the same molecules measured twice.
 3. **If the bridge is missing or its members disagree, refuse.** The correct
    output is `no_action` with `confidence: "refuses"` and an explanation. A
    principled refusal is a better demo than a confident correction, and an
-   unjustified correction on a real cliff hides the finding.
+   unjustified correction on a real cliff hides the finding. `record_decision`
+   enforces this: it will not write a correction with no concordant bridge
+   behind it.
 4. Choose the second test from what the first returned, not from a checklist.
    A clean offset with concordant bridge members points at the assay and
    `residual_by_plate` tells you whether it is the run or one plate. An offset
-   near zero with the fresh designs still low points at the designs, and
+   near zero with the fresh designs still off points at the designs, and
    `residual_by_mutation_class` tells you whether one position carries it.
    Wide replicate spread points at the assay before either, so
    `replicate_concordance` comes first when the read standard deviations are
    large.
-5. Write a decision record with `record_decision.py`. State every hypothesis
-   you considered, including the ones the evidence did not support, and fill
-   `if_wrong` with what would falsify your recommendation. That field is the
-   one a sceptical scientist reads first.
-6. A ruling is `accepted`, `accepted_with_modification`, `rejected` with a
+5. **Check the size of a class before believing it.** A cause that could
+   explain a whole round has to appear in a class large enough to move it. A
+   class of two designs with a residual twice everyone else's is noise, and
+   every test reports `n` next to its mean so you can see that. Note also that
+   designs carried over from earlier rounds are the designs the model was
+   trained on, so a contrast between them and the fresh ones is confounded
+   between "the model has seen these" and whatever else distinguishes them.
+   Say so in the record rather than picking one.
+6. **An offset that explains part of a round is a finding, not a failure.**
+   Compare the bridge estimate against the discrepancy the fresh designs show.
+   If the bridge recovers a fraction of it, the honest recommendation corrects
+   what the bridge supports and states what remains unexplained. Run
+   `calibration_by_region --offset bridge` and put the leftover number in the
+   record.
+7. Write the record with `record_decision.py --propose payload.json`. The
+   payload names hypotheses, the test each rests on, and your reading; the
+   script runs those tests itself and writes the numbers it got. **It refuses
+   a payload that carries its own `result`** -- there is no channel for a
+   number you produced. State every hypothesis you considered, including the
+   ones the evidence did not support, and fill `if_wrong` with what would
+   falsify your recommendation. That field is the one a sceptical scientist
+   reads first, and the script will not write a record without it.
+8. A ruling is `accepted`, `accepted_with_modification`, `rejected` with a
    reason, or `more_evidence_requested`, which names a test and sends the work
    back to you. Every ruling carries a named approver and a timestamp, and no
-   action is taken on an unruled record.
-7. Once ruled, re-import the round naming the authority:
-   `import_round.py ... --offset always --authority decision_NNN`. Then
-   continue with steps 5 and 6 of the loop.
+   action is taken on an unruled record. If you are handed back a test, run it
+   and propose again: the next pass must include what was asked for, and the
+   record keeps both passes.
+9. Then act on the ruling, which is the only thing that changes any data:
+
+   - `refit_only` or `no_action` -- change nothing. The round is ruled and the
+     loop is unblocked; go straight to step 6 of the round loop.
+   - `apply_offset_correction` -- re-import the round naming the ruling:
+     `import_round.py ... --offset always --authority decision_NNN`. It checks
+     the record: the authority has to exist, be ruled, and recommend the
+     action being taken.
+   - `drop_wells` -- re-import with `--drop-plate <plate> --authority
+     decision_NNN`, which discards those wells before reconciling.
+
+   Then run `fit_surrogates.py` for the round and continue.
+
+A ruling that changes no data leaves the snapshot's `frame.authority` reading
+`unruled`, and that is correct: the field describes the frame, and nothing
+moved it. Whether a round has been ruled is a property of its decision
+record.
 
 The five diagnostics are a fixed set and the sixth question is always the
 interesting one. When you need something the library does not cover, write ten

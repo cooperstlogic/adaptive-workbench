@@ -61,6 +61,7 @@ def create(root, template, lead_name=None, target=None, team=None, batch_size=No
         "batch": batch,
         "model_recipes": template["model_recipes"],
         "diagnostics": template["diagnostics"],
+        "diagnostics_policy": template["diagnostics_policy"],
         "anomaly_flag": template["anomaly_flag"],
     })
 
@@ -257,6 +258,57 @@ def known_version_offsets(state, through=None):
         if version not in known:
             known[version] = float(snap["frame"]["offset_applied"])
     return known
+
+
+DECISION_ID = "decision_%03d"
+
+
+def decision_id(round_id):
+    return DECISION_ID % int(round_id)
+
+
+def names_decision(authority):
+    """Does this authority name a decision record, or a standing policy?
+
+    Both are legitimate things to correct a round under -- a policy covers the
+    rounds nobody had to think about -- but only one of them is a ruling, and
+    the difference decides whether a flagged round is still waiting on a
+    human. Kept here so the import script and the fitting script cannot answer
+    it differently.
+    """
+    if not isinstance(authority, str):
+        return None
+    name = authority.strip()
+    if len(name) == len("decision_000") and name.startswith("decision_") and name[9:].isdigit():
+        return name
+    return None
+
+
+def read_decision(state, round_id):
+    """The decision record for a round, or None if nobody has written one."""
+    return read_artifact(state, "decisions", round_id)
+
+
+def is_ruled(state, round_id):
+    """Has a human ruled on this round?
+
+    Ruled-ness is a property of the decision record and not of the snapshot,
+    because the commonest correct ruling on a flagged round -- refit and touch
+    nothing -- changes no measurement and therefore moves no frame. A snapshot
+    whose frame says ``unruled`` after such a ruling is telling the truth
+    about the frame; this is what tells the truth about the round.
+    """
+    rec = read_decision(state, round_id)
+    return bool(rec and rec.get("status") == "ruled")
+
+
+def unruled_flagged_rounds(state, through=None):
+    """Flagged rounds still waiting on a human, in round order.
+
+    The list the fitting script prints and the scheduler stops on.
+    """
+    return [int(s["round"]) for s in snapshots(state, through=through)
+            if s["flagged"] and not is_ruled(state, s["round"])]
 
 
 def designs_by_id(state):

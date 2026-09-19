@@ -1,12 +1,12 @@
 {
   "censored_rule": "entered at the detection limit with a flag; biases them slightly upward, and a Tobit likelihood is the correct alternative",
   "feature_block": "onehot",
-  "hash": "sha256:173ad41534c8242db72eb081d9beb2f3704df718aa9f67c7f1f3b47ca61bdf18",
+  "hash": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d",
   "incumbent": 9.969072,
   "inputs": {
-    "objectives": "sha256:8ae096d4f819312e47981ae1453c90a8325d953829f61ff0ccced2bcd2360195",
-    "pool": "sha256:1c303cb3dc17ff07a90e9b87d964ab2e4762c4bdb958c448e3014a81f730574c",
-    "snapshots": "sha256:7141441c00ef17987d472602ea9cb4fae495612505946ee8146a521cc3e25cb3"
+    "objectives": "sha256:e459b8c9eb21e34feda142cc7cae4c4695eaa5d915d42ea0907b095d87ac92c3",
+    "pool": "sha256:7348d6fa875fe65659fe7a514fdf96e2b42281d1005db4503806de9f34898547",
+    "snapshots": "sha256:c7f1cdc2920d83f3cb386075f0f536ee8e98aa4b12a718f0dd0fdc21353beb7a"
   },
   "n_censored": 0,
   "n_components": 64,

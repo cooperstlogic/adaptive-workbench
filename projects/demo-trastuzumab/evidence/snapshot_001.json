@@ -17,11 +17,11 @@
     },
     "offset_policy": "if-clear"
   },
-  "hash": "sha256:be6c183dd9753369bbd8e7f6b7f2ed8c6db791e06a2a7a39907cfd1ad8e225b8",
+  "hash": "sha256:77a862441db7d6ff17a2f7322d6c3c9d06628491bb89244ffaabb1b3eadae670",
   "inputs": {
-    "batch": "sha256:8cf4bcdf2c2af5a2ae4b6c9551f1fe80c47356b7e023d86dd1d4fb6c16002309",
+    "batch": "sha256:91b9f49ca3fb43f65da808cb269fa8a77741c721ba770225d22b5cf7a50f8bd3",
     "designs": "sha256:01fb6463ad0a57dfe03ecce8c96d02e73bf314a4f83f28fee455112a3af15c33",
-    "objectives": "sha256:8ae096d4f819312e47981ae1453c90a8325d953829f61ff0ccced2bcd2360195"
+    "objectives": "sha256:e459b8c9eb21e34feda142cc7cae4c4695eaa5d915d42ea0907b095d87ac92c3"
   },
   "measurements": [
     {
@@ -1133,6 +1133,11 @@
     "approved_not_returned": [],
     "censoring_rule": "kept as censored at the detection limit, carrying the flag",
     "designs": 48,
+    "dropped": {
+      "authority": null,
+      "plates": [],
+      "rows": 0
+    },
     "n_censored": 0,
     "n_failed": 3,
     "n_ok": 45,

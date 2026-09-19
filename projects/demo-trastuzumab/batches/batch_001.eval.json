@@ -9,7 +9,7 @@
     "note": "this round is the baseline; there is nothing un-guided to compare it to"
   },
   "calibration": null,
-  "hash": "sha256:004e7adf1fe2ebacc28629a93cf7bc3ee0fc6f43d37981df6f111d3b62d2288e",
+  "hash": "sha256:8c31148a6b2f06d2260da5267e8e95b5e7cf9349583a9d16ef1404e5c27a7b0e",
   "improvement": {
     "best_fresh_this_round": 9.969072,
     "best_this_round": 9.969072,
@@ -18,9 +18,9 @@
     "mean_fresh": 9.054593
   },
   "inputs": {
-    "batch": "sha256:8cf4bcdf2c2af5a2ae4b6c9551f1fe80c47356b7e023d86dd1d4fb6c16002309",
+    "batch": "sha256:91b9f49ca3fb43f65da808cb269fa8a77741c721ba770225d22b5cf7a50f8bd3",
     "model_run": null,
-    "snapshot": "sha256:be6c183dd9753369bbd8e7f6b7f2ed8c6db791e06a2a7a39907cfd1ad8e225b8"
+    "snapshot": "sha256:77a862441db7d6ff17a2f7322d6c3c9d06628491bb89244ffaabb1b3eadae670"
   },
   "model_run": null,
   "model_winner": null,

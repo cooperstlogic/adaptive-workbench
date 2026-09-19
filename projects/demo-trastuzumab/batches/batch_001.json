@@ -1,6 +1,6 @@
 {
   "approval": {
-    "at": "2026-09-19T16:43:24+00:00",
+    "at": "2026-09-19T17:53:00+00:00",
     "by": "d.webster",
     "note": "",
     "status": "approved"
@@ -164,13 +164,13 @@
     "45964f402b4a",
     "eebe140702e7"
   ],
-  "hash": "sha256:8cf4bcdf2c2af5a2ae4b6c9551f1fe80c47356b7e023d86dd1d4fb6c16002309",
+  "hash": "sha256:91b9f49ca3fb43f65da808cb269fa8a77741c721ba770225d22b5cf7a50f8bd3",
   "incumbent": null,
   "inputs": {
     "designs": "sha256:c91f43949beefd7b7ef9fb4bae0d31f2e27485af418d4f305a003228d3382997",
     "model_run": null,
-    "objectives": "sha256:8ae096d4f819312e47981ae1453c90a8325d953829f61ff0ccced2bcd2360195",
-    "pool": "sha256:1c303cb3dc17ff07a90e9b87d964ab2e4762c4bdb958c448e3014a81f730574c"
+    "objectives": "sha256:e459b8c9eb21e34feda142cc7cae4c4695eaa5d915d42ea0907b095d87ac92c3",
+    "pool": "sha256:7348d6fa875fe65659fe7a514fdf96e2b42281d1005db4503806de9f34898547"
   },
   "min_pairwise_distance": 1.0,
   "mode": "seed",
