@@ -109,8 +109,85 @@ above have been run**, and from an unrelated directory `claude mcp list` then re
 uninstall adaptive-optimization@adaptive-workbench`.
 
 The plugin needs the `.venv` beside it, because the connectors are Python and the
-interpreter they name is that one. Whether the host can run a Python stdio connector on
-those terms is the first question phase 5b has to answer.
+interpreter they name is that one. Claude Science does not run them on those terms, and
+what it does run them on is the next section.
+
+### Installing into Claude Science
+
+Claude Science is a local application — installed on macOS or Linux, its data under
+`~/.claude-science`, opening in a browser tab — so it runs the same Python stdio
+connectors Claude Code runs. What it has no installer for is the *bundle*: the skill and
+the two connectors go in as three separate acts, one of which is a hand-written
+configuration file. Every step below has been run.
+
+**The skill, once.** `Settings > Credentials` takes a GitHub token — fine-grained, with
+the resource owner set to the organization that owns the repository, `Contents:
+Read-only`, and the `Metadata: Read-only` GitHub pairs with it automatically. Nothing
+else. Then `Settings > Skills > Add skill > Import from GitHub`. The host reads
+`.claude-plugin/marketplace.json`, resolves `skills/adaptive-optimization` out of it, and
+records the commit it came from beside the copy it keeps:
+
+```json
+{"repo": "cooperstlogic/adaptive-workbench",
+ "sha": "db99c082de4da87c682c5a8ce2b23cebaa1f795f",
+ "plugin": "adaptive-optimization", "marketplace": "adaptive-workbench",
+ "path": "skills/adaptive-optimization"}
+```
+
+The marketplace manifest is therefore read for the skill and ignored for the connectors.
+The same file declares both; one of them installs from it.
+
+**Each connector, by hand.** `Settings > Connectors > Add connector > Local command`, then
+a name and one command line. There is no separate arguments field — the box takes the
+whole line, as its `npx -y @modelcontextprotocol/server-memory` placeholder shows.
+
+| Name | Command |
+| --- | --- |
+| `registry` | `python /path/to/adaptive-workbench/connectors/registry_server.py` |
+| `bioprovider` | `python /path/to/adaptive-workbench/connectors/bioprovider_server.py` |
+
+`python` stays bare. The host resolves it to its own bundled environment
+(`~/.claude-science/conda/envs/claude-science-mcp`, Python 3.13, carrying `mcp` and
+`numpy`); an absolute path to this repo's `.venv` is refused before the process starts.
+
+**The sandbox grant, once.** The connectors are files in this repository, and the MCP
+sandbox cannot see this repository. Write `~/.claude-science/config.toml`, with real
+absolute paths:
+
+```toml
+[sandbox]
+user_read_paths  = ["/path/to/adaptive-workbench"]
+user_write_paths = ["/path/to/adaptive-workbench/lims_store"]
+```
+
+Read covers `connectors/`, `core/`, `lims.py` and the project directory. Write is granted
+to exactly one directory — the mock LIMS's own store — and to nothing else. Reads and
+writes are gated separately, so a read grant alone loads the tools and then fails on the
+first `submit_batch`. The file is read once at startup, so quit the app from the menu bar
+icon and relaunch; closing the browser tab is not enough. Neither key appears in the
+published configuration reference: the error message names `user_read_paths`, and
+`user_write_paths` sits beside it in the application's own schema.
+
+Then `registry` lists its five tools and `bioprovider` its three.
+
+**Four failures, each of which hid the next.** Only the first and the last say what is
+wrong, which is why they are written down here.
+
+| What you see | What it is |
+| --- | --- |
+| `sandbox-exec: execvp() of '…/.venv/bin/python' failed: Operation not permitted` | The sandbox will not exec a binary in your home directory. Use the bare name `python` |
+| Tools load forever; nothing in any log | The command box held an interpreter and no script, so a bare Python read the JSON-RPC stream as a program and answered nothing. A missing argument produces no error and no timeout |
+| `ModuleNotFoundError: No module named 'mcp.server.mcpserver'` | The host's environment carries `mcp` 1.x; this repo's `.venv` carries 2.x, where `FastMCP` was renamed to `MCPServer`. Both connectors now import whichever is present — decision 101 |
+| `… exists on this machine but is not visible inside the MCP sandbox` | The `config.toml` grant above, and a restart |
+
+`~/.claude-science/mcp/local-mcp.json` records what the dialog actually saved, and it
+identified two of the four faults faster than the interface did.
+
+A system path (`/usr`, `/opt`, `/bin`, `/nix` are readable by default) removes the need
+for the read grant and is the wrong trade here: it grants no writes, it needs root for a
+live git tree, and it splits the project directory in two, which is the one thing demo
+beat 5 cannot survive — the batch hashes only mean something if both surfaces read the
+same state.
 
 `check.py` runs 131 checks in about half a minute and is the handoff contract. Every
 check in it corresponds to a rule in `CLAUDE.md` or a number recorded in `DECISIONS.md`,
@@ -288,7 +365,7 @@ diagnostics itself and refuses any payload that arrives carrying its own numbers
 | 3 | The five pipeline scripts, `SKILL.md`, the mock LIMS | **Done** |
 | 4 | `core/diagnostics.py`, `run_diagnostic.py`, `record_decision.py`, decision records | **Done** |
 | 5 | Both connectors, `.mcp.json`, the installable plugin, end-to-end run driven by an agent | **Done — gate passed** |
-| 5b | The plugin installed into Claude Science, the gate re-run there, and the gap audit written | **Next** — beta access confirmed, so this is a deliverable rather than a maybe |
+| 5b | The plugin installed into Claude Science, the gate re-run there, and the gap audit written | **In progress** — skill and both connectors installed and serving tools in the host. The gate re-run and the gap audit are outstanding |
 | 6 | Web app: Pyodide boot, the Claude Science-shaped shell, artifact tabs, approve loop | Not started |
 | 7 | The agent in the session: tool-call stream, two tools, push-back round trip, budget cap, verified replay | Not started |
 | 8 | Committed demo project at round 3, Netlify deploy, public README | Not started |
@@ -615,8 +692,9 @@ that exist.
 - Decision 71 asks for a `main(argv)` on every pipeline script, checked at the start of
   5b. All seven have one.
 - **The connectors are Python and the plugin names `.venv/bin/python`.** Installing the
-  plugin somewhere without that interpreter beside it starts nothing. That is the first
-  thing to find out in the host, and it may be the first struck or surviving gap.
+  plugin somewhere without that interpreter beside it starts nothing. **Answered:** the
+  host refuses that interpreter outright and supplies its own, which carries `mcp` 1.x
+  against this repo's 2.x. Both connectors now import either — decision 101.
 
 ## Repo map
 
@@ -673,7 +751,7 @@ that exist.
 | The agent's reasoning in the browser | **Real Claude** while the daily budget holds — it chooses and sequences the diagnostics live, and a named human rules. Verified replay of the committed record otherwise, animated through the same component |
 | The web app's chrome | **A wireframe.** It renders the layer the phase-5b audit found missing, in the host's own grammar. The panels, the Python, the state and the hashes inside it are real |
 | The two connectors | **Real.** MCP stdio, five tools and three, each one call into `lims.py` or `core/`. `check.py` drives both over the protocol and compares them against the CLI |
-| The skill and connectors inside Claude Science | **Not yet.** Beta access confirmed and the plugin installs locally; whether it loads in the host is phase 5b's first question, and the answer goes here either way |
+| The skill and connectors inside Claude Science | **Installed and loading.** The skill imported from GitHub with its commit recorded; both connectors serve their tools in the host, under its interpreter and inside its sandbox. What the install took is written up under *Installing into Claude Science*. The round-4 gate has not yet been re-run there |
 | The agent's reasoning in the CLI | **Real, and the transcripts are committed.** Two headless Claude Code sessions on `claude-opus-5`: one diagnosed round 4 and wrote its record, one ran a full round unaided. `gates/` |
 | Rounds run in the browser | **Real.** The same Python, state held in the browser, never written back |
 

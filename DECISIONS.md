@@ -689,3 +689,57 @@ as gracefully as Claude Code did, cannot be answered from here. It goes on the 5
 checklist beside the interpreter question, and whatever happens gets written down —
 including "it never fired", which is the likeliest outcome and still worth recording
 once rather than wondered about twice.
+
+### Phase 5b: what the install into Claude Science cost, and what that is evidence of
+
+The skill and both connectors are installed in Claude Science and serving tools. The
+round-4 gate has not been re-run there yet and the gap audit is not written; this section
+records only the install, because what the install took is itself a finding and it is
+better written down while the error messages are still in front of us.
+
+Nothing here touches the landscape, the threshold, its parameters, the seed, or any
+published number. `check.py` passes 131/131 before and after, and the host's interpreter
+reproduces the committed one-hot hash `sha256:4f6ba1ff3d2c` exactly, on numpy 2.5.2
+against the `.venv`'s 2.5.3.
+
+| # | Decision | Reasoning |
+| --- | --- | --- |
+| 101 | Both connectors import `MCPServer` (`mcp` 2.x) or `FastMCP` (`mcp` 1.x), whichever is present, and pass `version=` only where it is accepted | Claude Science resolves a bare `python` connector command to its own bundled environment, which carries `mcp` 1.27.1; this repo's `.venv` carries 2.2.0, where `FastMCP` was renamed and `version=` dropped. Pinning either one strands the other surface. A thirteen-line try/except at the import site keeps one implementation serving both, which is non-negotiable 2 applied to the transport layer rather than to the science. `core/` has not heard of it, and the tool lists, the refusals and the one-hot hash are identical under both SDKs |
+| 102 | The sandbox grant lives in `~/.claude-science/config.toml` and is not vendored into this repository | It is host configuration on one machine, not project state, and it names an absolute path that is wrong everywhere else. The README carries the block to copy. Putting it in the repo would also imply `check.py` could verify it, and `check.py` verifies this repository rather than the machine it is on |
+| 103 | The write grant is `lims_store/` alone, not the repository | The registry is the only connector that writes, and it writes one directory. Granting the repository would hand a connector write access to `core/`, the project state and the gate output, which is the opposite of the boundary this build is arguing for. Reads and writes are separate keys in the host's schema, so the narrow grant costs nothing |
+
+**Four faults, each of which hid the next.** Written out in the README because only the
+first and the last say what is wrong. The sandbox refuses to exec an interpreter in the
+user's home directory, so `.venv/bin/python` never starts. A command line with no script
+argument produces a bare Python that reads the JSON-RPC stream as a program and answers
+nothing at all — no error, no timeout, no log line, just a spinner. The host's SDK is a
+major version behind the one the connectors were written against. And the connector
+cannot see the repository its own code lives in until `[sandbox] user_read_paths` grants
+it, which needs a restart. Three of the four are invisible in the Add-connector dialog.
+
+**The finding this makes, and it is better than the one that was pre-registered.** The
+claimed gap was that the host has no packaging unit. What is actually true is narrower
+and harder to dismiss: **a connector that carries its own interpreter and its own state
+cannot be installed through the connector interface alone.** The host has every primitive
+needed — sandbox grants, per-tool approval with four scopes, a local-command transport —
+and no way for a connector to *declare* what it requires. `plugin.json` states the
+interpreter, both servers and the skill in one file; in the host those became three
+manual acts, one of them an undocumented TOML key found by reading an error message and
+then the application binary.
+
+**And the half of it that runs the other way, recorded because the discipline says so.**
+`Import from GitHub` **does** read `.claude-plugin/marketplace.json`. It resolved
+`skills/adaptive-optimization` out of the manifest, and it wrote the commit it came from
+beside the installed copy — `sha db99c082`, with the plugin and marketplace names. So the
+manifest is read for the skill and ignored for the connectors, and the host records skill
+provenance to the commit. That is real traceability for the instructions layer and it
+partially covers the claimed traceability gap. What survives is the narrower claim: the
+host versions the *skill*, and nothing versions the *number a skill produced* back to the
+`core/` function and the input hash that produced it. The audit takes the narrower claim.
+
+**What the install did not answer.** Whether the connector can write `lims_store/` through
+the grant — the tools load, but no `submit_batch` has run in the host. Whether the
+scripts resolve, given that the skill's copy of them now lives in the application's data
+folder while `SKILL.md` names them by repository-relative path and the repository is
+granted separately. And whether the `bio` safeguard fires there, which is still the open
+question decision 100 left.

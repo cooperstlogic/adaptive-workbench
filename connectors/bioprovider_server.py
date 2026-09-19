@@ -34,8 +34,19 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO not in sys.path:
     sys.path.insert(0, REPO)
 
-from mcp.server.mcpserver import MCPServer  # noqa: E402
-from mcp.server.mcpserver.exceptions import ToolError  # noqa: E402
+# The SDK renamed FastMCP to MCPServer at 2.0 and dropped the ``version=``
+# argument on the way. This repo's .venv carries 2.x; the interpreter Claude
+# Science resolves a bare ``python`` connector command to carries 1.x. One
+# server serves both, which is CLAUDE.md's non-negotiable 2 applied to the
+# transport layer -- decision 101.
+try:
+    from mcp.server.mcpserver import MCPServer  # noqa: E402
+    from mcp.server.mcpserver.exceptions import ToolError  # noqa: E402
+    SERVER_KWARGS = {"version": "1.0.0"}
+except ImportError:  # mcp 1.x
+    from mcp.server.fastmcp import FastMCP as MCPServer  # noqa: E402
+    from mcp.server.fastmcp.exceptions import ToolError  # noqa: E402
+    SERVER_KWARGS = {}
 
 from core import encode, project as project_mod, schema, scoring  # noqa: E402
 
@@ -72,7 +83,7 @@ TOOLS = [
     ("predict_structures", "Stubbed. Predicts nothing in this build and says so"),
 ]
 
-server = MCPServer("adaptive-bioprovider", version="1.0.0", instructions=INSTRUCTIONS)
+server = MCPServer("adaptive-bioprovider", instructions=INSTRUCTIONS, **SERVER_KWARGS)
 
 
 class BackendError(ToolError):

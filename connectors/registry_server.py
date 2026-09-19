@@ -34,8 +34,19 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO not in sys.path:
     sys.path.insert(0, REPO)
 
-from mcp.server.mcpserver import MCPServer  # noqa: E402
-from mcp.server.mcpserver.exceptions import ToolError  # noqa: E402
+# The SDK renamed FastMCP to MCPServer at 2.0 and dropped the ``version=``
+# argument on the way. This repo's .venv carries 2.x; the interpreter Claude
+# Science resolves a bare ``python`` connector command to carries 1.x. One
+# server serves both, which is CLAUDE.md's non-negotiable 2 applied to the
+# transport layer -- decision 101.
+try:
+    from mcp.server.mcpserver import MCPServer  # noqa: E402
+    from mcp.server.mcpserver.exceptions import ToolError  # noqa: E402
+    SERVER_KWARGS = {"version": "1.0.0"}
+except ImportError:  # mcp 1.x
+    from mcp.server.fastmcp import FastMCP as MCPServer  # noqa: E402
+    from mcp.server.fastmcp.exceptions import ToolError  # noqa: E402
+    SERVER_KWARGS = {}
 
 import lims  # noqa: E402
 
@@ -58,7 +69,7 @@ assay is an oracle replaying generated values with noise."""
 # README. ``--tools`` prints it and check.py asserts none of them is exposed.
 WITHHELD = ["create_sample", "edit_assay_result", "start_workflow", "delete_record"]
 
-server = MCPServer("adaptive-registry", version="1.0.0", instructions=INSTRUCTIONS)
+server = MCPServer("adaptive-registry", instructions=INSTRUCTIONS, **SERVER_KWARGS)
 
 
 def _refuse(exc):
