@@ -561,3 +561,105 @@ round trip end to end, that every number in a written record reproduces when its
 re-run against the hashed inputs, that both halves of the fourth verb work — a ruling can
 drop a plate's wells and nothing can drop them without one — and that round 2 is ruled
 while having moved nothing.
+
+### Where this sits in the literature, and what it does not change
+
+Two preprints were read in full and compared against the build: Bachas et al. 2022
+(Absci, `10.1101/2022.08.16.504181`) and Frey et al. 2025 v3 (Genentech / Prescient
+Design, *Lab-in-the-loop*, `10.1101/2025.02.19.639050`). Nothing in `core/`, the
+landscape, the parameters, the threshold or any published number moved as a result. The
+outcome is three recorded decisions and one number quoted beside our own.
+
+| # | Decision | Reasoning |
+| --- | --- | --- |
+| 87 | The README states the design space is `trast-1`'s and says in the same paragraph that every affinity value is synthetic | The arithmetic is exact and worth claiming: Bachas's space is up to double mutants over eight CDR-H3 positions of trastuzumab excluding cysteine, 1 + 8·18 + 28·18² = 9,217, of which they measured 8,932 — the 97% they report. Ours is the same form over all twenty letters, 1 + 8·19 + 28·19² = 10,261, with cysteine removed downstream as a declared liability. That makes the `data/oracle.py` swap a genuinely one-file change rather than an aspiration. But "our use case is based on Bachas" is the sentence failure mode 1 exists to prevent — the design space is borrowed, the measurements are `data/synthetic.py`. Both halves are stated together or neither is. Caveat recorded: the paper's Table 1 is an image and does not give the eight positions in text, so *which* eight is unconfirmed; ours is `GGDGFYAM` at VH 99–106. Checking that against the release is step one of the swap, not a blocker to the claim about shape |
+| 88 | The template's `source` field has exactly two values, `measured` and `computed`, and a third for predicted properties is **not** added now | This is a real schema gap and the literature names it twice: Bachas's *naturalness* is a protein-language-model likelihood used as an optimization objective, and Frey's non-specificity is a surrogate trained on 2,305 BV ELISA measurements. Neither is measured, and neither is an exact calculation. The current schema would have to lie about one or the other. It is not filled today because a third category forces a decision about what non-negotiable 7 permits — a pLM score is deterministic and hashable, which is the letter of the rule, but it is not fifty lines of numpy an audience can check, which is its purpose. That argument is worth having once there is a predicted property to have it about, and inventing one to motivate the schema would be building the abstraction before the need |
+| 89 | Expected improvement on affinity alone is recorded as a deliberate simplification with a named successor, rather than left as an unmarked gap | Frey selects with Noisy Expected Hypervolume Improvement over a Pareto front in affinity × expression. Ours is single-objective because exactly one property here is measured, so there is no frontier to expand — `core/scoring.py` already argues that exact scores become filters rather than objectives, and Frey independently does the same for liability motifs and conserved residues. The distinction is not EI-versus-NEHVI as a matter of taste; it is that a second *measured* objective is what creates the need, and that is step 3 of the extension path. Naming the successor costs a line and stops the simplification reading as an oversight |
+
+**The number quoted beside our own.** Frey's matched random baseline — control designs
+drawn from repertoire mutations, matched on count and on mutational load — produced the
+best binder for three of five seeds; the control won the other two. Our guided arm is
+never slower than random on any of twenty paired seeds, at p = 0.0078. Both facts are now
+in the README, adjacent. The comparison is not apples to apples and the README says why,
+but a pitch that cites *Lab-in-the-loop* as the industrial-scale target and omits its
+baseline result is citing it selectively, and this audience will have read it.
+
+**What was considered and rejected.** Reporting held-out R² against the replicate-
+agreement ceiling, as Bachas does, is a better statistic than absolute R² and the inputs
+already exist — `replicate_concordance` estimates the round's read-noise scale, 0.171
+pKD in round 4. It is not built because it touches `core/diagnostics.py` and the
+invariant set before the hour-5 gate, and the gate is what phase 5 is for. Recorded here
+so it is a choice rather than an omission. Widening the mutation budget across rounds, as
+Frey ramps 6 → 8 → 12, is rejected outright for this build: decision 22 fixed the
+landscape at additive-plus-pairwise *because* `max_mutations = 2` makes higher-order terms
+unreachable, so widening the budget would invalidate the landscape's own justification —
+and the landscape does not move.
+
+### Phase 5: the two connectors, the plugin, and the hour-5 gate
+
+Both servers, `.mcp.json`, an installable plugin, and the gate run twice — once for
+criterion 3 and once for criterion 2. Nothing here touches the landscape, the threshold,
+the parameters, the seed or any published number. Round 4 still flags at −2.046 with a
+bridge of −1.014 (se 0.059); the difference is that a record now says what that means,
+and no human wrote it.
+
+| # | Decision | Reasoning |
+| --- | --- | --- |
+| 90 | `mcp/` is renamed `connectors/`, and decision 48's mitigation is struck as tested-and-wrong | Decision 48 kept the directory named `mcp/` on the grounds that holding "nothing importable" inside it would stop it shadowing the PyPI `mcp` distribution. That is false, and the test is one line: with the repo root on `sys.path`, `import mcp` resolved to the empty `mcp/` folder, because Python treats any bare directory as an implicit namespace package. The reasoning behind 48 was right and the remedy did not implement it. `connectors/` removes the class of problem rather than managing it, costs one line in CLAUDE.md's non-negotiable 4 and one in the repo map, and is the word the rest of the build already uses. `check.py` now asserts that `import mcp` reaches site-packages, so the claim is checked instead of assumed twice |
+| 91 | The official `mcp` SDK, not the standalone `fastmcp` package and not a hand-rolled JSON-RPC loop | Three options were weighed. A hand-rolled stdio server is about 120 lines, keeps the dependency list at numpy and matplotlib, and is readable the way `core/` is — genuinely tempting for this repo's ethos. It was rejected because phase 5b is the strongest asset in the artifact and its failure mode would be a protocol detail the host rejects, which is a hour lost to something that has nothing to do with the science. `fastmcp` 2.x depends on the official SDK anyway, so it is strictly more surface for the same two servers. The SDK is a *connector* dependency in the same sense matplotlib is an *evaluator* dependency: `core/` has not heard of it, and `check.py` asserts that |
+| 92 | SPEC.md says "FastMCP" and the code says `MCPServer`, because the SDK renamed it | `mcp.server.fastmcp.FastMCP` is gone in SDK 2.x; the class is `mcp.server.mcpserver.MCPServer` and the import raises with a migration note. Recorded rather than silently absorbed, because SPEC.md names the brand in three places and a future reader comparing the two would otherwise wonder which is wrong. The decorator-per-tool shape SPEC was describing is unchanged |
+| 93 | Every refusal is raised as the SDK's `ToolError`, not as a bare exception | A bare exception reaches the client as "Error executing tool embed_sequences" with the reason withheld and a traceback in the server log. Every refusal in these two files is deliberate — a round already submitted, an unwired backend, a construct that does not exist — and a refusal whose reason the agent cannot read is indistinguishable from a crash. The refusals *are* the deliverable here: criterion 6 is a tool list, and the `esm_live` error is the whole claim that the provider interface does not quietly substitute one-hot for an embedding |
+| 94 | `lims.py` grew `submit_project_batch` and `pull_to_csv`, and `main` now calls them | Decision 71 put a `main(argv)` on every pipeline script so one implementation serves two invocation paths. The submission path needed the same treatment one level up: the orchestration a submit does — read the batch, resolve the designs, mint, write the refs back, link the round — lived inside `main`'s argparse branch, so the connector would have had to either reimplement it or shell out and parse stdout. Now `main` prints what the function returns and the connector serializes it, and `check.py` compares the two exports byte for byte |
+| 95 | `pull_assay_results` writes the CSV and returns a summary; `list_designs` caps at 25 | Ninety-six rows of assay export is not something an agent should read, and the next command needs a path rather than a table. The tool returns the counts, the statuses, the columns and the exact `import_round.py` invocation that consumes it. Same reasoning for the 180-construct registry: the count is the useful part of the answer and the records are available on request. This is a judgment about what a tool result is *for*, and it is written down because the opposite choice — return everything, let the model filter — is the common one |
+| 96 | `predict_structures` returns nulls, not a plausible-looking confidence | SPEC.md asked for "a cached result with an honest note". A cached result with a pLDDT in it is a number an audience can read off a screen, and it would be invented. The tool returns `prediction: null`, `confidence: null`, `computed: false` and a note saying no structure model runs anywhere in this build — failure mode 1, refused inside the one file where blurring it would be easiest. Nothing downstream reads it, and the staged table says so |
+| 97 | The gate runs in a tree with `README.md`, `SPEC.md`, `DECISIONS.md` and `CLAUDE.md` removed, and the isolation is described honestly rather than overclaimed | All four discuss round 4, two of them give the answer. A gate run in this repo as it stands would test whether an agent can find a conclusion already written down. `decision_004.json` comes out of the copy for the same reason; `decision_002.json` stays, because it is the project's own state and a scientist picking up a flagged round would read the last record too. `data/` has to stay, because the registry connector imports the oracle — so the tree denies `Read` on it, the prompt says it is off limits, and the transcript is grepped afterwards. That is a guard and not a sandbox. Both runs came back with zero accesses and the round-1 session volunteered that it had not read it, which is evidence and not proof, and the distinction is stated where the transcripts are |
+| 98 | The transcripts are committed raw as well as digested | `gates/*.md` is the readable version and `gates/*.jsonl` is what the session actually emitted. Keeping only the digest would mean the evidence for the central agentic claim is a file this build wrote about itself. The raw transcripts also carry the awkward part: both sessions show an `API Error` on the turn after the `Skill` call, a safeguard flag tagged `[bio]` on an antibody-engineering prompt. The skill content did land — it is the next message in the stream, and `check.py`'s sufficiency claim rests on that — and both sessions continued. It is left in, because a transcript with the inconvenient part edited out is not a transcript |
+| 99 | `decision_004.json` is committed exactly as the gate wrote it, unruled, and will not be hand-edited | Its entire value is that no human touched it. `check.py` recomputes all eight of its results from the hashed inputs, so the record is verifiable rather than trusted, and the moment it is edited by hand that property is gone and cannot be recovered. The session itself found a real gap in it — all four cross-version anchors sit on plate R4P1 and the record does not say so — and declined to delete the record to work around the writer's refusal of a second open pass, naming `more_evidence_requested` as the clean route instead. That is the governance surface holding against the agent that wanted past it, which is the only test of it that means anything, so the gap stays until a ruling opens pass 2 |
+
+**What the gate found that phase 4 had not.** Phase 4 could say the round-4 remainder was
+not the cliff, and therefore was the model. The session said *which* model error, in an ad
+hoc cut it wrote itself after observing that the library's position test could not
+resolve it: position 102 appears in 43 of 46 designs, so the class is the round and no
+contrast exists inside it. Dropping to residue level, **40 of the 42 fresh designs carry
+G102L**, which the model had seen in exactly one measured design — the round-3 incumbent
+`G102L+A105K` at 11.837. `ridge_onehot` is additive, so it credited that pair's whole
+gain to two main effects and applied G102L to 40 new partners; all 40 fell short, across
+six partner positions, with no partner carrying it. In the corrected frame the G102L
+doubles average 9.490 against a parent of 9.230 — **G102L alone is worth about +0.26, not
++1.80, and the incumbent's affinity belongs to the pair.** Round 4 advanced nothing,
+because the optimizer spent 40 of 48 wells re-testing one main effect it had one
+observation of.
+
+Three things about that are worth saying. It is a **finding about the optimizer**, which
+means the loop is now producing evidence about itself rather than only about the
+molecules. It arrived through the documented escape hatch — ad hoc, read-only, source
+inlined, labelled one-off, `stdout` stored beside the code — so no number the model
+produced entered a code path, and non-negotiable 7 held under the one condition that
+tests it. And it is the clearest available answer to the ninety-second objection: a
+scheduler calling five scripts in order produces the flag, and does not produce that
+paragraph.
+
+**What was considered and not done.** Ruling `decision_004` was left to a human, which is
+the point of the phase and not an omission — the demo opens with round 4 open. Advancing
+the committed project past round 4 waits on that ruling. And the amendment the session
+asked for, naming R4P1 as the shared plate of all four anchors, is not written in, because
+writing it means either a ruling or an edit by hand and the second is decision 99.
+
+**One thing to check first in 5b, before anything else.** The plugin's connectors name
+`${CLAUDE_PLUGIN_ROOT}/.venv/bin/python`. Installed anywhere that interpreter is not
+beside them, both servers fail to start and the failure looks like the plugin being
+broken rather than the environment being incomplete. Whether the host can run a Python
+stdio connector at all — and how it expects the interpreter to be declared — is a gap
+question in its own right, and it belongs at the top of the audit rather than discovered
+halfway through it.
+
+**The install command is a command that has been run.** `claude plugin marketplace add`
+and `claude plugin install adaptive-optimization@adaptive-workbench` both succeeded, and
+from an unrelated working directory `claude mcp list` reports
+`plugin:adaptive-optimization:registry` and `:bioprovider` connected, with
+`${CLAUDE_PLUGIN_ROOT}` expanded to this repository. That closes the local half of
+SPEC.md's packaging section; the host half is 5b. Two configurations exist and they
+differ only in how they spell the path — `.mcp.json` relative, for a clone opened
+directly, and the same two servers inline in `plugin.json` under `${CLAUDE_PLUGIN_ROOT}`,
+for an install. `check.py` asserts both name the same two servers and that every path in
+either one exists.

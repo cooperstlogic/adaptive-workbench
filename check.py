@@ -33,6 +33,42 @@ def check(label, ok, detail=""):
     return ok
 
 
+def mcp_session(script):
+    """Talk to a connector the way a client does: spawn it, speak the protocol.
+
+    check.py drives the connectors over stdio rather than importing them,
+    because stdio is the interface a host actually uses. Importing would test
+    the Python and skip the transport, and the transport is the thing phase 5
+    added.
+    """
+    import asyncio
+
+    from mcp import ClientSession, StdioServerParameters
+    from mcp.client.stdio import stdio_client
+
+    async def _run(calls):
+        params = StdioServerParameters(
+            command=os.path.join(REPO, ".venv", "bin", "python"),
+            args=[os.path.join(REPO, "connectors", script)], cwd=REPO)
+        async with stdio_client(params) as (r, w):
+            async with ClientSession(r, w) as session:
+                init = await session.initialize()
+                listed = await session.list_tools()
+                out = {"server": init.server_info.name,
+                       "tools": sorted(t.name for t in listed.tools),
+                       "results": []}
+                for name, args in calls:
+                    res = await session.call_tool(name, args)
+                    text = res.content[0].text if res.content else ""
+                    out["results"].append({
+                        "tool": name, "error": bool(res.is_error), "text": text,
+                        "data": (json.loads(text)
+                                 if not res.is_error and text.startswith("{") else None)})
+                return out
+
+    return lambda calls: asyncio.run(_run(calls))
+
+
 def main():
     import numpy as np
 
@@ -588,6 +624,12 @@ def main():
         subprocess.run([sys.executable, os.path.join(REPO, "lims.py"), "pull",
                         "--project", sandbox, "--round", "R4", "--out", results4,
                         "--store", store], cwd=REPO, capture_output=True, text=True)
+        # These are tests of what a *first* proposal is refused for, so the
+        # sandbox starts round 4 without one. The committed project carries
+        # decision_004 -- the hour-5 gate wrote it -- and the writer would
+        # otherwise refuse every payload below for already having a record,
+        # which would pass the checks for the wrong reason.
+        os.remove(os.path.join(sandbox, "decisions", "decision_004.json"))
 
         def propose(payload, round_id=4):
             path = os.path.join(tmp, "payload.json")
@@ -712,6 +754,12 @@ def main():
         subprocess.run([sys.executable, os.path.join(REPO, "lims.py"), "pull",
                         "--project", sandbox, "--round", "R4", "--out", results4,
                         "--store", store], cwd=REPO, capture_output=True, text=True)
+        # These are tests of what a *first* proposal is refused for, so the
+        # sandbox starts round 4 without one. The committed project carries
+        # decision_004 -- the hour-5 gate wrote it -- and the writer would
+        # otherwise refuse every payload below for already having a record,
+        # which would pass the checks for the wrong reason.
+        os.remove(os.path.join(sandbox, "decisions", "decision_004.json"))
         path = os.path.join(tmp, "payload.json")
         with open(path, "w") as fh:
             json.dump({"hypotheses": [{"claim": "plate R4P2 ran low",
@@ -782,6 +830,202 @@ def main():
     check("every hypothesis in it points at the snapshot and batch it was computed from",
           all(h["inputs"]["snapshot"] == snap2["hash"] for h in dec2["hypotheses"]),
           "snapshot %s" % schema.short_hash(snap2["hash"]))
+
+
+    print("\nPhase 5 gate: round 4's decision record (SPEC.md acceptance criterion 3)")
+    # Written by a Claude Code session given only the skill and the connectors,
+    # in a tree with no README, SPEC, DECISIONS or CLAUDE.md in it. What is
+    # checked here is the record, not the transcript: the claim is that the
+    # skill and the five tests are sufficient, and a record that holds up is
+    # what sufficient looks like.
+    demo = project.load(demo_root)
+    dec4 = project.read_decision(demo, 4)
+    snap4 = project.read_artifact(demo, "evidence", 4)
+    batch4 = project.read_artifact(demo, "batches", 4)
+    by_test = {}
+    for h in dec4["hypotheses"]:
+        by_test.setdefault(h["diagnostic"], []).append(h["reading"])
+
+    check("round 4 carries a decision record and it verifies",
+          schema.verify(dec4) and dec4["round"] == 4,
+          "%s, %d hypotheses over %d of the five tests"
+          % (dec4["id"], len(dec4["hypotheses"]), len(by_test)))
+    check("it identifies the offset rather than the whole discrepancy",
+          any(r in ("supported", "partially supported")
+              for r in by_test.get("offset_from_controls", []))
+          and dec4["recommendation"]["action"] == "apply_offset_correction",
+          "bridge -1.014 against a -2.046 round: correct what the bridge supports")
+    check("it rejects the plate and the unstable read with the tests that reject them",
+          by_test.get("residual_by_plate") == ["not supported"]
+          and by_test.get("replicate_concordance") == ["not supported"],
+          "both plates displaced equally, and no replicate outside tolerance")
+    check("it ran the counterfactual and says what the correction leaves behind",
+          any(h["args"].get("offset") == "bridge"
+              for h in dec4["hypotheses"] if h["diagnostic"] == "calibration_by_region"),
+          "calibration_by_region --offset bridge is what makes the remainder visible")
+    check("it says what would falsify it, and it is not left open",
+          len(dec4["recommendation"]["if_wrong"].split()) > 20
+          and dec4["recommendation"]["alternative_considered"],
+          "%d words of if_wrong" % len(dec4["recommendation"]["if_wrong"].split()))
+    check("the sixth question is in ad_hoc, with its source and its label",
+          dec4["ad_hoc"] and all(a["code"] and "one-off, unversioned" in a["note"]
+                                 for a in dec4["ad_hoc"]),
+          "%d ad hoc cuts, none of them an input to a code path" % len(dec4["ad_hoc"]))
+    check("every number in it reproduces when its test is re-run",
+          not [h["diagnostic"] for h in dec4["hypotheses"]
+               if schema.content_hash(diagnostics.run(
+                   h["diagnostic"], snap4, batch4, project.designs_by_id(demo),
+                   policy=demo["objectives"]["diagnostics_policy"],
+                   args=dict(h["args"]))) != schema.content_hash(h["result"])],
+          "%d results recomputed from the hashed inputs" % len(dec4["hypotheses"]))
+    check("it points at the snapshot and batch it was computed from",
+          dec4["inputs"]["snapshot"] == snap4["hash"]
+          and dec4["inputs"]["batch"] == batch4["hash"],
+          "snapshot %s" % schema.short_hash(snap4["hash"]))
+    check("and it is unruled, because the agent proposes and does not dispose",
+          dec4["status"] == "open" and dec4["ruling"] is None
+          and not project.is_ruled(demo, 4)
+          and project.unruled_flagged_rounds(demo) == [4],
+          "round 4 is still waiting on a named human, which is the product working")
+
+    print("\nPhase 5: the registry connector (SPEC.md acceptance criterion 6)")
+    import lims as lims_mod
+    from core import scoring
+
+    # Decision 90: the directory is connectors/ and not mcp/, because a bare
+    # directory named mcp/ is a namespace package and shadows the SDK the
+    # servers import whenever the repo root is on sys.path. That was tested
+    # rather than assumed, and this is the test.
+    import mcp as mcp_sdk
+    sdk_path = os.path.abspath(list(mcp_sdk.__path__)[0])
+    check("the connector directory does not shadow the MCP SDK",
+          not os.path.isdir(os.path.join(REPO, "mcp"))
+          and os.path.basename(os.path.dirname(sdk_path)) == "site-packages",
+          "with the repo root on sys.path, import mcp still reaches site-packages")
+
+    conn_src = {name: open(os.path.join(REPO, "connectors", name)).read()
+                for name in ("registry_server.py", "bioprovider_server.py")}
+    # stdout *is* the JSON-RPC stream. A stray print breaks the connector for
+    # every client, and nothing else in the build would notice.
+    stray = []
+    for name, src in conn_src.items():
+        for fn in [n for n in ast.parse(src, filename=name).body
+                   if isinstance(n, ast.FunctionDef) and n.name != "main"]:
+            if any(isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+                   and n.func.id == "print" for n in ast.walk(fn)):
+                stray.append("%s:%s" % (name, fn.name))
+    check("no connector prints outside its --tools branch", not stray,
+          "stdout is the JSON-RPC stream; a stray print breaks every client")
+    check("the bioprovider never reaches the simulated lab",
+          "import data" not in conn_src["bioprovider_server.py"]
+          and "from data" not in conn_src["bioprovider_server.py"],
+          "the oracle is the registry's, behind lims.py, and nothing else imports it")
+
+    P = os.path.join("projects", "demo-trastuzumab")
+    reg = mcp_session("registry_server.py")
+    pull, resubmit, missing, listing = reg([
+        ("pull_assay_results", {"project": P, "round_id": "R4"}),
+        ("submit_batch", {"project": P, "round": 4}),
+        ("get_construct", {"project": P, "construct_id": "CST99999"}),
+        ("list_designs", {"project": P, "limit": 3})])["results"]
+    served = set(mcp_session("registry_server.py")([])["tools"])
+    withheld = {"create_sample", "edit_assay_result", "start_workflow", "delete_record"}
+
+    check("the registry connector serves exactly the declared tool list",
+          served == {name for name, _ in lims_mod.TOOLS}, ", ".join(sorted(served)))
+    check("and none of the four withheld tools exists on it",
+          not (served & withheld),
+          "no " + ", ".join(sorted(withheld)))
+    tool_help = subprocess.run(
+        [sys.executable, os.path.join(REPO, "connectors", "registry_server.py"), "--tools"],
+        cwd=REPO, capture_output=True, text=True).stdout
+    check("and the tool list says so out loud, which is the boundary claim",
+          all(w in tool_help for w in withheld) and "deliberately" in tool_help,
+          "the answer to 'does this replace the LIMS' is a tool list")
+
+    # Non-negotiable 2 at the connector layer: same bytes, different transport.
+    direct = lims_mod.rows_to_csv(
+        lims_mod.Registry(lims_mod.store_path_for(P)).pull_assay_results("R4"))
+    written = open(os.path.join(REPO, pull["data"]["path"])).read()
+    check("the connector and the CLI export byte-identical rows",
+          written == direct and pull["data"]["n_rows"] == 96,
+          "%d rows, %d bytes, assay version %s"
+          % (pull["data"]["n_rows"], len(written), pull["data"]["assay_version"]))
+    check("a round cannot be submitted twice, and the refusal says why",
+          resubmit["error"] and "already been submitted" in resubmit["text"],
+          "the registry does not overwrite assay data")
+    check("a refusal reaches the caller as a message, not as a crash",
+          missing["error"] and "CST99999" in missing["text"],
+          "ToolError carries the reason; a bare exception reaches the agent as noise")
+    check("list_designs caps what it returns and says what it held back",
+          listing["data"]["n_shown"] == 3 and listing["data"]["n_total"] > 3,
+          "%d of %d" % (listing["data"]["n_shown"], listing["data"]["n_total"]))
+
+    print("\nPhase 5: the provider interface, and what it refuses to fake")
+    state = project.load(os.path.join(REPO, P))
+    by_id = project.designs_by_id(state)
+    ids = list(by_id)[:4]
+    bio = mcp_session("bioprovider_server.py")
+    embed, esm, scored, struct = bio([
+        ("embed_sequences", {"project": P, "model": "onehot", "sequences": ids}),
+        ("embed_sequences", {"project": P, "model": "esm2_t12_35M_UR50D", "sequences": ids}),
+        ("score_properties", {"project": P, "tool_set": "developability", "candidates": ids}),
+        ("predict_structures", {"project": P, "model": "boltz", "complexes": ids})])["results"]
+
+    check("the bioprovider serves exactly the three declared tools",
+          set(bio([])["tools"]) == {"embed_sequences", "score_properties",
+                                    "predict_structures"},
+          "embed_sequences, score_properties, predict_structures")
+
+    parent, region = state["designs"]["parent"], state["objectives"]["editable_region"]
+    X = encode.one_hot([by_id[i]["sequence"] for i in ids], region)
+    own = schema.content_hash({"onehot": [[float(v) for v in row] for row in X]})
+    check("embed_sequences returns the block core/ computes, hash for hash",
+          embed["data"]["hash"] == own and embed["data"]["shape"] == [len(ids), 160],
+          "%s, %d x 160, %d ones per row"
+          % (schema.short_hash(own), len(ids), embed["data"]["ones_per_row"]))
+    check("an unwired backend is refused, and the refusal names what is missing",
+          esm["error"] and "esm_live" in esm["text"] and "not wired" in esm["text"],
+          "no silent fallback to one-hot -- failure mode 1 in the one swappable layer")
+
+    agree = all(
+        abs(row["hydrophobicity"]
+            - scoring.hydrophobicity(by_id[row["design_id"]]["sequence"], region)) < 1e-12
+        and row["liability_count"] == scoring.liability_count(
+            by_id[row["design_id"]]["sequence"], parent, region)
+        for row in scored["data"]["results"])
+    check("score_properties agrees with the filter enforcing the same numbers",
+          agree and scored["data"]["source"] == "computed",
+          "%d designs, %d passing, computed rather than predicted"
+          % (scored["data"]["n"], scored["data"]["n_passing"]))
+    check("predict_structures returns no number and says it is stubbed",
+          struct["data"]["status"] == "stubbed" and struct["data"]["computed"] is False
+          and all(x["prediction"] is None and x["confidence"] is None
+                  for x in struct["data"]["results"]),
+          "a stub that invented a pLDDT would be the exact failure this build is about")
+
+    print("\nPhase 5: the plugin is installable, not merely described")
+    plugin = schema.read_json(os.path.join(REPO, ".claude-plugin", "plugin.json"))
+    market = schema.read_json(os.path.join(REPO, ".claude-plugin", "marketplace.json"))
+    root_mcp = schema.read_json(os.path.join(REPO, ".mcp.json"))
+    check("the marketplace declares one plugin and it is this directory",
+          len(market["plugins"]) == 1 and market["plugins"][0]["source"] == "./"
+          and market["plugins"][0]["name"] == plugin["name"],
+          "%s -> %s" % (market["name"], plugin["name"]))
+    check("the plugin bundles the skill where a loader looks for it",
+          os.path.isfile(os.path.join(REPO, "skills", "adaptive-optimization", "SKILL.md")),
+          "skills/adaptive-optimization/SKILL.md")
+    check("both connectors are registered in both launch contexts",
+          set(plugin["mcpServers"]) == set(root_mcp["mcpServers"])
+          == {"registry", "bioprovider"},
+          "plugin root for an install, repo-relative for a clone")
+    named = [a for spec in list(plugin["mcpServers"].values()) + list(root_mcp["mcpServers"].values())
+             for a in [spec["command"]] + spec["args"]]
+    check("every path either manifest names exists",
+          all(os.path.isfile(os.path.join(
+              REPO, p.replace("${CLAUDE_PLUGIN_ROOT}/", "").replace("./", "")))
+              for p in named),
+          "%d paths, the interpreter and both connectors" % len(named))
 
     if FAILS:
         print("\n%d of %d checks FAILED:" % (len(FAILS), TOTAL))

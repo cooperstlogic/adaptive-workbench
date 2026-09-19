@@ -51,7 +51,7 @@ One core module tree, three surfaces over it.
 | --- | --- |
 | core/ | Pure numpy, shared by every surface: encode.py, surrogate.py, candidates.py, acquisition.py, scoring.py, diagnostics.py, schema.py |
 | skills/adaptive-optimization/ | SKILL.md plus seven thin CLI wrappers in scripts/ |
-| mcp/ | registry\_server.py (LIMS stand-in), bioprovider\_server.py (Tamarind-shaped provider) |
+| connectors/ | registry\_server.py (LIMS stand-in), bioprovider\_server.py (Tamarind-shaped provider). Not `mcp/`, which shadows the SDK — decision 90 |
 | templates/ | antibody-affinity-maturation/, plus a stub second template |
 | data/ | build\_oracle.py, build\_features.py, synthetic.py |
 | web/ | Vite app: the Claude Science-shaped shell, its artifact tabs, and public/assets/ for the precomputed matrices |
@@ -522,18 +522,18 @@ This audience will ask. Put this table in the README and be able to recite it, b
 | Developability and liability scores | **Real** deterministic calculations, not assay measurements, labelled as computed throughout the UI |
 | Affinity values | **Simulated.** A synthetic NK-style landscape with pre-registered parameters, labelled on every chart |
 | The wet lab | **Simulated.** An oracle behind the registry server adds noise, ~3% construct failure, censoring, and per-round offsets |
-| The LIMS | **Staged.** A mock server with a deliberately narrow write path |
+| The LIMS | **Staged.** A mock server with a deliberately narrow write path, reachable over MCP and byte-compatible with the CLI |
 | Sequence embeddings | **Not built.** One-hot is the only feature block; the provider interface exists and `esm_live` is unwired |
-| Structure prediction | **Stubbed.** Returns a cached result and says so |
+| Structure prediction | **Stubbed.** Returns nulls and says it predicted nothing. No confidence score is invented and nothing downstream reads it |
 | The agent's reasoning in the browser | **Real Claude** while the daily budget holds. Verified replay of a committed record otherwise, with the evidence recomputed live |
 | The agent's reasoning in the CLI | **Real.** Claude Code runs the diagnosis unaided; this is acceptance criterion 3 |
 | Rounds run in the browser | **Real.** The same Python, on state held in the browser and never written back to the repository |
 | The web app's chrome | **A wireframe.** It renders the layer the 5b audit found missing, in the host's own grammar. The panels, the Python, the state and the hashes inside it are real |
-| The skill and connectors inside Claude Science | **Real.** Beta access confirmed; the plugin installs, the connectors load, and phase 5b runs the round-4 gate in the host |
+| The skill and connectors inside Claude Science | **Not yet.** Beta access confirmed and the plugin installs locally; whether it loads in the host is phase 5b's first question |
 
 ## Packaging for Claude Science
 
-The skill and connectors should be installable, not merely described. Anthropic publishes a life-sciences marketplace of MCP servers and skills for Claude Code, so mirror that shape: a `marketplace.json` at the repo root declaring one plugin that bundles the `adaptive-optimization` skill and both MCP servers, plus a README section giving the one command to add it.
+The skill and connectors should be installable, not merely described. Anthropic publishes a life-sciences marketplace of MCP servers and skills for Claude Code, so mirror that shape: a `marketplace.json` declaring one plugin that bundles the `adaptive-optimization` skill and both MCP servers, plus a README section giving the one command to add it. Built in phase 5, and it lives at `.claude-plugin/marketplace.json` rather than the repo root, because that is where a plugin loader looks.
 
 The distribution mechanism is the host's, in the host's own words: *"Save any pipeline as a reusable skill, or connect to your lab's preferred tool with a connector, and every future session inherits it automatically."* Quote that line in the README directly above the install command. It is the strongest available argument that this is an extension rather than a rival, and it is not ours.
 

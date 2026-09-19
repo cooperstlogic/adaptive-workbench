@@ -13,9 +13,13 @@ record. It cannot create samples out of nothing, edit assay data, or drive a
 workflow. When someone asks in the demo whether this replaces Benchling, the
 answer is the tool list.
 
-Phase 5 wraps these same functions in a FastMCP stdio server. The logic lives
-in a plain module so that wrapping is a change of transport and not a second
-implementation -- the fork CLAUDE.md's non-negotiable 2 forbids.
+``connectors/registry_server.py`` wraps these same functions in an MCP stdio
+server. The logic lives in this plain module so that wrapping is a change of
+transport and not a second implementation -- the fork CLAUDE.md's
+non-negotiable 2 forbids. The two orchestrating calls a submission needs,
+``submit_project_batch`` and ``pull_to_csv``, are module functions for that
+reason: ``main`` prints what they return, the connector serializes it, and
+neither one reimplements the other.
 
     python lims.py submit --project projects/demo-trastuzumab --round 1
     python lims.py pull   --round R1 --out /tmp/round1.csv
@@ -234,6 +238,73 @@ def store_path_for(project_root, store=None):
     return os.path.join(STORE_DIR, "%s.json" % os.path.basename(os.path.normpath(project_root)))
 
 
+EXPORT_DIR = os.path.join(STORE_DIR, "exports")
+
+
+def export_path_for(project_root, round_id):
+    """Where a round's assay export lands by default.
+
+    ``run_rounds.py`` and the registry connector agree on this path so that
+    the command after a pull is always the same command.
+    """
+    name = os.path.basename(os.path.normpath(project_root))
+    n = int(str(round_id).lstrip("Rr")) if str(round_id).lstrip("Rr").isdigit() else round_id
+    return os.path.join(EXPORT_DIR, "%s_round%s.csv" % (name, n))
+
+
+def submit_project_batch(project_root, round_id, store=None, run_seed=0):
+    """Submit a project's approved batch and record the links it gets back.
+
+    The registry mints the identifiers and owns the samples; the workbench
+    keeps the external references and nothing else. Returns a record rather
+    than printing one, because two surfaces call this.
+    """
+    from core import project as project_mod
+
+    state = project_mod.load(project_root)
+    batch = project_mod.read_artifact(state, "batches", int(round_id))
+    if batch is None:
+        raise ValueError("no batch for round %d; run select_batch.py first" % int(round_id))
+    by_id = project_mod.designs_by_id(state)
+    designs = [{"design_id": d, "sequence": by_id[d]["sequence"]} for d in batch["approved"]]
+
+    reg = Registry(store_path_for(project_root, store), run_seed=run_seed)
+    result = reg.submit_batch(state["project"]["id"], int(round_id), designs)
+    project_mod.register_external_refs(state, result["external_refs"])
+    project_mod.link_round(state, int(round_id), submission={
+        "round_id": result["round_id"], "assay_version": result["assay_version"],
+        "n_samples": result["n_samples"], "registry": "mock-lims",
+    })
+    result["n_designs"] = len(designs)
+    result["n_constructs"] = len(reg.store["constructs"])
+    result["plates"] = sorted({r["plate"] for r in result["external_refs"]})
+    result["store"] = reg.store_path
+    result["approval_status"] = batch["approval"]["status"]
+    return result
+
+
+def pull_to_csv(round_id, project_root=None, store=None, out=None):
+    """Read a round's rows and write the export a real pull would produce.
+
+    Pulling is a read: the values were generated once, at submission, so a
+    round replays identically however often it is asked for.
+    """
+    reg = Registry(store_path_for(project_root or "", store))
+    rows = reg.pull_assay_results(round_id)
+    text = rows_to_csv(rows)
+    if out:
+        os.makedirs(os.path.dirname(os.path.abspath(out)) or ".", exist_ok=True)
+        with open(out, "w", encoding="utf-8") as fh:
+            fh.write(text)
+    statuses = {}
+    for r in rows:
+        statuses[r["status"]] = statuses.get(r["status"], 0) + 1
+    key = round_id if str(round_id).startswith("R") else "R%d" % int(round_id)
+    return {"round_id": key,
+            "n_rows": len(rows), "assay_version": rows[0]["assay_version"] if rows else None,
+            "status_counts": statuses, "path": out, "csv": text, "rows": rows}
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -274,25 +345,16 @@ def main(argv=None):
         if not (args.store or args.project):
             print("pull needs --store or --project", file=sys.stderr)
             return 2
-        reg = Registry(store_path_for(args.project or "", args.store))
-        rows = reg.pull_assay_results(args.round)
-        text = rows_to_csv(rows)
+        res = pull_to_csv(args.round, args.project, args.store, args.out)
         if args.out:
-            os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
-            with open(args.out, "w", encoding="utf-8") as fh:
-                fh.write(text)
-            statuses = {}
-            for r in rows:
-                statuses[r["status"]] = statuses.get(r["status"], 0) + 1
             print("pulled %d rows for %s, assay version %s"
-                  % (len(rows), args.round, rows[0]["assay_version"] if rows else "?"))
-            print("status  %s" % ", ".join("%s %d" % kv for kv in sorted(statuses.items())))
+                  % (res["n_rows"], args.round, res["assay_version"] or "?"))
+            print("status  %s" % ", ".join("%s %d" % kv
+                                           for kv in sorted(res["status_counts"].items())))
             print("wrote   %s" % args.out)
         else:
-            sys.stdout.write(text)
+            sys.stdout.write(res["csv"])
         return 0
-
-    from core import project as project_mod
 
     if args.cmd == "attach":
         reg = Registry(store_path_for(args.project, args.store))
@@ -301,31 +363,21 @@ def main(argv=None):
         return 0
 
     # submit
-    state = project_mod.load(args.project)
-    batch = project_mod.read_artifact(state, "batches", args.round)
-    if batch is None:
-        print("no batch for round %d; run select_batch.py first" % args.round, file=sys.stderr)
+    try:
+        result = submit_project_batch(args.project, args.round, args.store, args.run_seed)
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
         return 2
-    if batch["approval"]["status"] == "unreviewed":
+    if result["approval_status"] == "unreviewed":
         print("note: batch_%03d is unreviewed -- submitting what the optimizer recommended"
               % args.round, file=sys.stderr)
-    by_id = project_mod.designs_by_id(state)
-    designs = [{"design_id": d, "sequence": by_id[d]["sequence"]} for d in batch["approved"]]
-
-    reg = Registry(store_path_for(args.project, args.store), run_seed=args.run_seed)
-    result = reg.submit_batch(state["project"]["id"], args.round, designs)
-    project_mod.register_external_refs(state, result["external_refs"])
-    project_mod.link_round(state, args.round, submission={
-        "round_id": result["round_id"], "assay_version": result["assay_version"],
-        "n_samples": result["n_samples"], "registry": "mock-lims",
-    })
 
     print("submitted   %d designs as %s, assay version %s"
-          % (len(designs), result["round_id"], result["assay_version"]))
+          % (result["n_designs"], result["round_id"], result["assay_version"]))
     print("minted      %d sample ids, %d constructs total"
-          % (result["n_samples"], len(reg.store["constructs"])))
-    print("plates      %s" % ", ".join(sorted({r["plate"] for r in result["external_refs"]})))
-    print("store       %s" % os.path.relpath(reg.store_path, REPO))
+          % (result["n_samples"], result["n_constructs"]))
+    print("plates      %s" % ", ".join(result["plates"]))
+    print("store       %s" % os.path.relpath(result["store"], REPO))
     print("refs        written into designs.json; the workbench owns the link and nothing else")
     return 0
 

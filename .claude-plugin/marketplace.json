@@ -1,0 +1,16 @@
+{
+  "$schema": "https://code.claude.com/schemas/marketplace.json",
+  "name": "adaptive-workbench",
+  "description": "A scientist-governed layer for persistent decision state across experimental rounds. Everything laboratory in it is simulated.",
+  "owner": {
+    "name": "Dylan Webster"
+  },
+  "plugins": [
+    {
+      "name": "adaptive-optimization",
+      "source": "./",
+      "description": "The adaptive-optimization skill, the five-test diagnostic library, and the registry and bioprovider connectors. The laboratory is simulated: synthetic landscape, mock LIMS, oracle assay.",
+      "category": "science"
+    }
+  ]
+}

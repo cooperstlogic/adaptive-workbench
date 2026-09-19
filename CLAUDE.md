@@ -5,16 +5,18 @@ every choice already settled.
 
 ## Where the build is
 
-**Phases 1, 2 and 3 are done and the hour-3 gate passed. Phase 4 is next.** Full status,
+**Phases 1 to 5 are done. The hour-3 gate and the hour-5 gate both passed, and the
+gate transcripts are committed in `gates/`. Phase 5b is next.** Full status,
 results and commands are in `README.md`; every settled choice and its reasoning is in
 `DECISIONS.md`. Read both before writing code, and read
 `skills/adaptive-optimization/SKILL.md` before touching anything in the round loop.
 
 - Use `.venv/bin/python`, never `python3` — the system interpreter has no numpy.
-- Run `.venv/bin/python check.py` before and after any phase. It verifies 73 invariants
+- Run `.venv/bin/python check.py` before and after any phase. It verifies 131 invariants
   that correspond to rules here and numbers in `DECISIONS.md`; a failure means the state
-  drifted from what is documented. It takes about twenty seconds, because it runs two full
-  six-round campaigns through the CLI and checks them against the evaluator.
+  drifted from what is documented. It takes about half a minute, because it runs two full
+  six-round campaigns through the CLI, checks them against the evaluator, and drives both
+  connectors over the MCP protocol.
 - **The threshold is already fixed at 10.762 pKD**, pre-registered and recorded before any
   campaign ran. Do not recompute, re-pick, or adjust it. Do not change the landscape or
   its parameters. If guided does not separate from random, say so.
@@ -46,6 +48,10 @@ a left rail whose sessions are rounds, a centre conversation, and a right artifa
 with tabs. The chrome is a wireframe and is labelled one. Decisions 57–66 in
 `DECISIONS.md` record that choice, why orchestration runs live while the verdict stays
 human, and what was cut to pay for it. Read them before phase 6.
+
+**`decision_004.json` is gate output and is not to be hand-edited.** An agent with only
+the skill and the connectors wrote it, `check.py` recomputes every number in it, and its
+whole value is that nobody touched it. Amendments go through a ruling — decision 99.
 
 **Phase 5b is the checkpoint that matters for the pitch.** Beta access to Claude Science
 is confirmed and it takes custom connectors and local skill packs, so the plugin installs
@@ -99,9 +105,11 @@ trustworthy and inspectable.
    and left-censored values, so `import_round` has real reconciliation work to do.
    `simulate_campaign.py` is the one exception: it is the evaluator, not the product, and
    it reads landscape values to score the diagnostic line. Nothing on a product path may.
-   In this build the registry is `lims.py` at the repo root; `mcp/` holds only the two
-   server entry points, because an importable package named `mcp` would shadow the PyPI
-   distribution FastMCP is built on.
+   In this build the registry is `lims.py` at the repo root and the two server entry
+   points live in `connectors/`. The directory is **not** called `mcp/`: a bare
+   directory of that name is a namespace package, so it shadows the `mcp` PyPI
+   distribution the servers are built on whenever the repo root is on `sys.path`.
+   That was tested rather than assumed — decision 90.
 5. Never build sample inventory, plate design, or assay authoring. Their absence is the
    argument.
 6. Constraints declared in a template are enforced in code before optimization runs, not
