@@ -1,0 +1,536 @@
+{
+  "baseline": {
+    "best": 9.969072,
+    "gain_in_best": 1.107481,
+    "gain_in_mean": 0.782575,
+    "kind": "unguided_round_1",
+    "mean": 9.054593,
+    "n": 45,
+    "note": "round 1 is the only batch in this project chosen without a model. The random-selection arm is an evaluator construct and lives in campaign.json, not here."
+  },
+  "calibration": {
+    "by_slot": {
+      "control": {
+        "coverage": 0.0,
+        "mae": 0.581463,
+        "mean_signed": 0.581463,
+        "n": 1,
+        "rmse": 0.581463
+      },
+      "exploration": {
+        "coverage": 1.0,
+        "mae": 0.169334,
+        "mean_signed": 0.076108,
+        "n": 2,
+        "rmse": 0.185651
+      },
+      "pick": {
+        "coverage": 0.275,
+        "mae": 0.918078,
+        "mean_signed": 0.799674,
+        "n": 40,
+        "rmse": 1.073352
+      },
+      "replicate": {
+        "coverage": 1.0,
+        "mae": 0.265811,
+        "mean_signed": -0.170986,
+        "n": 2,
+        "rmse": 0.316056
+      }
+    },
+    "drift_from_held_out": -0.422223,
+    "extrapolating": {
+      "coverage": 1.0,
+      "n": 2
+    },
+    "frame_note": "residuals are against the snapshot as recorded, in the raw assay frame under authority 'unruled'; a flagged round that has not been ruled on carries its run offset into these numbers, which is what the anomaly flag saw",
+    "held_out_coverage_at_fit": 0.755556,
+    "interval": 0.8,
+    "nominal_coverage": 0.8,
+    "realized_coverage": 0.333333,
+    "residuals": {
+      "mae": 0.848331,
+      "mean_signed": 0.719526,
+      "n": 45,
+      "rmse": 1.018606
+    }
+  },
+  "hash": "sha256:3b0db3dabf9dbb99d82598a814eb754645244ce591895d6e93710ea639d480e5",
+  "improvement": {
+    "best_fresh_this_round": 11.076553,
+    "best_this_round": 11.076553,
+    "gain_over_incumbent": 1.107481,
+    "incumbent_at_selection": 9.969072,
+    "mean_fresh": 9.837167
+  },
+  "inputs": {
+    "batch": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81",
+    "model_run": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d",
+    "snapshot": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d"
+  },
+  "model_run": 1,
+  "model_winner": "ridge_onehot",
+  "n_approved": 48,
+  "n_overridden": 0,
+  "n_recommended": 48,
+  "n_returned": 48,
+  "n_scored": 45,
+  "overrides_note": "predictions are scored for approved designs only; the model is neither credited nor blamed for designs a scientist removed",
+  "per_design": [
+    {
+      "design_id": "2cf79e4408c6",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 9.646044,
+      "pred_mean": 9.064581,
+      "pred_sd": 0.405013,
+      "residual": 0.581463,
+      "slot": "control"
+    },
+    {
+      "design_id": "1e9b122824ae",
+      "extrapolation": false,
+      "inside_interval": true,
+      "observed": 8.606731,
+      "pred_mean": 9.043528,
+      "pred_sd": 0.405013,
+      "residual": -0.436797,
+      "slot": "replicate"
+    },
+    {
+      "design_id": "0cbc658a1a74",
+      "extrapolation": false,
+      "inside_interval": true,
+      "observed": 9.148165,
+      "pred_mean": 9.053341,
+      "pred_sd": 0.405051,
+      "residual": 0.094824,
+      "slot": "replicate"
+    },
+    {
+      "design_id": "2140e26790a7",
+      "extrapolation": true,
+      "inside_interval": true,
+      "observed": 8.961962,
+      "pred_mean": 9.055188,
+      "pred_sd": 0.406394,
+      "residual": -0.093226,
+      "slot": "exploration"
+    },
+    {
+      "design_id": "da600311d660",
+      "extrapolation": true,
+      "inside_interval": true,
+      "observed": 9.300629,
+      "pred_mean": 9.055188,
+      "pred_sd": 0.406394,
+      "residual": 0.245441,
+      "slot": "exploration"
+    },
+    {
+      "design_id": "6608d61473d3",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 10.763386,
+      "pred_mean": 9.077497,
+      "pred_sd": 0.406233,
+      "residual": 1.685889,
+      "slot": "pick"
+    },
+    {
+      "design_id": "405519388f8a",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 10.505643,
+      "pred_mean": 9.073615,
+      "pred_sd": 0.406201,
+      "residual": 1.432028,
+      "slot": "pick"
+    },
+    {
+      "design_id": "7835f8c3d25b",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 9.766438,
+      "pred_mean": 9.073417,
+      "pred_sd": 0.406201,
+      "residual": 0.693021,
+      "slot": "pick"
+    },
+    {
+      "design_id": "4811d86a53cb",
+      "extrapolation": false,
+      "inside_interval": true,
+      "observed": 9.049223,
+      "pred_mean": 9.072803,
+      "pred_sd": 0.406233,
+      "residual": -0.02358,
+      "slot": "pick"
+    },
+    {
+      "design_id": "43f0ccdc29c4",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 10.567737,
+      "pred_mean": 9.077309,
+      "pred_sd": 0.406201,
+      "residual": 1.490428,
+      "slot": "pick"
+    },
+    {
+      "design_id": "b0e7f9bb1911",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 10.215559,
+      "pred_mean": 9.072312,
+      "pred_sd": 0.406233,
+      "residual": 1.143247,
+      "slot": "pick"
+    },
+    {
+      "design_id": "d59c74ee687c",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 10.886202,
+      "pred_mean": 9.075751,
+      "pred_sd": 0.406233,
+      "residual": 1.810451,
+      "slot": "pick"
+    },
+    {
+      "design_id": "1c3fa5288dd4",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 9.955557,
+      "pred_mean": 9.070921,
+      "pred_sd": 0.406201,
+      "residual": 0.884636,
+      "slot": "pick"
+    },
+    {
+      "design_id": "46811c6d9b10",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 10.286175,
+      "pred_mean": 9.070764,
+      "pred_sd": 0.406233,
+      "residual": 1.215411,
+      "slot": "pick"
+    },
+    {
+      "design_id": "426376ade013",
+      "extrapolation": false,
+      "inside_interval": true,
+      "observed": 9.542231,
+      "pred_mean": 9.070447,
+      "pred_sd": 0.406233,
+      "residual": 0.471784,
+      "slot": "pick"
+    },
+    {
+      "design_id": "7a5cd4a645ae",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 10.064503,
+      "pred_mean": 9.074481,
+      "pred_sd": 0.406233,
+      "residual": 0.990022,
+      "slot": "pick"
+    },
+    {
+      "design_id": "9ed74ec249be",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 10.897403,
+      "pred_mean": 9.074458,
+      "pred_sd": 0.406233,
+      "residual": 1.822945,
+      "slot": "pick"
+    },
+    {
+      "design_id": "87f359672bf5",
+      "extrapolation": false,
+      "inside_interval": true,
+      "observed": 8.778009,
+      "pred_mean": 9.074331,
+      "pred_sd": 0.406233,
+      "residual": -0.296322,
+      "slot": "pick"
+    },
+    {
+      "design_id": "147aae55e66c",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 10.038882,
+      "pred_mean": 9.074293,
+      "pred_sd": 0.406201,
+      "residual": 0.964589,
+      "slot": "pick"
+    },
+    {
+      "design_id": "e86bc2d459dd",
+      "extrapolation": false,
+      "inside_interval": true,
+      "observed": 9.561148,
+      "pred_mean": 9.074143,
+      "pred_sd": 0.406201,
+      "residual": 0.487005,
+      "slot": "pick"
+    },
+    {
+      "design_id": "841e381ea9ee",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 10.437168,
+      "pred_mean": 9.06927,
+      "pred_sd": 0.406201,
+      "residual": 1.367898,
+      "slot": "pick"
+    },
+    {
+      "design_id": "8c914992c971",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 10.277059,
+      "pred_mean": 9.073463,
+      "pred_sd": 0.406233,
+      "residual": 1.203596,
+      "slot": "pick"
+    },
+    {
+      "design_id": "6ede809009ef",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 10.388359,
+      "pred_mean": 9.06843,
+      "pred_sd": 0.406201,
+      "residual": 1.319929,
+      "slot": "pick"
+    },
+    {
+      "design_id": "22bbfbbf39ad",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 10.141968,
+      "pred_mean": 9.068322,
+      "pred_sd": 0.406233,
+      "residual": 1.073646,
+      "slot": "pick"
+    },
+    {
+      "design_id": "03ff71056f94",
+      "extrapolation": false,
+      "inside_interval": true,
+      "observed": 9.018681,
+      "pred_mean": 9.072792,
+      "pred_sd": 0.40628,
+      "residual": -0.054111,
+      "slot": "pick"
+    },
+    {
+      "design_id": "3c26010bf39f",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 9.977283,
+      "pred_mean": 9.072792,
+      "pred_sd": 0.40628,
+      "residual": 0.904491,
+      "slot": "pick"
+    },
+    {
+      "design_id": "4fa820f5f740",
+      "extrapolation": false,
+      "inside_interval": true,
+      "observed": 9.451731,
+      "pred_mean": 9.072792,
+      "pred_sd": 0.40628,
+      "residual": 0.378939,
+      "slot": "pick"
+    },
+    {
+      "design_id": "78c3b8c64d6a",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 8.189005,
+      "pred_mean": 9.072792,
+      "pred_sd": 0.40628,
+      "residual": -0.883787,
+      "slot": "pick"
+    },
+    {
+      "design_id": "45c60b22754e",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 9.643967,
+      "pred_mean": 9.072792,
+      "pred_sd": 0.40628,
+      "residual": 0.571175,
+      "slot": "pick"
+    },
+    {
+      "design_id": "e3dd6814e516",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 9.892039,
+      "pred_mean": 9.072792,
+      "pred_sd": 0.40628,
+      "residual": 0.819247,
+      "slot": "pick"
+    },
+    {
+      "design_id": "461fbbf04961",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 8.324949,
+      "pred_mean": 9.072792,
+      "pred_sd": 0.40628,
+      "residual": -0.747843,
+      "slot": "pick"
+    },
+    {
+      "design_id": "08ae46e3bda9",
+      "extrapolation": false,
+      "inside_interval": true,
+      "observed": 9.40574,
+      "pred_mean": 9.072605,
+      "pred_sd": 0.406249,
+      "residual": 0.333135,
+      "slot": "pick"
+    },
+    {
+      "design_id": "1571eed837a9",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 9.980386,
+      "pred_mean": 9.072605,
+      "pred_sd": 0.406249,
+      "residual": 0.907781,
+      "slot": "pick"
+    },
+    {
+      "design_id": "5224fc58ccb8",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 10.915505,
+      "pred_mean": 9.072605,
+      "pred_sd": 0.406249,
+      "residual": 1.8429,
+      "slot": "pick"
+    },
+    {
+      "design_id": "66ec65d271cf",
+      "extrapolation": false,
+      "inside_interval": true,
+      "observed": 8.986316,
+      "pred_mean": 9.072605,
+      "pred_sd": 0.406249,
+      "residual": -0.086289,
+      "slot": "pick"
+    },
+    {
+      "design_id": "dd14b3775684",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 9.654674,
+      "pred_mean": 9.072605,
+      "pred_sd": 0.406249,
+      "residual": 0.582069,
+      "slot": "pick"
+    },
+    {
+      "design_id": "a73c27550514",
+      "extrapolation": false,
+      "inside_interval": true,
+      "observed": 8.796454,
+      "pred_mean": 9.072605,
+      "pred_sd": 0.406249,
+      "residual": -0.276151,
+      "slot": "pick"
+    },
+    {
+      "design_id": "bebdccf8c0cf",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 9.630057,
+      "pred_mean": 9.072605,
+      "pred_sd": 0.406249,
+      "residual": 0.557452,
+      "slot": "pick"
+    },
+    {
+      "design_id": "939b45454227",
+      "extrapolation": false,
+      "inside_interval": true,
+      "observed": 9.34291,
+      "pred_mean": 9.072605,
+      "pred_sd": 0.406249,
+      "residual": 0.270305,
+      "slot": "pick"
+    },
+    {
+      "design_id": "8fb99842c94d",
+      "extrapolation": false,
+      "inside_interval": true,
+      "observed": 9.220562,
+      "pred_mean": 9.072605,
+      "pred_sd": 0.406249,
+      "residual": 0.147957,
+      "slot": "pick"
+    },
+    {
+      "design_id": "a0152c442cd3",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 11.076553,
+      "pred_mean": 9.072605,
+      "pred_sd": 0.406249,
+      "residual": 2.003948,
+      "slot": "pick"
+    },
+    {
+      "design_id": "83648cfdb163",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 10.271349,
+      "pred_mean": 9.072605,
+      "pred_sd": 0.406249,
+      "residual": 1.198744,
+      "slot": "pick"
+    },
+    {
+      "design_id": "018fd046ac95",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 11.039621,
+      "pred_mean": 9.072667,
+      "pred_sd": 0.406201,
+      "residual": 1.966954,
+      "slot": "pick"
+    },
+    {
+      "design_id": "23a58c0667f3",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 9.647493,
+      "pred_mean": 9.072292,
+      "pred_sd": 0.406281,
+      "residual": 0.575201,
+      "slot": "pick"
+    },
+    {
+      "design_id": "e2e200423ca0",
+      "extrapolation": false,
+      "inside_interval": false,
+      "observed": 10.310515,
+      "pred_mean": 9.072292,
+      "pred_sd": 0.406281,
+      "residual": 1.238223,
+      "slot": "pick"
+    }
+  ],
+  "round": 2,
+  "schema_version": 1,
+  "scored_excludes": "construct failures, censored wells, and round-1 designs with no prior model",
+  "unit": "pKD"
+}

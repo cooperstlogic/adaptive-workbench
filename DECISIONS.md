@@ -876,3 +876,60 @@ install including an undocumented key. **It cannot be done live and it does not 
 Demo from a machine set up and verified beforehand, check the connectors list green
 before the room fills, and keep Claude Code as the stated fallback for the beat — which
 decision 70 already allows for a different reason.
+
+### Phase 6: the browser, and what building it found
+
+The web app boots Pyodide, mounts the repository's own modules, and runs the
+round loop against the visitor's own copy of the project. Approving round 4
+flags it in 1.5 seconds, the diagnosis recomputes all eight tests, a named
+person rules, the correction runs under that ruling, and round 5 is selected —
+about six seconds end to end including the boot.
+
+The shell is Claude Science's, as decision 59 settled, and it is labelled a
+wireframe in a strip across the top of every screen. What it holds is not a
+wireframe: the panels read the project's own JSON, the tool-call chips are
+commands that actually ran, and the numbers come out of `core/`.
+
+| # | Decision | Reasoning |
+| --- | --- | --- |
+| 112 | The browser **mounts** the repository rather than bundling a copy of it. `web/bundle.py` copies `core/`, `data/`, `lims.py` and the seven scripts byte for byte into the same directory shape, records a sha256 per file in a manifest, and `check.py` fails if any of them drifts from its source | Non-negotiable 2 says the science is never implemented twice, and the browser is the surface where a fork would be most tempting and least visible — a "just this one function in JavaScript" is a fifteen-minute change nobody would notice. Copying into the repo's own layout means every `sys.path` walk and every `dirname(__file__)` inside those modules resolves the way it does on a laptop, so Pyodide imports the same code the CLI imports rather than a port of it. The manifest turns "we promise it is the same" into a check |
+| 113 | `web/py/wb_driver.py` is the only new Python, it calls each script's `main(argv)`, and it computes nothing | Decision 71 put a `main(argv)` on every script for exactly this. The driver is `run_rounds.py` with the subprocess taken out: same scripts, same order, same arguments, stdout captured instead of inherited. Anything it computed would be a second implementation of something, so it computes nothing — including the progress line, which is `core.reconcile.pool` over a prefix of the snapshots |
+| 114 | The state the browser opens on is **derived** from the committed project by rewinding round 4, and the derivation is proved by replaying that round forward and comparing against the committed snapshot | A hand-written demo state is a fixture, and a fixture that drifts from the project is failure mode one with extra steps. The rewind removes round 4's snapshot, evaluation and decision, un-mints its registry ids, and then `bundle.py` replays submit → pull → import → score and requires the returned snapshot to match `snapshot_004` in every field. If the rewind were wrong the replay would not reproduce it |
+| 115 | What ships is the **unapproved** round-4 batch record, not the committed one | `--approved-by` stamps `approval.at` inside the hashed body, so an approved batch record can never be reproduced on another machine or at another moment. Without a signature the record is a pure function of the pool, the model run and the objectives, and every surface that selects that batch prints `ff8df7984a20`. This is also the honest version of the demo: approving is what the visitor is there to do, and the batch should be waiting for them rather than already signed |
+| 116 | The cross-surface identity claim is therefore made on **selection records**, and acceptance criterion 7 is checked on `batch_005` | An approval timestamp propagates: batch → snapshot → model run → next batch, because each record hashes its inputs. So two surfaces that both ran the round can agree on every number and still disagree on every hash below the signature. Stating the claim on the unsigned record is not a weakening; it is the only version of the claim that was ever true, and it is now mechanically checked |
+| 117 | The proposal that ships with the bundle is `decision_004.json` with every `result`, `source` and `inputs` block **stripped out**, and the browser re-runs all eight tests | What survives is what the agent contributed: the claims, which test each rests on, how it read the answer, and the recommendation. `record_decision.py` refuses a payload carrying its own results, so the browser could not smuggle a number in even if it wanted to. A figure that appeared in the browser without being recomputed there is exactly the failure non-negotiable 7 exists to prevent |
+| 118 | Pyodide 314.0.7 (Python 3.14.2, numpy 2.4.6), with the runtime and the one wheel served from the site's own origin and the wheel's sha256 checked against pyodide's lock file at build time | SPEC.md's rule: a demo that depends on a third-party CDN and conference wifi at the same moment has a coin flip in it. `core/`'s single dependency is what makes this cheap — 13 MB of runtime and one 2.8 MB wheel, and nothing else to fetch |
+| 119 | A visitor's rounds live in Pyodide's filesystem and in `localStorage`, as an **overlay**: only files that differ from the shipped bundle are stored, keyed by the manifest hash | The project is 1.6 MB and `localStorage` is about 5. Storing the diff keeps a full campaign near 1.1 MB, and keying on the manifest means a new bundle starts clean instead of merging a visitor's round 5 into a project that has changed underneath it. Every read and write is wrapped, because a private window can refuse both |
+
+**What building it found, and the two things that changed elsewhere.**
+
+| # | Found | What was done |
+| --- | --- | --- |
+| 120 | **`evaluate_prior.py` has to run again after a correcting re-import, and `SKILL.md` did not say so.** The evaluation records the hash of the snapshot it scored against; a ruling that moves the frame leaves that pointer aimed at a snapshot that no longer exists, and its residuals describe a frame the project has abandoned | Step 9 of the diagnosis procedure now says to re-score before fitting. The pair runs together on the way in and it runs together on the way back. The hour-5 gate transcripts were produced against the earlier wording; this changes no diagnosis and no number in them, only what happens after a ruling |
+| 121 | **Round 5 flags too, at −0.818 pKD, and it is real.** The CLI reproduces it to the digit from the same state. The evaluator's fully-corrected guided arm does not flag round 5 (+0.358) because it corrects every round at import; the product path corrects a flagged round only under a ruling, so rounds 2 and 3 are pooled differently and the model that selects round 5 is a different model | Recorded rather than smoothed. It is the `if_wrong` clause of `decision_004` coming true in the half that predicted it — *the refit still over-predicts* — and it means **phase 7's live agent has a round to diagnose that nothing in this repository has diagnosed before.** That is a better test of the agentic claim than replaying round 4, and phase 7 should use it as one |
+
+**The centre column, and what phase 6 deliberately left for phase 7.**
+
+The session's tool-call chips are not an animation: each one is a command that
+ran against the visitor's copy of the project, with its exit code and both of
+its output streams. `run_diagnostic.py` prints its record on stdout and its
+human summary on stderr, so the driver captures the two separately — merging
+them made the record unparseable, which is how that was noticed.
+
+The composer is present, disabled, and says why: the host's approval primitive
+is an untyped chat interrupt, and the ruling here deliberately does not go
+through the text box. Above it sit four verbs bound to code paths, with hashed
+evidence and an `if_wrong` line — gap 105, rendered. The rail carries exactly
+one new item, **Rounds**, which is gap 106; everything above it already exists
+in Claude Science and is drawn, labelled and inert rather than faked. The
+template gallery carries a requirements table assembled by `bundle.py` from
+`plugin.json`, `marketplace.json` and the two connector modules, with a column
+for what each row cost by hand in the host — gap 109. The Notebook tab resolves
+any figure on screen to the `core/` function that produced it, its file, that
+file's sha256 and its input hashes — gap 107, narrowed to one component as the
+audit said to narrow it. Gap 108 is not leaned on: the gallery says plainly
+that instantiating a second project is not wired up in this build.
+
+What phase 7 inherits: the model in the centre seat choosing the sequence, the
+push-back round trip that makes `more_evidence_requested` fire, and round 5 as
+a round nobody has diagnosed yet.

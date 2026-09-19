@@ -173,6 +173,12 @@ bridge estimate and never a number you supply, which is the same rule as rule
    - `drop_wells` -- re-import with `--drop-plate <plate> --authority
      decision_NNN`, which discards those wells before reconciling.
 
+   **If you re-imported, re-run `evaluate_prior.py` for that round before
+   fitting.** The evaluation records the hash of the snapshot it scored
+   against, so a moved frame leaves it pointing at a snapshot that no longer
+   exists, and its residuals describe a frame the project has abandoned. The
+   two run as a pair on the way in and they run as a pair on the way back.
+
    Then run `fit_surrogates.py` for the round and continue.
 
 A ruling that changes no data leaves the snapshot's `frame.authority` reading

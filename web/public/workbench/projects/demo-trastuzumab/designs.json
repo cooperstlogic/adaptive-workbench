@@ -1,0 +1,4207 @@
+{
+  "designs": [
+    {
+      "computed": {
+        "hydrophobicity": 0.506944,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "8b8998709aa9",
+      "first_round": 1,
+      "mutations": [],
+      "n_mutations": 0,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00001",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.5375,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "033db628211f",
+      "first_round": 1,
+      "mutations": [
+        "G99A"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00002",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWAGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.5375,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "861d7b164749",
+      "first_round": 1,
+      "mutations": [
+        "G100A"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00003",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGADGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "78cfce74484f",
+      "first_round": 1,
+      "mutations": [
+        "D101K"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00004",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGKGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.5375,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "4879e53244a7",
+      "first_round": 1,
+      "mutations": [
+        "G102A"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00005",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDAFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.493056,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "87dc3b08adb4",
+      "first_round": 1,
+      "mutations": [
+        "F103A"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00006",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGAYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.55,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "1e9b122824ae",
+      "first_round": 1,
+      "mutations": [
+        "Y104A"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00007",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFAAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.433333,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "455e284fdf1e",
+      "first_round": 1,
+      "mutations": [
+        "A105D"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00008",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYDMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.505556,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "b916813591de",
+      "first_round": 1,
+      "mutations": [
+        "M106A"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00009",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAADYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.458333,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "fd8f76aa5818",
+      "first_round": 1,
+      "mutations": [
+        "G99K"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00010",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWKGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "5592b6553294",
+      "first_round": 1,
+      "mutations": [
+        "G100D"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00011",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGDDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.544444,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "79c67a7ef092",
+      "first_round": 1,
+      "mutations": [
+        "D101S"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00012",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "76cdf6433ac8",
+      "first_round": 1,
+      "mutations": [
+        "G102D"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00013",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDDFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.419444,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "8ea8b1e9fd16",
+      "first_round": 1,
+      "mutations": [
+        "F103D"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00014",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGDYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.476389,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "88435c51d137",
+      "first_round": 1,
+      "mutations": [
+        "Y104D"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00015",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFDAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.427778,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "2cf79e4408c6",
+      "first_round": 1,
+      "mutations": [
+        "A105K"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00016",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.431944,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "5f3a1b5068c6",
+      "first_round": 1,
+      "mutations": [
+        "M106D"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00017",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYADDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "5fc55d2d2274",
+      "first_round": 1,
+      "mutations": [
+        "G99S"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00018",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWSGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.458333,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "845e5cd48da9",
+      "first_round": 1,
+      "mutations": [
+        "G100K"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00019",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.543056,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "5013add1f694",
+      "first_round": 1,
+      "mutations": [
+        "D101W"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00020",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGWGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.458333,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "24beed7cdca2",
+      "first_round": 1,
+      "mutations": [
+        "G102K"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00021",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDKFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.413889,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "0a81836724cc",
+      "first_round": 1,
+      "mutations": [
+        "F103K"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00022",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGKYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.470833,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "574b2ebe0c3b",
+      "first_round": 1,
+      "mutations": [
+        "Y104K"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00023",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFKAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.470833,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "0c7892d8d3cf",
+      "first_round": 1,
+      "mutations": [
+        "A105S"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00024",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYSMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.426389,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "e31f780d3901",
+      "first_round": 1,
+      "mutations": [
+        "M106K"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00025",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAKDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.5,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "e2158f90500c",
+      "first_round": 1,
+      "mutations": [
+        "G99W"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00026",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWWGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "4925b930af23",
+      "first_round": 1,
+      "mutations": [
+        "G100S"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00027",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGSDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.506944,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "ea525ee66108",
+      "first_round": 1,
+      "mutations": [
+        "D101E"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00028",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGEGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "f7069713339a",
+      "first_round": 1,
+      "mutations": [
+        "G102S"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00029",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDSFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.456944,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "1ca966c765ee",
+      "first_round": 1,
+      "mutations": [
+        "F103S"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00030",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGSYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.513889,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "32ce7c2ebebb",
+      "first_round": 1,
+      "mutations": [
+        "Y104S"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00031",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFSAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.534722,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "8d6f54b3f822",
+      "first_round": 1,
+      "mutations": [
+        "A105L"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00032",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYLMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.469444,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "1093e5e99ad7",
+      "first_round": 1,
+      "mutations": [
+        "M106S"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00033",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYASDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "22071e74814a",
+      "first_round": 1,
+      "mutations": [
+        "G99E"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00034",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWEGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.5,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "cf009e89f84e",
+      "first_round": 1,
+      "mutations": [
+        "G100W"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00035",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGWDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.55,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "075714d6f435",
+      "first_round": 1,
+      "mutations": [
+        "D101G"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00036",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGGGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.5,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "1f44a7f98160",
+      "first_round": 1,
+      "mutations": [
+        "G102W"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00037",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDWFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.520833,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "0cbc658a1a74",
+      "first_round": 1,
+      "mutations": [
+        "F103L"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00038",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGLYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.5125,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "bb230ac6cc93",
+      "first_round": 1,
+      "mutations": [
+        "Y104W"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00039",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFWAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.469444,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "74322de16a37",
+      "first_round": 1,
+      "mutations": [
+        "A105W"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00040",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYWMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.533333,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "2c9dccfa92fa",
+      "first_round": 1,
+      "mutations": [
+        "M106L"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00041",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYALDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.468056,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "f88e6ed6f766",
+      "first_round": 1,
+      "mutations": [
+        "G99H"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00042",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWHGDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "4b6e69c90313",
+      "first_round": 1,
+      "mutations": [
+        "G100E"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00043",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGEDGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.511111,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "058ed95bd61f",
+      "first_round": 1,
+      "mutations": [
+        "D101H"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00044",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGHGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "de7943c5dd73",
+      "first_round": 1,
+      "mutations": [
+        "G102E"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00045",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDEFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.455556,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "cf77042dceed",
+      "first_round": 1,
+      "mutations": [
+        "F103W"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00046",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGWYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.476389,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "45964f402b4a",
+      "first_round": 1,
+      "mutations": [
+        "Y104E"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00047",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFEAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.433333,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "eebe140702e7",
+      "first_round": 1,
+      "mutations": [
+        "A105E"
+      ],
+      "n_mutations": 1,
+      "origin": "round1_seed",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00048",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYEMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.388889,
+        "liability_count": 0,
+        "net_charge": -3
+      },
+      "design_id": "2140e26790a7",
+      "first_round": 2,
+      "mutations": [
+        "G100E",
+        "M106D"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00049",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGEDGFYADDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.388889,
+        "liability_count": 0,
+        "net_charge": -3
+      },
+      "design_id": "da600311d660",
+      "first_round": 2,
+      "mutations": [
+        "G100E",
+        "M106E"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00050",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGEDGFYAEDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.495833,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "6608d61473d3",
+      "first_round": 2,
+      "mutations": [
+        "G100K",
+        "D101S"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00051",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKSGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.5375,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "405519388f8a",
+      "first_round": 2,
+      "mutations": [
+        "D101S",
+        "G102W"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00052",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSWFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.529167,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "7835f8c3d25b",
+      "first_round": 2,
+      "mutations": [
+        "D101K",
+        "A105L"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00053",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGKGFYLMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.531944,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "4811d86a53cb",
+      "first_round": 2,
+      "mutations": [
+        "G100A",
+        "D101K"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00054",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGAKGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.465278,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "43f0ccdc29c4",
+      "first_round": 2,
+      "mutations": [
+        "D101S",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00055",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.486111,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "b0e7f9bb1911",
+      "first_round": 2,
+      "mutations": [
+        "G100K",
+        "A105L"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00056",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKDGFYLMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.452778,
+        "liability_count": 0,
+        "net_charge": 2
+      },
+      "design_id": "d59c74ee687c",
+      "first_round": 2,
+      "mutations": [
+        "G100K",
+        "D101K"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00057",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKKGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.422222,
+        "liability_count": 0,
+        "net_charge": 2
+      },
+      "design_id": "d896259be90b",
+      "first_round": 2,
+      "mutations": [
+        "D101K",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00058",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGKGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.495833,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "1c3fa5288dd4",
+      "first_round": 2,
+      "mutations": [
+        "D101K",
+        "G102S"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00059",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGKSFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.451389,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "46811c6d9b10",
+      "first_round": 2,
+      "mutations": [
+        "G100K",
+        "G102W"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00060",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKDWFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "426376ade013",
+      "first_round": 2,
+      "mutations": [
+        "G100D",
+        "D101E"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00061",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGDEGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.458333,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "7a5cd4a645ae",
+      "first_round": 2,
+      "mutations": [
+        "G100K",
+        "D101E"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00062",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKEGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.379167,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "9ed74ec249be",
+      "first_round": 2,
+      "mutations": [
+        "G100K",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00063",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKDGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.4625,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "87f359672bf5",
+      "first_round": 2,
+      "mutations": [
+        "G100K",
+        "D101H"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00064",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKHGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.427778,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "147aae55e66c",
+      "first_round": 2,
+      "mutations": [
+        "D101E",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00065",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGEGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.431944,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "e86bc2d459dd",
+      "first_round": 2,
+      "mutations": [
+        "D101H",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00066",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGHGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.5375,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "841e381ea9ee",
+      "first_round": 2,
+      "mutations": [
+        "G99W",
+        "D101S"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00067",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWWGSGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "8c914992c971",
+      "first_round": 2,
+      "mutations": [
+        "G100D",
+        "D101S"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00068",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGDSGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.527778,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "6ede809009ef",
+      "first_round": 2,
+      "mutations": [
+        "G102W",
+        "A105L"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00069",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDWFYLMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.494444,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "22bbfbbf39ad",
+      "first_round": 2,
+      "mutations": [
+        "D101S",
+        "F103S"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00070",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSGSYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.531944,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "03ff71056f94",
+      "first_round": 2,
+      "mutations": [
+        "G100K",
+        "D101A"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00071",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKAGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.545833,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "3c26010bf39f",
+      "first_round": 2,
+      "mutations": [
+        "G100K",
+        "D101F"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00072",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKFGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.533333,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "4fa820f5f740",
+      "first_round": 2,
+      "mutations": [
+        "G100K",
+        "D101M"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00073",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKMGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.484722,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "78c3b8c64d6a",
+      "first_round": 2,
+      "mutations": [
+        "G100K",
+        "D101P"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00074",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKPGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.458333,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "45c60b22754e",
+      "first_round": 2,
+      "mutations": [
+        "G100K",
+        "D101Q"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00075",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKQGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.444444,
+        "liability_count": 0,
+        "net_charge": 2
+      },
+      "design_id": "e3dd6814e516",
+      "first_round": 2,
+      "mutations": [
+        "G100K",
+        "D101R"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00076",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKRGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.497222,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "461fbbf04961",
+      "first_round": 2,
+      "mutations": [
+        "G100K",
+        "D101T"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00077",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKTGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.488889,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "83410f085df2",
+      "first_round": 2,
+      "mutations": [
+        "G100K",
+        "D101Y"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00078",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKYGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "08ae46e3bda9",
+      "first_round": 2,
+      "mutations": [
+        "D101A",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00079",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGAGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.515278,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "1571eed837a9",
+      "first_round": 2,
+      "mutations": [
+        "D101F",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00080",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGFGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.538889,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "5224fc58ccb8",
+      "first_round": 2,
+      "mutations": [
+        "D101I",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00081",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGIGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.529167,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "66ec65d271cf",
+      "first_round": 2,
+      "mutations": [
+        "D101L",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00082",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGLGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.502778,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "dd14b3775684",
+      "first_round": 2,
+      "mutations": [
+        "D101M",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00083",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGMGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.454167,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "a73c27550514",
+      "first_round": 2,
+      "mutations": [
+        "D101P",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00084",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGPGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.427778,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "bebdccf8c0cf",
+      "first_round": 2,
+      "mutations": [
+        "D101Q",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00085",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGQGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.413889,
+        "liability_count": 0,
+        "net_charge": 2
+      },
+      "design_id": "939b45454227",
+      "first_round": 2,
+      "mutations": [
+        "D101R",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00086",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGRGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.466667,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "8fb99842c94d",
+      "first_round": 2,
+      "mutations": [
+        "D101T",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00087",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGTGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.534722,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "a0152c442cd3",
+      "first_round": 2,
+      "mutations": [
+        "D101V",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00088",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGVGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.458333,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "83648cfdb163",
+      "first_round": 2,
+      "mutations": [
+        "D101Y",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00089",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGYGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.538889,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "018fd046ac95",
+      "first_round": 2,
+      "mutations": [
+        "D101S",
+        "G102S"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00090",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSSFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "23a58c0667f3",
+      "first_round": 2,
+      "mutations": [
+        "G100E",
+        "D101S"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00091",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGESGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.505556,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "e2e200423ca0",
+      "first_round": 2,
+      "mutations": [
+        "G100H",
+        "D101S"
+      ],
+      "n_mutations": 2,
+      "origin": "round2_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00092",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGHSGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.505556,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "c01e15fe090e",
+      "first_round": 3,
+      "mutations": [
+        "F103A",
+        "M106F"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00093",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGAYAFDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.461111,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "8d4a0ff21738",
+      "first_round": 3,
+      "mutations": [
+        "F103A",
+        "M106G"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00094",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGAYAGDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.422222,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "4a5e60f97a71",
+      "first_round": 3,
+      "mutations": [
+        "G102S",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00095",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDSFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.505556,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "e19c7c5a1934",
+      "first_round": 3,
+      "mutations": [
+        "D101S",
+        "G102H"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00096",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSHFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.513889,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "aaf29ec95592",
+      "first_round": 3,
+      "mutations": [
+        "D101S",
+        "A105G"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00097",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSGFYGMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "fa2f81ac03d3",
+      "first_round": 3,
+      "mutations": [
+        "D101S",
+        "G102N"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00098",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSNFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.527778,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "d3b48d3ed714",
+      "first_round": 3,
+      "mutations": [
+        "D101S",
+        "G102P"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00099",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSPFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "5fb1903ee015",
+      "first_round": 3,
+      "mutations": [
+        "D101S",
+        "G102Q"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00100",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSQFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.4875,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "96c8cc46834c",
+      "first_round": 3,
+      "mutations": [
+        "D101S",
+        "G102R"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00101",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSRFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.540278,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "16d93211e6c4",
+      "first_round": 3,
+      "mutations": [
+        "D101S",
+        "G102T"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00102",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSTFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.531944,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "a3902a2b2d79",
+      "first_round": 3,
+      "mutations": [
+        "D101S",
+        "G102Y"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00103",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSYFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.420833,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "346dbe1e93c3",
+      "first_round": 3,
+      "mutations": [
+        "G102W",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00104",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDWFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.475,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "6e608230a19a",
+      "first_round": 3,
+      "mutations": [
+        "D101S",
+        "A105H"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00105",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSGFYHMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.545833,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "94a5b5565cf9",
+      "first_round": 3,
+      "mutations": [
+        "D101S",
+        "A105M"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00106",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSGFYMMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.470833,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "31d73eebd0ac",
+      "first_round": 3,
+      "mutations": [
+        "D101S",
+        "A105N"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00107",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSGFYNMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.497222,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "d53f341d7160",
+      "first_round": 3,
+      "mutations": [
+        "D101S",
+        "A105P"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00108",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSGFYPMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.470833,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "153dd4c11783",
+      "first_round": 3,
+      "mutations": [
+        "D101S",
+        "A105Q"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00109",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSGFYQMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.456944,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "999cb21674bc",
+      "first_round": 3,
+      "mutations": [
+        "D101S",
+        "A105R"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00110",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSGFYRMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.509722,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "c2a0f502f535",
+      "first_round": 3,
+      "mutations": [
+        "D101S",
+        "A105T"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00111",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSGFYTMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "14b6412f74ae",
+      "first_round": 3,
+      "mutations": [
+        "D101S",
+        "A105Y"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00112",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSGFYYMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "135eb00c0b2b",
+      "first_round": 3,
+      "mutations": [
+        "G100N",
+        "D101S"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00113",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGNSGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.527778,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "d9719e23e501",
+      "first_round": 3,
+      "mutations": [
+        "G100P",
+        "D101S"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00114",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGPSGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "5de17ca006ca",
+      "first_round": 3,
+      "mutations": [
+        "G100Q",
+        "D101S"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00115",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGQSGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.4875,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "cb82d9a5249e",
+      "first_round": 3,
+      "mutations": [
+        "G100R",
+        "D101S"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00116",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGRSGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.540278,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "8814c847c050",
+      "first_round": 3,
+      "mutations": [
+        "G100T",
+        "D101S"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00117",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGTSGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.531944,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "38551edbf6e6",
+      "first_round": 3,
+      "mutations": [
+        "G100Y",
+        "D101S"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00118",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGYSGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.420833,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "04104b8f7304",
+      "first_round": 3,
+      "mutations": [
+        "G99W",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00119",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWWGDGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.472222,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "05c101eb2606",
+      "first_round": 3,
+      "mutations": [
+        "G102F",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00120",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDFFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.388889,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "e29c2b13782b",
+      "first_round": 3,
+      "mutations": [
+        "G102H",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00121",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDHFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.495833,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "aa8111885551",
+      "first_round": 3,
+      "mutations": [
+        "G102I",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00122",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDIFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.486111,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "497ac31f6a69",
+      "first_round": 3,
+      "mutations": [
+        "G102L",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00123",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.459722,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "9ce37556818b",
+      "first_round": 3,
+      "mutations": [
+        "G102M",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00124",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDMFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.384722,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "d7cfe178e407",
+      "first_round": 3,
+      "mutations": [
+        "G102N",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00125",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDNFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.411111,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "e34f4a41b8a9",
+      "first_round": 3,
+      "mutations": [
+        "G102P",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00126",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDPFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.384722,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "cd85ee57a2d7",
+      "first_round": 3,
+      "mutations": [
+        "G102Q",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00127",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDQFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.370833,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "92171a9bd48a",
+      "first_round": 3,
+      "mutations": [
+        "G102R",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00128",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDRFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.423611,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "f0e21d990067",
+      "first_round": 3,
+      "mutations": [
+        "G102T",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00129",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDTFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.491667,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "03bf7f716ab5",
+      "first_round": 3,
+      "mutations": [
+        "G102V",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00130",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDVFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.415278,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "0431f3958eb0",
+      "first_round": 3,
+      "mutations": [
+        "G102Y",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00131",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDYFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "4835f9e8fec9",
+      "first_round": 3,
+      "mutations": [
+        "D101S",
+        "M106K"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00132",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSGFYAKDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.388889,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "6319952b1e0a",
+      "first_round": 3,
+      "mutations": [
+        "G100H",
+        "A105K"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00133",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGHDGFYKMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "dfef6bb8f665",
+      "first_round": 3,
+      "mutations": [
+        "G99E",
+        "D101S"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00134",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWEGSGFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "f3b120afcfcb",
+      "first_round": 3,
+      "mutations": [
+        "D101S",
+        "G102E"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00135",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSEFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.452778,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "669003b34ff7",
+      "first_round": 3,
+      "mutations": [
+        "G100K",
+        "G102S"
+      ],
+      "n_mutations": 2,
+      "origin": "round3_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": "CST00136",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKDSFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.493056,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "42b833f1de7a",
+      "first_round": 4,
+      "mutations": [
+        "Y104F",
+        "M106H"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFFAHDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.488889,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "e8aebc41177b",
+      "first_round": 4,
+      "mutations": [
+        "Y104F",
+        "M106N"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFFANDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.530556,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "d8973cc3ee3b",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "A105T"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYTMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.491667,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "b63885b5b1af",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "A105N"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYNMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.522222,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "1993cb1941a8",
+      "first_round": 4,
+      "mutations": [
+        "G100N",
+        "G102L"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGNDLFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.522222,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "735dba573501",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "A105Y"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYYMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.533333,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "ab4fe82ba70b",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "M106G"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYAGDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.522222,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "92a6c678e0b4",
+      "first_round": 4,
+      "mutations": [
+        "G99D",
+        "G102L"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWDGDLFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.526389,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "b92cbb98447e",
+      "first_round": 4,
+      "mutations": [
+        "G100H",
+        "G102L"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGHDLFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.516667,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "521996197c39",
+      "first_round": 4,
+      "mutations": [
+        "G100K",
+        "G102L"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKDLFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.548611,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "cb25cf0599cd",
+      "first_round": 4,
+      "mutations": [
+        "G99P",
+        "G102L"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWPGDLFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.522222,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "a316524c9997",
+      "first_round": 4,
+      "mutations": [
+        "G99Q",
+        "G102L"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWQGDLFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.508333,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "72fea0953bdc",
+      "first_round": 4,
+      "mutations": [
+        "G99R",
+        "G102L"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWRGDLFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.490278,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "2461c9af10f5",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "M106E"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYAEDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.494444,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "e4445ad35607",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "M106H"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYAHDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.490278,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "883f1b93adbd",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "M106N"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYANDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.516667,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "abec1a266674",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "M106P"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYAPDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.490278,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "660dd2f296de",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "M106Q"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYAQDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.476389,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "d729f024b925",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "M106R"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYARDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.529167,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "1ee452bf4aba",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "M106T"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYATDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.526389,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "89c1a68df10b",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "M106W"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYAWDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.520833,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "a9c4757ca360",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "M106Y"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYAYDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.522222,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "0f86bd9792bb",
+      "first_round": 4,
+      "mutations": [
+        "G99E",
+        "G102L"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWEGDLFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.477778,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "f11415c8ac27",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "F103E"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLEYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.484722,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "5b858d487d3e",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "M106K"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYAKDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.520833,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "19100675da4d",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "F103G"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLGYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.481944,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "f0f4edbf2479",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "F103H"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLHYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.477778,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "36a80d646ecc",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "F103N"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLNYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.504167,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "a4d5cafd0f1a",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "F103P"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLPYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.477778,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "40d099ab9fb1",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "F103Q"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLQYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "90eb6e88d3db",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "F103R"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLRYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.516667,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "d094c018c586",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "F103T"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLTYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.508333,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "7e719b166a5c",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "F103Y"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLYYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.538889,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "74019eb99fb5",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "Y104H"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFHAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.515278,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "c18c7234b0b7",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "F103S"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLSYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.534722,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "13fe41b7c363",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "Y104N"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFNAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.534722,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "bf3f86722873",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "Y104Q"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFQAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.520833,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "2dd890f85101",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "Y104R"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFRAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.518056,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "0f4ea6ee4d6c",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "A105P"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYPMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.513889,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "7e8f5c58d66c",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "F103W"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLWYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.522222,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "00ec9c8b1620",
+      "first_round": 4,
+      "mutations": [
+        "G100D",
+        "G102L"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGDDLFYAMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.490278,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "7cd738afb9fb",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "M106D"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYADDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.477778,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "3cb14ea4df3a",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "A105R"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYRMDYWGQGTLVTVSS"
+    },
+    {
+      "computed": {
+        "hydrophobicity": 0.495833,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "6b72a6fc5094",
+      "first_round": 4,
+      "mutations": [
+        "G102L",
+        "A105H"
+      ],
+      "n_mutations": 2,
+      "origin": "round4_guided",
+      "parent": "8b8998709aa9",
+      "registry_id": null,
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDLFYHMDYWGQGTLVTVSS"
+    }
+  ],
+  "external_refs": [
+    {
+      "construct_id": "CST00001",
+      "design_id": "8b8998709aa9",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-001"
+    },
+    {
+      "construct_id": "CST00002",
+      "design_id": "033db628211f",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-002"
+    },
+    {
+      "construct_id": "CST00003",
+      "design_id": "861d7b164749",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-003"
+    },
+    {
+      "construct_id": "CST00004",
+      "design_id": "78cfce74484f",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-004"
+    },
+    {
+      "construct_id": "CST00005",
+      "design_id": "4879e53244a7",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-005"
+    },
+    {
+      "construct_id": "CST00006",
+      "design_id": "87dc3b08adb4",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-006"
+    },
+    {
+      "construct_id": "CST00007",
+      "design_id": "1e9b122824ae",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-007"
+    },
+    {
+      "construct_id": "CST00008",
+      "design_id": "455e284fdf1e",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-008"
+    },
+    {
+      "construct_id": "CST00009",
+      "design_id": "b916813591de",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-009"
+    },
+    {
+      "construct_id": "CST00010",
+      "design_id": "fd8f76aa5818",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-010"
+    },
+    {
+      "construct_id": "CST00011",
+      "design_id": "5592b6553294",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-011"
+    },
+    {
+      "construct_id": "CST00012",
+      "design_id": "79c67a7ef092",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-012"
+    },
+    {
+      "construct_id": "CST00013",
+      "design_id": "76cdf6433ac8",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-013"
+    },
+    {
+      "construct_id": "CST00014",
+      "design_id": "8ea8b1e9fd16",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-014"
+    },
+    {
+      "construct_id": "CST00015",
+      "design_id": "88435c51d137",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-015"
+    },
+    {
+      "construct_id": "CST00016",
+      "design_id": "2cf79e4408c6",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-016"
+    },
+    {
+      "construct_id": "CST00017",
+      "design_id": "5f3a1b5068c6",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-017"
+    },
+    {
+      "construct_id": "CST00018",
+      "design_id": "5fc55d2d2274",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-018"
+    },
+    {
+      "construct_id": "CST00019",
+      "design_id": "845e5cd48da9",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-019"
+    },
+    {
+      "construct_id": "CST00020",
+      "design_id": "5013add1f694",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-020"
+    },
+    {
+      "construct_id": "CST00021",
+      "design_id": "24beed7cdca2",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-021"
+    },
+    {
+      "construct_id": "CST00022",
+      "design_id": "0a81836724cc",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-022"
+    },
+    {
+      "construct_id": "CST00023",
+      "design_id": "574b2ebe0c3b",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-023"
+    },
+    {
+      "construct_id": "CST00024",
+      "design_id": "0c7892d8d3cf",
+      "plate": "R1P1",
+      "round": 1,
+      "sample_id": "SMP-R1-024"
+    },
+    {
+      "construct_id": "CST00025",
+      "design_id": "e31f780d3901",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-025"
+    },
+    {
+      "construct_id": "CST00026",
+      "design_id": "e2158f90500c",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-026"
+    },
+    {
+      "construct_id": "CST00027",
+      "design_id": "4925b930af23",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-027"
+    },
+    {
+      "construct_id": "CST00028",
+      "design_id": "ea525ee66108",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-028"
+    },
+    {
+      "construct_id": "CST00029",
+      "design_id": "f7069713339a",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-029"
+    },
+    {
+      "construct_id": "CST00030",
+      "design_id": "1ca966c765ee",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-030"
+    },
+    {
+      "construct_id": "CST00031",
+      "design_id": "32ce7c2ebebb",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-031"
+    },
+    {
+      "construct_id": "CST00032",
+      "design_id": "8d6f54b3f822",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-032"
+    },
+    {
+      "construct_id": "CST00033",
+      "design_id": "1093e5e99ad7",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-033"
+    },
+    {
+      "construct_id": "CST00034",
+      "design_id": "22071e74814a",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-034"
+    },
+    {
+      "construct_id": "CST00035",
+      "design_id": "cf009e89f84e",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-035"
+    },
+    {
+      "construct_id": "CST00036",
+      "design_id": "075714d6f435",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-036"
+    },
+    {
+      "construct_id": "CST00037",
+      "design_id": "1f44a7f98160",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-037"
+    },
+    {
+      "construct_id": "CST00038",
+      "design_id": "0cbc658a1a74",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-038"
+    },
+    {
+      "construct_id": "CST00039",
+      "design_id": "bb230ac6cc93",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-039"
+    },
+    {
+      "construct_id": "CST00040",
+      "design_id": "74322de16a37",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-040"
+    },
+    {
+      "construct_id": "CST00041",
+      "design_id": "2c9dccfa92fa",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-041"
+    },
+    {
+      "construct_id": "CST00042",
+      "design_id": "f88e6ed6f766",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-042"
+    },
+    {
+      "construct_id": "CST00043",
+      "design_id": "4b6e69c90313",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-043"
+    },
+    {
+      "construct_id": "CST00044",
+      "design_id": "058ed95bd61f",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-044"
+    },
+    {
+      "construct_id": "CST00045",
+      "design_id": "de7943c5dd73",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-045"
+    },
+    {
+      "construct_id": "CST00046",
+      "design_id": "cf77042dceed",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-046"
+    },
+    {
+      "construct_id": "CST00047",
+      "design_id": "45964f402b4a",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-047"
+    },
+    {
+      "construct_id": "CST00048",
+      "design_id": "eebe140702e7",
+      "plate": "R1P2",
+      "round": 1,
+      "sample_id": "SMP-R1-048"
+    },
+    {
+      "construct_id": "CST00001",
+      "design_id": "8b8998709aa9",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-001"
+    },
+    {
+      "construct_id": "CST00016",
+      "design_id": "2cf79e4408c6",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-002"
+    },
+    {
+      "construct_id": "CST00007",
+      "design_id": "1e9b122824ae",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-003"
+    },
+    {
+      "construct_id": "CST00038",
+      "design_id": "0cbc658a1a74",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-004"
+    },
+    {
+      "construct_id": "CST00049",
+      "design_id": "2140e26790a7",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-005"
+    },
+    {
+      "construct_id": "CST00050",
+      "design_id": "da600311d660",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-006"
+    },
+    {
+      "construct_id": "CST00051",
+      "design_id": "6608d61473d3",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-007"
+    },
+    {
+      "construct_id": "CST00052",
+      "design_id": "405519388f8a",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-008"
+    },
+    {
+      "construct_id": "CST00053",
+      "design_id": "7835f8c3d25b",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-009"
+    },
+    {
+      "construct_id": "CST00054",
+      "design_id": "4811d86a53cb",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-010"
+    },
+    {
+      "construct_id": "CST00055",
+      "design_id": "43f0ccdc29c4",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-011"
+    },
+    {
+      "construct_id": "CST00056",
+      "design_id": "b0e7f9bb1911",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-012"
+    },
+    {
+      "construct_id": "CST00057",
+      "design_id": "d59c74ee687c",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-013"
+    },
+    {
+      "construct_id": "CST00058",
+      "design_id": "d896259be90b",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-014"
+    },
+    {
+      "construct_id": "CST00059",
+      "design_id": "1c3fa5288dd4",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-015"
+    },
+    {
+      "construct_id": "CST00060",
+      "design_id": "46811c6d9b10",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-016"
+    },
+    {
+      "construct_id": "CST00061",
+      "design_id": "426376ade013",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-017"
+    },
+    {
+      "construct_id": "CST00062",
+      "design_id": "7a5cd4a645ae",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-018"
+    },
+    {
+      "construct_id": "CST00063",
+      "design_id": "9ed74ec249be",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-019"
+    },
+    {
+      "construct_id": "CST00064",
+      "design_id": "87f359672bf5",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-020"
+    },
+    {
+      "construct_id": "CST00065",
+      "design_id": "147aae55e66c",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-021"
+    },
+    {
+      "construct_id": "CST00066",
+      "design_id": "e86bc2d459dd",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-022"
+    },
+    {
+      "construct_id": "CST00067",
+      "design_id": "841e381ea9ee",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-023"
+    },
+    {
+      "construct_id": "CST00068",
+      "design_id": "8c914992c971",
+      "plate": "R2P1",
+      "round": 2,
+      "sample_id": "SMP-R2-024"
+    },
+    {
+      "construct_id": "CST00069",
+      "design_id": "6ede809009ef",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-025"
+    },
+    {
+      "construct_id": "CST00070",
+      "design_id": "22bbfbbf39ad",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-026"
+    },
+    {
+      "construct_id": "CST00071",
+      "design_id": "03ff71056f94",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-027"
+    },
+    {
+      "construct_id": "CST00072",
+      "design_id": "3c26010bf39f",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-028"
+    },
+    {
+      "construct_id": "CST00073",
+      "design_id": "4fa820f5f740",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-029"
+    },
+    {
+      "construct_id": "CST00074",
+      "design_id": "78c3b8c64d6a",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-030"
+    },
+    {
+      "construct_id": "CST00075",
+      "design_id": "45c60b22754e",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-031"
+    },
+    {
+      "construct_id": "CST00076",
+      "design_id": "e3dd6814e516",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-032"
+    },
+    {
+      "construct_id": "CST00077",
+      "design_id": "461fbbf04961",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-033"
+    },
+    {
+      "construct_id": "CST00078",
+      "design_id": "83410f085df2",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-034"
+    },
+    {
+      "construct_id": "CST00079",
+      "design_id": "08ae46e3bda9",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-035"
+    },
+    {
+      "construct_id": "CST00080",
+      "design_id": "1571eed837a9",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-036"
+    },
+    {
+      "construct_id": "CST00081",
+      "design_id": "5224fc58ccb8",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-037"
+    },
+    {
+      "construct_id": "CST00082",
+      "design_id": "66ec65d271cf",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-038"
+    },
+    {
+      "construct_id": "CST00083",
+      "design_id": "dd14b3775684",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-039"
+    },
+    {
+      "construct_id": "CST00084",
+      "design_id": "a73c27550514",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-040"
+    },
+    {
+      "construct_id": "CST00085",
+      "design_id": "bebdccf8c0cf",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-041"
+    },
+    {
+      "construct_id": "CST00086",
+      "design_id": "939b45454227",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-042"
+    },
+    {
+      "construct_id": "CST00087",
+      "design_id": "8fb99842c94d",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-043"
+    },
+    {
+      "construct_id": "CST00088",
+      "design_id": "a0152c442cd3",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-044"
+    },
+    {
+      "construct_id": "CST00089",
+      "design_id": "83648cfdb163",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-045"
+    },
+    {
+      "construct_id": "CST00090",
+      "design_id": "018fd046ac95",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-046"
+    },
+    {
+      "construct_id": "CST00091",
+      "design_id": "23a58c0667f3",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-047"
+    },
+    {
+      "construct_id": "CST00092",
+      "design_id": "e2e200423ca0",
+      "plate": "R2P2",
+      "round": 2,
+      "sample_id": "SMP-R2-048"
+    },
+    {
+      "construct_id": "CST00001",
+      "design_id": "8b8998709aa9",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-001"
+    },
+    {
+      "construct_id": "CST00088",
+      "design_id": "a0152c442cd3",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-002"
+    },
+    {
+      "construct_id": "CST00050",
+      "design_id": "da600311d660",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-003"
+    },
+    {
+      "construct_id": "CST00060",
+      "design_id": "46811c6d9b10",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-004"
+    },
+    {
+      "construct_id": "CST00093",
+      "design_id": "c01e15fe090e",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-005"
+    },
+    {
+      "construct_id": "CST00094",
+      "design_id": "8d4a0ff21738",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-006"
+    },
+    {
+      "construct_id": "CST00095",
+      "design_id": "4a5e60f97a71",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-007"
+    },
+    {
+      "construct_id": "CST00096",
+      "design_id": "e19c7c5a1934",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-008"
+    },
+    {
+      "construct_id": "CST00097",
+      "design_id": "aaf29ec95592",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-009"
+    },
+    {
+      "construct_id": "CST00098",
+      "design_id": "fa2f81ac03d3",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-010"
+    },
+    {
+      "construct_id": "CST00099",
+      "design_id": "d3b48d3ed714",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-011"
+    },
+    {
+      "construct_id": "CST00100",
+      "design_id": "5fb1903ee015",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-012"
+    },
+    {
+      "construct_id": "CST00101",
+      "design_id": "96c8cc46834c",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-013"
+    },
+    {
+      "construct_id": "CST00102",
+      "design_id": "16d93211e6c4",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-014"
+    },
+    {
+      "construct_id": "CST00103",
+      "design_id": "a3902a2b2d79",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-015"
+    },
+    {
+      "construct_id": "CST00104",
+      "design_id": "346dbe1e93c3",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-016"
+    },
+    {
+      "construct_id": "CST00105",
+      "design_id": "6e608230a19a",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-017"
+    },
+    {
+      "construct_id": "CST00106",
+      "design_id": "94a5b5565cf9",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-018"
+    },
+    {
+      "construct_id": "CST00107",
+      "design_id": "31d73eebd0ac",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-019"
+    },
+    {
+      "construct_id": "CST00108",
+      "design_id": "d53f341d7160",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-020"
+    },
+    {
+      "construct_id": "CST00109",
+      "design_id": "153dd4c11783",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-021"
+    },
+    {
+      "construct_id": "CST00110",
+      "design_id": "999cb21674bc",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-022"
+    },
+    {
+      "construct_id": "CST00111",
+      "design_id": "c2a0f502f535",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-023"
+    },
+    {
+      "construct_id": "CST00112",
+      "design_id": "14b6412f74ae",
+      "plate": "R3P1",
+      "round": 3,
+      "sample_id": "SMP-R3-024"
+    },
+    {
+      "construct_id": "CST00113",
+      "design_id": "135eb00c0b2b",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-025"
+    },
+    {
+      "construct_id": "CST00114",
+      "design_id": "d9719e23e501",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-026"
+    },
+    {
+      "construct_id": "CST00115",
+      "design_id": "5de17ca006ca",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-027"
+    },
+    {
+      "construct_id": "CST00116",
+      "design_id": "cb82d9a5249e",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-028"
+    },
+    {
+      "construct_id": "CST00117",
+      "design_id": "8814c847c050",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-029"
+    },
+    {
+      "construct_id": "CST00118",
+      "design_id": "38551edbf6e6",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-030"
+    },
+    {
+      "construct_id": "CST00119",
+      "design_id": "04104b8f7304",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-031"
+    },
+    {
+      "construct_id": "CST00120",
+      "design_id": "05c101eb2606",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-032"
+    },
+    {
+      "construct_id": "CST00121",
+      "design_id": "e29c2b13782b",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-033"
+    },
+    {
+      "construct_id": "CST00122",
+      "design_id": "aa8111885551",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-034"
+    },
+    {
+      "construct_id": "CST00123",
+      "design_id": "497ac31f6a69",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-035"
+    },
+    {
+      "construct_id": "CST00124",
+      "design_id": "9ce37556818b",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-036"
+    },
+    {
+      "construct_id": "CST00125",
+      "design_id": "d7cfe178e407",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-037"
+    },
+    {
+      "construct_id": "CST00126",
+      "design_id": "e34f4a41b8a9",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-038"
+    },
+    {
+      "construct_id": "CST00127",
+      "design_id": "cd85ee57a2d7",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-039"
+    },
+    {
+      "construct_id": "CST00128",
+      "design_id": "92171a9bd48a",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-040"
+    },
+    {
+      "construct_id": "CST00129",
+      "design_id": "f0e21d990067",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-041"
+    },
+    {
+      "construct_id": "CST00130",
+      "design_id": "03bf7f716ab5",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-042"
+    },
+    {
+      "construct_id": "CST00131",
+      "design_id": "0431f3958eb0",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-043"
+    },
+    {
+      "construct_id": "CST00132",
+      "design_id": "4835f9e8fec9",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-044"
+    },
+    {
+      "construct_id": "CST00133",
+      "design_id": "6319952b1e0a",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-045"
+    },
+    {
+      "construct_id": "CST00134",
+      "design_id": "dfef6bb8f665",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-046"
+    },
+    {
+      "construct_id": "CST00135",
+      "design_id": "f3b120afcfcb",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-047"
+    },
+    {
+      "construct_id": "CST00136",
+      "design_id": "669003b34ff7",
+      "plate": "R3P2",
+      "round": 3,
+      "sample_id": "SMP-R3-048"
+    }
+  ],
+  "hash": "sha256:7f303bfaaf0d6b860a3c58485bb60b0e424d8706846a447a768230195ca1f0e1",
+  "parent": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAMDYWGQGTLVTVSS",
+  "schema_version": 1
+}

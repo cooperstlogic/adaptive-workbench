@@ -69,6 +69,70 @@ def mcp_session(script):
     return lambda calls: asyncio.run(_run(calls))
 
 
+def cli_replay_of(files):
+    """Run the browser's own sequence through the CLI and compare the bytes.
+
+    The browser claims to be the same science on a different runtime. This
+    drives the CLI scripts over the same starting state, in the same order,
+    with the same arguments and no approver named, and returns which files
+    came out identical. Two cannot: a decision record carries the moment a
+    person ruled, and rounds.json carries the moments the graph was rewritten.
+    """
+    from core import schema  # noqa: PLC0415
+
+    web_out = os.path.join(REPO, "web", "public", "workbench")
+    scripts = os.path.join(REPO, "skills", "adaptive-optimization", "scripts")
+    prefix = "projects/demo-trastuzumab/"
+    with tempfile.TemporaryDirectory() as tmp:
+        root = os.path.join(tmp, "demo-trastuzumab")
+        shutil.copytree(os.path.join(web_out, "projects", "demo-trastuzumab"), root)
+        store = os.path.join(tmp, "store.json")
+        shutil.copyfile(os.path.join(web_out, "lims_store", "demo-trastuzumab.json"), store)
+        exports = os.path.join(tmp, "exports")
+        os.makedirs(exports)
+        csv_path = os.path.join(exports, "demo-trastuzumab_round4.csv")
+        payload = schema.read_json(os.path.join(web_out, "reference",
+                                                "decision_004.proposal.json"))
+        proposal = os.path.join(tmp, "proposal_004.json")
+        with open(proposal, "w", encoding="utf-8") as fh:
+            json.dump({k: payload[k] for k in
+                       ("trigger", "hypotheses", "recommendation", "ad_hoc")}, fh, indent=1)
+
+        def run(*argv):
+            r = subprocess.run([sys.executable] + list(argv), cwd=REPO,
+                               capture_output=True, text=True)
+            if r.returncode != 0:
+                raise RuntimeError("%s\n%s" % (argv[0], r.stderr or r.stdout))
+
+        lims = os.path.join(REPO, "lims.py")
+        S = lambda name: os.path.join(scripts, name)  # noqa: E731
+        run(S("select_batch.py"), "--project", root, "--round", "4")
+        run(lims, "submit", "--project", root, "--round", "4", "--store", store)
+        run(lims, "pull", "--project", root, "--round", "R4", "--out", csv_path,
+            "--store", store)
+        run(S("import_round.py"), "--project", root, "--round", "4", "--results", csv_path,
+            "--offset", "if-clear", "--authority", "bridge_policy:browser --offset if-clear")
+        run(S("evaluate_prior.py"), "--project", root, "--round", "4")
+        run(S("record_decision.py"), "--project", root, "--round", "4", "--propose", proposal)
+        run(S("record_decision.py"), "--project", root, "--round", "4", "--rule", "accepted",
+            "--by", "check.py", "--note", "ruled by web/scripts/pyodide-check.mjs")
+        run(S("import_round.py"), "--project", root, "--round", "4", "--results", csv_path,
+            "--offset", "always", "--authority", "decision_004")
+        run(S("evaluate_prior.py"), "--project", root, "--round", "4")
+        run(S("fit_surrogates.py"), "--project", root, "--round", "4")
+        run(S("generate_candidates.py"), "--project", root, "--round", "5")
+        run(S("select_batch.py"), "--project", root, "--round", "5")
+
+        same, drifted = [], []
+        for rel, text in sorted(files.items()):
+            if not rel.startswith(prefix):
+                continue
+            path = os.path.join(root, rel[len(prefix):])
+            got = open(path, encoding="utf-8").read() if os.path.isfile(path) else None
+            (same if got == text else drifted).append(rel[len(prefix):])
+        return same, drifted
+
+
 def main():
     import numpy as np
 
@@ -1037,6 +1101,136 @@ def main():
               REPO, p.replace("${CLAUDE_PLUGIN_ROOT}/", "").replace("./", "")))
               for p in named),
           "%d paths, the interpreter and both connectors" % len(named))
+
+    print("\nPhase 6: the browser bundle is the repository, not a copy of it")
+    sys.path.insert(0, os.path.join(REPO, "web"))
+    import bundle as web_bundle  # noqa: PLC0415
+
+    OUT = web_bundle.OUT
+    fresh, why = web_bundle.check()
+    check("the bundle the site serves is the one this repository would write now",
+          fresh, why or "web/bundle.py --check")
+    manifest = (schema.read_json(os.path.join(OUT, "manifest.json"))
+                if os.path.isfile(os.path.join(OUT, "manifest.json")) else {"code": []})
+    verbatim = [e for e in manifest["code"] if e.get("verbatim")]
+    identical = [e for e in verbatim
+                 if os.path.isfile(os.path.join(REPO, e["path"]))
+                 and open(os.path.join(REPO, e["path"]), "rb").read()
+                 == open(os.path.join(OUT, e["path"]), "rb").read()]
+    check("every module the browser executes is the repository's, byte for byte",
+          len(identical) == len(verbatim) and len(verbatim) >= 20,
+          "%d of %d files; CLAUDE.md non-negotiable 2 applied to the surface most "
+          "tempted to fork" % (len(identical), len(verbatim)))
+    check("and they are laid out in the repo's own shape, so every import resolves",
+          all(os.path.isfile(os.path.join(OUT, rel)) for rel in
+              ("core/diagnostics.py", "data/oracle.py", "lims.py",
+               "skills/adaptive-optimization/scripts/import_round.py")),
+          "core/, data/, lims.py and the scripts, where dirname(__file__) expects them")
+    check("nothing under web/src/ is Python, and no driver logic hides in the page",
+          not [f for _d, _s, fs in os.walk(os.path.join(REPO, "web", "src"))
+               for f in fs if f.endswith(".py")],
+          "the page calls wb_driver; wb_driver calls the scripts; the scripts call core/")
+
+    print("\nPhase 6: the state the browser opens on is derived, not hand-written")
+    demo = os.path.join(REPO, "projects", "demo-trastuzumab")
+    web_project = os.path.join(OUT, "projects", "demo-trastuzumab")
+    committed_batch = schema.read_json(os.path.join(demo, "batches", "batch_004.json"))
+    shipped_batch = schema.read_json(os.path.join(web_project, "batches", "batch_004.json"))
+    differ = sorted(k for k in set(shipped_batch) | set(committed_batch)
+                    if shipped_batch.get(k) != committed_batch.get(k))
+    check("the shipped round-4 batch is the committed one with the signature taken off",
+          differ == ["approval", "hash"]
+          and shipped_batch["approval"]["status"] == "unreviewed",
+          "differs in %s and nothing else" % ", ".join(differ))
+    def has_time(obj):
+        """Any ISO timestamp anywhere in the record, at any depth."""
+        if isinstance(obj, dict):
+            return any(has_time(v) for v in obj.values())
+        if isinstance(obj, list):
+            return any(has_time(v) for v in obj)
+        return isinstance(obj, str) and len(obj) >= 19 and obj[4] == "-" and obj[10] == "T"
+
+    check("and it therefore carries no timestamp, which is what makes its hash portable",
+          not has_time(shipped_batch) and has_time(committed_batch),
+          "%s is a pure function of the pool, the model run and the objectives; the "
+          "committed one carries the moment it was signed and can never be reproduced"
+          % schema.short_hash(shipped_batch["hash"]))
+    check("the round the visitor is asked to approve has not been run yet",
+          not os.path.exists(os.path.join(web_project, "evidence", "snapshot_004.json"))
+          and not os.path.exists(os.path.join(web_project, "decisions",
+                                              "decision_004.json"))
+          and os.path.isfile(os.path.join(web_project, "candidates", "pool_004.json")),
+          "pool and batch present; snapshot, evaluation and decision absent")
+    store = schema.read_json(os.path.join(OUT, "lims_store", "demo-trastuzumab.json"))
+    check("and the registry has not been sent it either",
+          set(store["rounds"]) == {"R1", "R2", "R3"}
+          and store["next_construct"] == len(store["constructs"]) + 1,
+          "%d constructs, next %s -- the round-4 designs get their ids when submitted"
+          % (len(store["constructs"]), store["next_construct"]))
+
+    proposal = schema.read_json(os.path.join(OUT, "reference", "decision_004.proposal.json"))
+    carried = [k for h in proposal["hypotheses"] for k in ("result", "source", "inputs")
+               if k in h]
+    check("the shipped proposal carries claims and no numbers",
+          not carried and len(proposal["hypotheses"]) == 8
+          and all(h.get("diagnostic") and h.get("reading") for h in proposal["hypotheses"]),
+          "8 hypotheses, every result stripped; record_decision.py re-runs each test in "
+          "the browser -- CLAUDE.md non-negotiable 7")
+    committed_record = schema.read_json(os.path.join(demo, "decisions",
+                                                     "decision_004.json"))
+    check("and it is the committed record's own claims, not a retelling of them",
+          [h["claim"] for h in proposal["hypotheses"]]
+          == [h["claim"] for h in committed_record["hypotheses"]]
+          and proposal["source_record"] == committed_record["hash"],
+          "derived from %s by web/bundle.py"
+          % schema.short_hash(committed_record["hash"]))
+
+    print("\nPhase 6: the browser and the CLI (SPEC.md acceptance criterion 7)")
+    node = shutil.which("node")
+    harness = os.path.join(REPO, "web", "scripts", "pyodide-check.mjs")
+    staged = os.path.join(REPO, "web", "public", "pyodide", "pyodide.mjs")
+    if not (node and os.path.isfile(staged)):
+        check("the browser path runs the same science as the CLI",
+              False,
+              "SKIPPED: needs node and a staged runtime -- run "
+              "`cd web && npm install && npm run sync`")
+    else:
+        proc = subprocess.run([node, harness, "--json"], cwd=REPO,
+                              capture_output=True, text=True)
+        browser = json.loads(proc.stdout) if proc.returncode == 0 else None
+        check("the whole round-4 loop runs in Pyodide, in the browser's own runtime",
+              browser is not None and browser["round4"]["flagged"]
+              and browser["decision"]["action"] == "apply_offset_correction",
+              (("Python %s, numpy %s, %d ms"
+                % (browser["python"], browser["numpy"], browser["timing"]["total_ms"]))
+               if browser else (proc.stderr or "")[-200:]))
+        if browser:
+            snap4 = schema.read_json(os.path.join(demo, "evidence", "snapshot_004.json"))
+            check("and it reproduces the committed round-4 numbers under a different numpy",
+                  abs(browser["round4"]["mean_signed_residual"]
+                      - snap4["anomaly"]["mean_signed_residual"]) < 5e-7
+                  and abs(browser["round4"]["bridge_offset"]
+                          - snap4["frame"]["offset_estimate"]["offset"]) < 5e-7,
+                  "mean signed residual %.6f, bridge %.6f, against numpy %s on Python %s"
+                  % (browser["round4"]["mean_signed_residual"],
+                     browser["round4"]["bridge_offset"], browser["numpy"],
+                     browser["python"]))
+            check("approving a batch advances the round in under five seconds",
+                  browser["timing"]["approve_ms"] < 5000
+                  and browser["timing"]["advance_ms"] < 5000,
+                  "approve %d ms, advance %d ms -- phase 6's done-condition"
+                  % (browser["timing"]["approve_ms"], browser["timing"]["advance_ms"]))
+
+            same, drifted = cli_replay_of(browser["files"])
+            check("the browser and the CLI write byte-identical artifacts",
+                  sorted(drifted) == ["decisions/decision_004.json", "rounds.json"],
+                  "%d of %d files identical; the two that differ carry the time a person "
+                  "ruled and the times the graph was rewritten"
+                  % (len(same), len(same) + len(drifted)))
+            check("including the next round's batch, which is criterion 7",
+                  "batches/batch_005.json" in same,
+                  "batch_005 %s on both surfaces"
+                  % schema.short_hash(browser["after"]["round5_batch_hash"]))
 
     if FAILS:
         print("\n%d of %d checks FAILED:" % (len(FAILS), TOTAL))

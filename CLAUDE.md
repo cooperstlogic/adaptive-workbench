@@ -5,20 +5,23 @@ every choice already settled.
 
 ## Where the build is
 
-**Phases 1 to 5b are done. The hour-3 gate and the hour-5 gate both passed, the
-plugin runs in Claude Science and the round-4 diagnosis reproduces there, and the gap
-audit is written — decisions 105 to 111. Phase 6 is next, and it builds against the
-surviving gaps rather than the claimed ones.** Full status,
-results and commands are in `README.md`; every settled choice and its reasoning is in
-`DECISIONS.md`. Read both before writing code, and read
-`skills/adaptive-optimization/SKILL.md` before touching anything in the round loop.
+**Phases 1 to 6 are done. Both gates passed, the plugin runs in Claude Science and the
+round-4 diagnosis reproduces there, the gap audit is written — decisions 105 to 111 — and
+the browser now runs the round loop on the repository's own modules, writing artifacts
+byte-identical to the CLI's. Phase 7 is next: the live agent in the centre column, the
+push-back round trip, the budget cap and verified replay.** Full status, results and
+commands are in `README.md`; every settled choice and its reasoning is in `DECISIONS.md`.
+Read both before writing code, and read `skills/adaptive-optimization/SKILL.md` before
+touching anything in the round loop.
 
 - Use `.venv/bin/python`, never `python3` — the system interpreter has no numpy.
-- Run `.venv/bin/python check.py` before and after any phase. It verifies 132 invariants
+- Run `.venv/bin/python check.py` before and after any phase. It verifies 147 invariants
   that correspond to rules here and numbers in `DECISIONS.md`; a failure means the state
   drifted from what is documented. It takes about half a minute, because it runs two full
-  six-round campaigns through the CLI, checks them against the evaluator, and drives both
-  connectors over the MCP protocol.
+  six-round campaigns through the CLI, checks them against the evaluator, drives both
+  connectors over the MCP protocol, and boots Pyodide to compare the browser's artifacts
+  against the CLI's byte for byte. The last of those needs `cd web && npm install && npm
+  run sync`; without it that check reports SKIPPED and fails, which is deliberate.
 - **The threshold is already fixed at 10.762 pKD**, pre-registered and recorded before any
   campaign ran. Do not recompute, re-pick, or adjust it. Do not change the landscape or
   its parameters. If guided does not separate from random, say so.
@@ -55,13 +58,21 @@ human, and what was cut to pay for it. Read them before phase 6.
 the skill and the connectors wrote it, `check.py` recomputes every number in it, and its
 whole value is that nobody touched it. Amendments go through a ruling — decision 99.
 
-**Phase 5b is done and its audit is what phase 6 builds against.** The plugin installs
-into Claude Science, all eight tools run there, and the round-4 diagnosis reproduces
-every number and input hash. The audit is decisions 105–111: three of the four claimed
-gaps survive narrowed, one is under-tested, and three unclaimed gaps were found that are
-stronger than two of the four. **Build against 105, 106 and 109** — a typed decision with
-verbs bound to code paths, a round graph with somewhere to render, and a connector that
-can declare what it needs. Narrow 107 to one component. Do not lean on 108.
+**Phase 5b's audit is what phase 6 was built against, and phase 7 inherits the same
+list.** The audit is decisions 105–111: three of the four claimed gaps survive narrowed,
+one is under-tested, and three unclaimed gaps were found that are stronger than two of the
+four. Phase 6 answered 105 with four verbs outside the composer, 106 with the Rounds view,
+107 with the Notebook tab, and 109 with a requirements table derived from the manifests.
+108 is not leaned on anywhere.
+
+**Phase 6 is done — decisions 112 to 121.** Three things from it change how phase 7 works.
+The browser mounts `core/` byte for byte rather than bundling a copy, and `check.py` fails
+if a copy drifts, so **re-run `python web/bundle.py` after touching anything the browser
+executes** — including `web/py/wb_driver.py`. Cross-surface hash claims are made on
+*unsigned* selection records, because `--approved-by` stamps a timestamp inside the hashed
+body and it propagates down the whole chain. And **round 5 flags at −0.818 pKD on the
+product path** — reproduced by both surfaces, predicted by `decision_004`'s own `if_wrong`
+line — which gives phase 7 a round nobody has diagnosed yet. Use it.
 
 ## The two proof artifacts
 

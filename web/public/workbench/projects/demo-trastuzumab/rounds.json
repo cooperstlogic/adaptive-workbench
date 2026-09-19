@@ -1,0 +1,117 @@
+{
+  "hash": "sha256:62d727fc6a6957fa6790bd1ac4908a9693d2f82c47d463fdfd71e7aefcef85dd",
+  "project": "demo-trastuzumab",
+  "rounds": [
+    {
+      "batch": {
+        "file": "batches/batch_001.json",
+        "hash": "sha256:91b9f49ca3fb43f65da808cb269fa8a77741c721ba770225d22b5cf7a50f8bd3"
+      },
+      "evaluation": {
+        "file": "batches/batch_001.eval.json",
+        "hash": "sha256:8c31148a6b2f06d2260da5267e8e95b5e7cf9349583a9d16ef1404e5c27a7b0e"
+      },
+      "flagged": false,
+      "model": {
+        "file": "models/run_001.json",
+        "hash": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d"
+      },
+      "pool": {
+        "file": "candidates/pool_001.json",
+        "hash": "sha256:7348d6fa875fe65659fe7a514fdf96e2b42281d1005db4503806de9f34898547"
+      },
+      "round": 1,
+      "snapshot": {
+        "file": "evidence/snapshot_001.json",
+        "hash": "sha256:77a862441db7d6ff17a2f7322d6c3c9d06628491bb89244ffaabb1b3eadae670"
+      },
+      "submission": {
+        "assay_version": "v1.2",
+        "n_samples": 48,
+        "registry": "mock-lims",
+        "round_id": "R1"
+      },
+      "updated": "2026-09-19T17:53:00+00:00"
+    },
+    {
+      "batch": {
+        "file": "batches/batch_002.json",
+        "hash": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81"
+      },
+      "decision": {
+        "file": "decisions/decision_002.json",
+        "hash": "sha256:de562c21b843faa873ceb9e8291deb26c80fef6e750d2cc3962e1aae31f9a0ce"
+      },
+      "decision_status": "ruled",
+      "evaluation": {
+        "file": "batches/batch_002.eval.json",
+        "hash": "sha256:3b0db3dabf9dbb99d82598a814eb754645244ce591895d6e93710ea639d480e5"
+      },
+      "flagged": true,
+      "model": {
+        "file": "models/run_002.json",
+        "hash": "sha256:2bbcf7a19bbdd3fac826f65c09dc6e5a1bab2486cfb563eeffab38bc505b8d0f"
+      },
+      "pool": {
+        "file": "candidates/pool_002.json",
+        "hash": "sha256:2efb37ab59a03173ebba1bce8dc15145606ed893f03093274e82d8f7fdb56ddf"
+      },
+      "round": 2,
+      "snapshot": {
+        "file": "evidence/snapshot_002.json",
+        "hash": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d"
+      },
+      "submission": {
+        "assay_version": "v1.2",
+        "n_samples": 48,
+        "registry": "mock-lims",
+        "round_id": "R2"
+      },
+      "updated": "2026-09-19T17:53:15+00:00"
+    },
+    {
+      "batch": {
+        "file": "batches/batch_003.json",
+        "hash": "sha256:0783c299dc52b513a4f5595b41eb9f4995bac19bcb31fe9215cd91c3ff654fda"
+      },
+      "evaluation": {
+        "file": "batches/batch_003.eval.json",
+        "hash": "sha256:8d589fd3a70a380a87504898dec629f3890683c12547e851047aa7a915d87b28"
+      },
+      "flagged": false,
+      "model": {
+        "file": "models/run_003.json",
+        "hash": "sha256:d86da1213e5a50a3f1a139400045faab73de242d9bbf6adee76dc94068e025bf"
+      },
+      "pool": {
+        "file": "candidates/pool_003.json",
+        "hash": "sha256:8050c26301fa5764cccc04c7e6688fc2f4345b120fc4792b86e8028035ad33b9"
+      },
+      "round": 3,
+      "snapshot": {
+        "file": "evidence/snapshot_003.json",
+        "hash": "sha256:25aa79959e67402f2ea8cd1d33137689b2ec403602db326b5c6ae7525578b2c2"
+      },
+      "submission": {
+        "assay_version": "v1.2",
+        "n_samples": 48,
+        "registry": "mock-lims",
+        "round_id": "R3"
+      },
+      "updated": "2026-09-19T17:53:25+00:00"
+    },
+    {
+      "batch": {
+        "file": "batches/batch_004.json",
+        "hash": "sha256:ff8df7984a20d24698cd72818766b34a864a1599df242b6be2cabfd87a47d029"
+      },
+      "pool": {
+        "file": "candidates/pool_004.json",
+        "hash": "sha256:65a9390bcafc2252d15b0d04f5a641bedc3b8f7b02de94e627919c75d85333eb"
+      },
+      "round": 4,
+      "updated": "2026-09-19T23:02:20+00:00"
+    }
+  ],
+  "schema_version": 1
+}

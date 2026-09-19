@@ -1,0 +1,83 @@
+{
+  "kind": "project_requirements",
+  "needs": [
+    {
+      "declared_in": ".claude-plugin/plugin.json",
+      "in_the_host": "refused; the sandbox will not exec a binary under $HOME, and the host supplies its own bare `python` instead",
+      "satisfied_by": "the loader, in Claude Code",
+      "value": "${CLAUDE_PLUGIN_ROOT}/.venv/bin/python",
+      "what": "an interpreter"
+    },
+    {
+      "declared_in": ".claude-plugin/plugin.json",
+      "in_the_host": "one dialog each, a whole command line in a single field",
+      "satisfied_by": "the loader, in Claude Code",
+      "value": "registry, bioprovider",
+      "what": "two stdio connectors"
+    },
+    {
+      "declared_in": ".claude-plugin/marketplace.json",
+      "in_the_host": "imported from GitHub, with its commit recorded",
+      "satisfied_by": "the loader, in Claude Code",
+      "value": "skills/adaptive-optimization",
+      "what": "the skill"
+    },
+    {
+      "declared_in": "nothing declares this",
+      "in_the_host": "a hand-written [sandbox] user_read_paths in ~/.claude-science/config.toml, and a restart",
+      "satisfied_by": "the working directory, in Claude Code",
+      "value": "<repository root>",
+      "what": "read access to the code and the project"
+    },
+    {
+      "declared_in": "nothing declares this",
+      "in_the_host": "user_write_paths, beside it, in the same undocumented block",
+      "satisfied_by": "the working directory, in Claude Code",
+      "value": "lims_store/",
+      "what": "write access, and only here"
+    }
+  ],
+  "note": "The first three rows a manifest declares and a loader satisfies. The last two no manifest can express, which is the finding: the host has every primitive needed -- sandbox grants, per-tool approval, a local-command transport -- and no way for a connector to say what it requires.",
+  "plugin": {
+    "name": "adaptive-optimization",
+    "version": "1.0.0"
+  },
+  "schema_version": 1,
+  "servers": [
+    {
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/connectors/registry_server.py"
+      ],
+      "command": "${CLAUDE_PLUGIN_ROOT}/.venv/bin/python",
+      "name": "registry",
+      "tools": [
+        "submit_batch",
+        "list_designs",
+        "pull_assay_results",
+        "get_construct",
+        "attach_recommendation"
+      ],
+      "transport": "stdio",
+      "withheld": [
+        "create_sample",
+        "edit_assay_result",
+        "start_workflow",
+        "delete_record"
+      ]
+    },
+    {
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/connectors/bioprovider_server.py"
+      ],
+      "command": "${CLAUDE_PLUGIN_ROOT}/.venv/bin/python",
+      "name": "bioprovider",
+      "tools": [
+        "embed_sequences",
+        "score_properties",
+        "predict_structures"
+      ],
+      "transport": "stdio",
+      "withheld": []
+    }
+  ]
+}

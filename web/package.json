@@ -1,0 +1,21 @@
+{
+  "name": "adaptive-workbench-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "sync": "python3 ../web/bundle.py && node scripts/stage-pyodide.mjs",
+    "dev": "vite",
+    "build": "node scripts/stage-pyodide.mjs && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.1",
+    "pyodide": "314.0.7",
+    "vite": "^8.3.0"
+  }
+}

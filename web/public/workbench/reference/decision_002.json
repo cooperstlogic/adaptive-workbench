@@ -1,0 +1,939 @@
+{
+  "ad_hoc": [
+    {
+      "code": "# How much does the model discriminate between this round's designs at all?\nimport json\nimport numpy as np\nbatch = json.load(open(\"projects/demo-trastuzumab/batches/batch_002.json\"))\nmu = np.array([s[\"pred_mean\"] for s in batch[\"slots\"] if s[\"slot\"] == \"pick\"])\nsd = np.array([s[\"pred_sd\"] for s in batch[\"slots\"] if s[\"slot\"] == \"pick\"])\nprint(\"picks                %d\" % mu.size)\nprint(\"prediction range     %.4f pKD  (%.4f to %.4f)\" % (np.ptp(mu), mu.min(), mu.max()))\nprint(\"prediction sd        %.4f pKD\" % mu.std(ddof=1))\nprint(\"mean predictive sd   %.4f pKD\" % sd.mean())\nprint(\"spread / uncertainty %.4f\" % (mu.std(ddof=1) / sd.mean()))",
+      "note": "one-off, unversioned; evidence a human reads, never an input to a code path",
+      "question": "How much does the model discriminate between this round's designs at all? No library test reports the spread of the predictions themselves.",
+      "stdout": "picks                42\nprediction range     0.0092 pKD  (9.0683 to 9.0775)\nprediction sd        0.0018 pKD\nmean predictive sd   0.4062 pKD\nspread / uncertainty 0.0045"
+    }
+  ],
+  "hash": "sha256:de562c21b843faa873ceb9e8291deb26c80fef6e750d2cc3962e1aae31f9a0ce",
+  "hypotheses": [
+    {
+      "args": {},
+      "claim": "A run or reagent offset between round 1 and round 2 moved every well up.",
+      "diagnostic": "offset_from_controls",
+      "id": "h1",
+      "inputs": {
+        "batch": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81",
+        "model_run": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d",
+        "snapshot": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d"
+      },
+      "reading": "not supported",
+      "reasoning": "The two shared designs agree with each other and put the run at -0.167 pKD, se 0.064 -- a small drift in the opposite direction to the surprise. The assay version is v1.2, which round 1 already characterized. An offset that would explain designs coming back 0.765 above prediction has to be positive and roughly that size; this one is negative and an eighth of it.",
+      "result": {
+        "assay_version": "v1.2",
+        "concordance_k": 2.0,
+        "concordance_tolerance": 0.316762,
+        "concordant": true,
+        "delta_range": 0.128297,
+        "delta_sd": 0.09072,
+        "frame": {
+          "authority": "unruled",
+          "offset_applied": 0.0
+        },
+        "known_version_offset": 0.0,
+        "n_bridge": 2,
+        "n_scored": 45,
+        "note": "bridge of 2; spread sd 0.091 against a tolerance of 0.317, being 2.0 x the round's read-noise scale 0.158",
+        "offset_pkd": -0.166601,
+        "per_design_delta": [
+          -0.102452,
+          -0.230749
+        ],
+        "read_noise_scale": 0.158381,
+        "round": 2,
+        "scope": "all",
+        "scored_excludes": "construct failures, censored wells, and designs the batch carried no prediction for",
+        "se": 0.064149,
+        "test": "offset_from_controls",
+        "unit": "pKD"
+      },
+      "source": "core.diagnostics.offset_from_controls"
+    },
+    {
+      "args": {},
+      "claim": "The assay was unstable while the plates were read, so the reads are simply noisy.",
+      "diagnostic": "replicate_concordance",
+      "id": "h2",
+      "inputs": {
+        "batch": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81",
+        "model_run": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d",
+        "snapshot": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d"
+      },
+      "reading": "not supported",
+      "reasoning": "45 designs carry two usable reads. The round's own read-noise scale is 0.158 pKD and no design's replicates disagree by more than the 0.475 tolerance. The reads are repeatable; whatever moved the round was there before the plate was read.",
+      "result": {
+        "flagged": [],
+        "frame": {
+          "authority": "unruled",
+          "offset_applied": 0.0
+        },
+        "max_read_sd": 0.439974,
+        "median_read_sd": 0.116652,
+        "n_flagged": 0,
+        "n_scored": 45,
+        "n_single_read": 0,
+        "n_with_replicates": 45,
+        "note": "45 designs with two usable reads, noise scale 0.158, 0 above the 0.475 tolerance",
+        "outlier_k": 3.0,
+        "read_noise_scale": 0.158381,
+        "round": 2,
+        "scope": "all",
+        "scored_excludes": "construct failures, censored wells, and designs the batch carried no prediction for",
+        "test": "replicate_concordance",
+        "tolerance": 0.475143
+      },
+      "source": "core.diagnostics.replicate_concordance"
+    },
+    {
+      "args": {},
+      "claim": "One plate ran high and carried the round with it.",
+      "diagnostic": "residual_by_plate",
+      "id": "h3",
+      "inputs": {
+        "batch": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81",
+        "model_run": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d",
+        "snapshot": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d"
+      },
+      "reading": "not supported",
+      "reasoning": "R2P1 sits at +0.806 over 22 designs and R2P2 at +0.637 over 23. The gap of 0.169 pKD is 0.78 standard errors and both plates are high. A plate artifact moves one plate and leaves the other; this moved both.",
+      "result": {
+        "by_plate": {
+          "R2P1": {
+            "mean": 0.806125,
+            "n": 22,
+            "sd": 0.68491,
+            "se": 0.146023
+          },
+          "R2P2": {
+            "mean": 0.636692,
+            "n": 23,
+            "sd": 0.775152,
+            "se": 0.16163
+          }
+        },
+        "frame": {
+          "authority": "unruled",
+          "offset_applied": 0.0
+        },
+        "max_gap": 0.169433,
+        "n": 45,
+        "n_scored": 45,
+        "note": "2 plates; largest difference between plate means 0.169 against a standard error of 0.218",
+        "overall": {
+          "mean": 0.719526,
+          "n": 45,
+          "sd": 0.729148,
+          "se": 0.108695
+        },
+        "round": 2,
+        "scope": "all",
+        "scored_excludes": "construct failures, censored wells, and designs the batch carried no prediction for",
+        "se_of_gap": 0.217824,
+        "test": "residual_by_plate",
+        "z_of_gap": 0.777845
+      },
+      "source": "core.diagnostics.residual_by_plate"
+    },
+    {
+      "args": {
+        "by": "position"
+      },
+      "claim": "A real structure-activity effect at one edited position accounts for the round.",
+      "diagnostic": "residual_by_mutation_class",
+      "id": "h4",
+      "inputs": {
+        "batch": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81",
+        "model_run": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d",
+        "snapshot": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d"
+      },
+      "reading": "not supported",
+      "reasoning": "The two classes large enough to move a 42-design round sit on the overall mean: position 101 at +0.736 over 36 designs and position 100 at +0.618 over 21, against +0.720 overall. The classes that deviate further -- 99, 102, 104, 106 -- hold one, two or five designs each, and a class of one cannot carry forty-two.",
+      "result": {
+        "by": "position",
+        "classes": {
+          "100": {
+            "mean_other": 0.808395,
+            "mean_residual": 0.617962,
+            "n": 21,
+            "n_fresh": 21,
+            "n_other": 24,
+            "sd": 0.780481,
+            "se": 0.170315,
+            "vs_other_classes": -0.190433
+          },
+          "101": {
+            "mean_other": 0.654804,
+            "mean_residual": 0.735706,
+            "n": 36,
+            "n_fresh": 36,
+            "n_other": 9,
+            "sd": 0.731891,
+            "se": 0.121982,
+            "vs_other_classes": 0.080902
+          },
+          "102": {
+            "mean_other": 0.638993,
+            "mean_residual": 1.363792,
+            "n": 5,
+            "n_fresh": 5,
+            "n_other": 40,
+            "sd": 0.394332,
+            "se": 0.176351,
+            "vs_other_classes": 0.724799
+          },
+          "103": {
+            "mean_other": 0.725819,
+            "mean_residual": 0.584235,
+            "n": 2,
+            "n_fresh": 1,
+            "n_other": 43,
+            "sd": 0.692132,
+            "se": 0.489411,
+            "vs_other_classes": -0.141584
+          },
+          "104": {
+            "mean_other": 0.745806,
+            "mean_residual": -0.436797,
+            "n": 1,
+            "n_fresh": 0,
+            "n_other": 44,
+            "sd": null,
+            "se": null,
+            "vs_other_classes": -1.182603
+          },
+          "105": {
+            "mean_other": 0.630546,
+            "mean_residual": 0.841288,
+            "n": 19,
+            "n_fresh": 18,
+            "n_other": 26,
+            "sd": 0.655934,
+            "se": 0.150482,
+            "vs_other_classes": 0.210743
+          },
+          "106": {
+            "mean_other": 0.749452,
+            "mean_residual": 0.076108,
+            "n": 2,
+            "n_fresh": 2,
+            "n_other": 43,
+            "sd": 0.239474,
+            "se": 0.169334,
+            "vs_other_classes": -0.673345
+          },
+          "99": {
+            "mean_other": 0.70479,
+            "mean_residual": 1.367898,
+            "n": 1,
+            "n_fresh": 1,
+            "n_other": 44,
+            "sd": null,
+            "se": null,
+            "vs_other_classes": 0.663108
+          }
+        },
+        "frame": {
+          "authority": "unruled",
+          "offset_applied": 0.0
+        },
+        "n": 45,
+        "n_scored": 45,
+        "note": "8 classes by position; class means span 1.805 around an overall 0.720. A design with two mutations belongs to two position classes, so the classes overlap and n is what says whether a class could move the round",
+        "overall": {
+          "mean": 0.719526,
+          "n": 45,
+          "sd": 0.729148,
+          "se": 0.108695
+        },
+        "range_of_class_means": 1.804695,
+        "round": 2,
+        "scope": "all",
+        "scored_excludes": "construct failures, censored wells, and designs the batch carried no prediction for",
+        "test": "residual_by_mutation_class"
+      },
+      "source": "core.diagnostics.residual_by_mutation_class"
+    },
+    {
+      "args": {
+        "by": "n_mutations"
+      },
+      "claim": "The model extrapolated: it was fit on a single-mutant scan and round 2 is the first batch of double mutants it has ever been asked about.",
+      "diagnostic": "residual_by_mutation_class",
+      "id": "h5",
+      "inputs": {
+        "batch": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81",
+        "model_run": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d",
+        "snapshot": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d"
+      },
+      "reading": "supported",
+      "reasoning": "The 42 double mutants came back +0.765 above prediction. The three single mutants in the same wells came back +0.080 -- on target. The model predicts what it has seen and under-predicts what it has not. The caveat belongs in the record: those three singles are also the designs carried over from round 1, so they were in the training set, and in-sample fit and familiar mutation count are confounded here. Both readings point at the same action, and the next round separates them.",
+      "result": {
+        "by": "n_mutations",
+        "classes": {
+          "1": {
+            "mean_other": 0.765219,
+            "mean_residual": 0.07983,
+            "n": 3,
+            "n_fresh": 0,
+            "n_other": 42,
+            "sd": 0.509296,
+            "se": 0.294042,
+            "vs_other_classes": -0.685389
+          },
+          "2": {
+            "mean_other": 0.07983,
+            "mean_residual": 0.765219,
+            "n": 42,
+            "n_fresh": 42,
+            "n_other": 3,
+            "sd": 0.725137,
+            "se": 0.111891,
+            "vs_other_classes": 0.685389
+          }
+        },
+        "frame": {
+          "authority": "unruled",
+          "offset_applied": 0.0
+        },
+        "n": 45,
+        "n_scored": 45,
+        "note": "2 classes by n_mutations; class means span 0.685 around an overall 0.720. A design with two mutations belongs to two position classes, so the classes overlap and n is what says whether a class could move the round",
+        "overall": {
+          "mean": 0.719526,
+          "n": 45,
+          "sd": 0.729148,
+          "se": 0.108695
+        },
+        "range_of_class_means": 0.685389,
+        "round": 2,
+        "scope": "all",
+        "scored_excludes": "construct failures, censored wells, and designs the batch carried no prediction for",
+        "test": "residual_by_mutation_class"
+      },
+      "source": "core.diagnostics.residual_by_mutation_class"
+    },
+    {
+      "args": {},
+      "claim": "The model's predictive intervals cannot be trusted over this region, independently of where its means sit.",
+      "diagnostic": "calibration_by_region",
+      "id": "h6",
+      "inputs": {
+        "batch": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81",
+        "model_run": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d",
+        "snapshot": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d"
+      },
+      "reading": "supported",
+      "reasoning": "Coverage of the 80% interval is 0.333 over 45 designs, against 0.76 held out at fit time. It degrades from 0.42 in the lowest quarter of predicted values to 0.18 in the highest, and the mean residual in that top quarter is +1.117. A model that is worst where it is most confident of an improvement is describing a region it has no evidence about.",
+      "result": {
+        "bins": 4,
+        "by_predicted_value": [
+          {
+            "coverage": 0.416667,
+            "mean_residual": 0.608351,
+            "n": 12,
+            "pred_max": 9.072292,
+            "pred_min": 9.043528
+          },
+          {
+            "coverage": 0.454545,
+            "mean_residual": 0.605512,
+            "n": 11,
+            "pred_max": 9.072605,
+            "pred_min": 9.072292
+          },
+          {
+            "coverage": 0.272727,
+            "mean_residual": 0.557652,
+            "n": 11,
+            "pred_max": 9.072803,
+            "pred_min": 9.072605
+          },
+          {
+            "coverage": 0.181818,
+            "mean_residual": 1.116696,
+            "n": 11,
+            "pred_max": 9.077497,
+            "pred_min": 9.073417
+          }
+        ],
+        "coverage": 0.333333,
+        "frame": {
+          "authority": "unruled",
+          "offset_applied": 0.0
+        },
+        "interval": 0.8,
+        "mean_residual": 0.719526,
+        "n": 45,
+        "n_scored": 45,
+        "nominal_coverage": 0.8,
+        "note": "45 designs, 4 bins by predicted value",
+        "offset_applied": 0.0,
+        "round": 2,
+        "scope": "all",
+        "scored_excludes": "construct failures, censored wells, and designs the batch carried no prediction for",
+        "test": "calibration_by_region"
+      },
+      "source": "core.diagnostics.calibration_by_region"
+    },
+    {
+      "args": {
+        "offset": "bridge"
+      },
+      "claim": "If the round were an assay shift after all, moving it by the bridge estimate would improve the model's coverage.",
+      "diagnostic": "calibration_by_region",
+      "id": "h7",
+      "inputs": {
+        "batch": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81",
+        "model_run": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d",
+        "snapshot": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d"
+      },
+      "reading": "not supported",
+      "reasoning": "It does the opposite. Applying the -0.167 pKD bridge estimate takes coverage from 0.333 down to 0.267 and the mean residual from +0.720 up to +0.886. This is the counterfactual that h1 rests on, run rather than argued: the correction available is not merely too small, it is pointed the wrong way.",
+      "result": {
+        "bins": 4,
+        "by_predicted_value": [
+          {
+            "coverage": 0.333333,
+            "mean_residual": 0.774952,
+            "n": 12,
+            "pred_max": 9.072292,
+            "pred_min": 9.043528
+          },
+          {
+            "coverage": 0.454545,
+            "mean_residual": 0.772113,
+            "n": 11,
+            "pred_max": 9.072605,
+            "pred_min": 9.072292
+          },
+          {
+            "coverage": 0.181818,
+            "mean_residual": 0.724253,
+            "n": 11,
+            "pred_max": 9.072803,
+            "pred_min": 9.072605
+          },
+          {
+            "coverage": 0.090909,
+            "mean_residual": 1.283297,
+            "n": 11,
+            "pred_max": 9.077497,
+            "pred_min": 9.073417
+          }
+        ],
+        "coverage": 0.266667,
+        "frame": {
+          "authority": "unruled",
+          "offset_applied": 0.0
+        },
+        "interval": 0.8,
+        "mean_residual": 0.886127,
+        "n": 45,
+        "n_scored": 45,
+        "nominal_coverage": 0.8,
+        "note": "45 designs, 4 bins by predicted value; residuals shifted by -0.167 before scoring, so this is the coverage a correction of that size would leave",
+        "offset_applied": -0.166601,
+        "round": 2,
+        "scope": "all",
+        "scored_excludes": "construct failures, censored wells, and designs the batch carried no prediction for",
+        "test": "calibration_by_region"
+      },
+      "source": "core.diagnostics.calibration_by_region"
+    }
+  ],
+  "id": "decision_002",
+  "inputs": {
+    "batch": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81",
+    "model_run": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d",
+    "snapshot": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d"
+  },
+  "mirrors_note": "hypotheses, ad_hoc, recommendation and ruling mirror the last pass; passes holds every one of them in order",
+  "n_passes": 1,
+  "passes": [
+    {
+      "ad_hoc": [
+        {
+          "code": "# How much does the model discriminate between this round's designs at all?\nimport json\nimport numpy as np\nbatch = json.load(open(\"projects/demo-trastuzumab/batches/batch_002.json\"))\nmu = np.array([s[\"pred_mean\"] for s in batch[\"slots\"] if s[\"slot\"] == \"pick\"])\nsd = np.array([s[\"pred_sd\"] for s in batch[\"slots\"] if s[\"slot\"] == \"pick\"])\nprint(\"picks                %d\" % mu.size)\nprint(\"prediction range     %.4f pKD  (%.4f to %.4f)\" % (np.ptp(mu), mu.min(), mu.max()))\nprint(\"prediction sd        %.4f pKD\" % mu.std(ddof=1))\nprint(\"mean predictive sd   %.4f pKD\" % sd.mean())\nprint(\"spread / uncertainty %.4f\" % (mu.std(ddof=1) / sd.mean()))",
+          "note": "one-off, unversioned; evidence a human reads, never an input to a code path",
+          "question": "How much does the model discriminate between this round's designs at all? No library test reports the spread of the predictions themselves.",
+          "stdout": "picks                42\nprediction range     0.0092 pKD  (9.0683 to 9.0775)\nprediction sd        0.0018 pKD\nmean predictive sd   0.4062 pKD\nspread / uncertainty 0.0045"
+        }
+      ],
+      "answering": null,
+      "at": "2026-09-19T17:53:15+00:00",
+      "hypotheses": [
+        {
+          "args": {},
+          "claim": "A run or reagent offset between round 1 and round 2 moved every well up.",
+          "diagnostic": "offset_from_controls",
+          "id": "h1",
+          "inputs": {
+            "batch": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81",
+            "model_run": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d",
+            "snapshot": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d"
+          },
+          "reading": "not supported",
+          "reasoning": "The two shared designs agree with each other and put the run at -0.167 pKD, se 0.064 -- a small drift in the opposite direction to the surprise. The assay version is v1.2, which round 1 already characterized. An offset that would explain designs coming back 0.765 above prediction has to be positive and roughly that size; this one is negative and an eighth of it.",
+          "result": {
+            "assay_version": "v1.2",
+            "concordance_k": 2.0,
+            "concordance_tolerance": 0.316762,
+            "concordant": true,
+            "delta_range": 0.128297,
+            "delta_sd": 0.09072,
+            "frame": {
+              "authority": "unruled",
+              "offset_applied": 0.0
+            },
+            "known_version_offset": 0.0,
+            "n_bridge": 2,
+            "n_scored": 45,
+            "note": "bridge of 2; spread sd 0.091 against a tolerance of 0.317, being 2.0 x the round's read-noise scale 0.158",
+            "offset_pkd": -0.166601,
+            "per_design_delta": [
+              -0.102452,
+              -0.230749
+            ],
+            "read_noise_scale": 0.158381,
+            "round": 2,
+            "scope": "all",
+            "scored_excludes": "construct failures, censored wells, and designs the batch carried no prediction for",
+            "se": 0.064149,
+            "test": "offset_from_controls",
+            "unit": "pKD"
+          },
+          "source": "core.diagnostics.offset_from_controls"
+        },
+        {
+          "args": {},
+          "claim": "The assay was unstable while the plates were read, so the reads are simply noisy.",
+          "diagnostic": "replicate_concordance",
+          "id": "h2",
+          "inputs": {
+            "batch": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81",
+            "model_run": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d",
+            "snapshot": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d"
+          },
+          "reading": "not supported",
+          "reasoning": "45 designs carry two usable reads. The round's own read-noise scale is 0.158 pKD and no design's replicates disagree by more than the 0.475 tolerance. The reads are repeatable; whatever moved the round was there before the plate was read.",
+          "result": {
+            "flagged": [],
+            "frame": {
+              "authority": "unruled",
+              "offset_applied": 0.0
+            },
+            "max_read_sd": 0.439974,
+            "median_read_sd": 0.116652,
+            "n_flagged": 0,
+            "n_scored": 45,
+            "n_single_read": 0,
+            "n_with_replicates": 45,
+            "note": "45 designs with two usable reads, noise scale 0.158, 0 above the 0.475 tolerance",
+            "outlier_k": 3.0,
+            "read_noise_scale": 0.158381,
+            "round": 2,
+            "scope": "all",
+            "scored_excludes": "construct failures, censored wells, and designs the batch carried no prediction for",
+            "test": "replicate_concordance",
+            "tolerance": 0.475143
+          },
+          "source": "core.diagnostics.replicate_concordance"
+        },
+        {
+          "args": {},
+          "claim": "One plate ran high and carried the round with it.",
+          "diagnostic": "residual_by_plate",
+          "id": "h3",
+          "inputs": {
+            "batch": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81",
+            "model_run": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d",
+            "snapshot": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d"
+          },
+          "reading": "not supported",
+          "reasoning": "R2P1 sits at +0.806 over 22 designs and R2P2 at +0.637 over 23. The gap of 0.169 pKD is 0.78 standard errors and both plates are high. A plate artifact moves one plate and leaves the other; this moved both.",
+          "result": {
+            "by_plate": {
+              "R2P1": {
+                "mean": 0.806125,
+                "n": 22,
+                "sd": 0.68491,
+                "se": 0.146023
+              },
+              "R2P2": {
+                "mean": 0.636692,
+                "n": 23,
+                "sd": 0.775152,
+                "se": 0.16163
+              }
+            },
+            "frame": {
+              "authority": "unruled",
+              "offset_applied": 0.0
+            },
+            "max_gap": 0.169433,
+            "n": 45,
+            "n_scored": 45,
+            "note": "2 plates; largest difference between plate means 0.169 against a standard error of 0.218",
+            "overall": {
+              "mean": 0.719526,
+              "n": 45,
+              "sd": 0.729148,
+              "se": 0.108695
+            },
+            "round": 2,
+            "scope": "all",
+            "scored_excludes": "construct failures, censored wells, and designs the batch carried no prediction for",
+            "se_of_gap": 0.217824,
+            "test": "residual_by_plate",
+            "z_of_gap": 0.777845
+          },
+          "source": "core.diagnostics.residual_by_plate"
+        },
+        {
+          "args": {
+            "by": "position"
+          },
+          "claim": "A real structure-activity effect at one edited position accounts for the round.",
+          "diagnostic": "residual_by_mutation_class",
+          "id": "h4",
+          "inputs": {
+            "batch": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81",
+            "model_run": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d",
+            "snapshot": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d"
+          },
+          "reading": "not supported",
+          "reasoning": "The two classes large enough to move a 42-design round sit on the overall mean: position 101 at +0.736 over 36 designs and position 100 at +0.618 over 21, against +0.720 overall. The classes that deviate further -- 99, 102, 104, 106 -- hold one, two or five designs each, and a class of one cannot carry forty-two.",
+          "result": {
+            "by": "position",
+            "classes": {
+              "100": {
+                "mean_other": 0.808395,
+                "mean_residual": 0.617962,
+                "n": 21,
+                "n_fresh": 21,
+                "n_other": 24,
+                "sd": 0.780481,
+                "se": 0.170315,
+                "vs_other_classes": -0.190433
+              },
+              "101": {
+                "mean_other": 0.654804,
+                "mean_residual": 0.735706,
+                "n": 36,
+                "n_fresh": 36,
+                "n_other": 9,
+                "sd": 0.731891,
+                "se": 0.121982,
+                "vs_other_classes": 0.080902
+              },
+              "102": {
+                "mean_other": 0.638993,
+                "mean_residual": 1.363792,
+                "n": 5,
+                "n_fresh": 5,
+                "n_other": 40,
+                "sd": 0.394332,
+                "se": 0.176351,
+                "vs_other_classes": 0.724799
+              },
+              "103": {
+                "mean_other": 0.725819,
+                "mean_residual": 0.584235,
+                "n": 2,
+                "n_fresh": 1,
+                "n_other": 43,
+                "sd": 0.692132,
+                "se": 0.489411,
+                "vs_other_classes": -0.141584
+              },
+              "104": {
+                "mean_other": 0.745806,
+                "mean_residual": -0.436797,
+                "n": 1,
+                "n_fresh": 0,
+                "n_other": 44,
+                "sd": null,
+                "se": null,
+                "vs_other_classes": -1.182603
+              },
+              "105": {
+                "mean_other": 0.630546,
+                "mean_residual": 0.841288,
+                "n": 19,
+                "n_fresh": 18,
+                "n_other": 26,
+                "sd": 0.655934,
+                "se": 0.150482,
+                "vs_other_classes": 0.210743
+              },
+              "106": {
+                "mean_other": 0.749452,
+                "mean_residual": 0.076108,
+                "n": 2,
+                "n_fresh": 2,
+                "n_other": 43,
+                "sd": 0.239474,
+                "se": 0.169334,
+                "vs_other_classes": -0.673345
+              },
+              "99": {
+                "mean_other": 0.70479,
+                "mean_residual": 1.367898,
+                "n": 1,
+                "n_fresh": 1,
+                "n_other": 44,
+                "sd": null,
+                "se": null,
+                "vs_other_classes": 0.663108
+              }
+            },
+            "frame": {
+              "authority": "unruled",
+              "offset_applied": 0.0
+            },
+            "n": 45,
+            "n_scored": 45,
+            "note": "8 classes by position; class means span 1.805 around an overall 0.720. A design with two mutations belongs to two position classes, so the classes overlap and n is what says whether a class could move the round",
+            "overall": {
+              "mean": 0.719526,
+              "n": 45,
+              "sd": 0.729148,
+              "se": 0.108695
+            },
+            "range_of_class_means": 1.804695,
+            "round": 2,
+            "scope": "all",
+            "scored_excludes": "construct failures, censored wells, and designs the batch carried no prediction for",
+            "test": "residual_by_mutation_class"
+          },
+          "source": "core.diagnostics.residual_by_mutation_class"
+        },
+        {
+          "args": {
+            "by": "n_mutations"
+          },
+          "claim": "The model extrapolated: it was fit on a single-mutant scan and round 2 is the first batch of double mutants it has ever been asked about.",
+          "diagnostic": "residual_by_mutation_class",
+          "id": "h5",
+          "inputs": {
+            "batch": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81",
+            "model_run": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d",
+            "snapshot": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d"
+          },
+          "reading": "supported",
+          "reasoning": "The 42 double mutants came back +0.765 above prediction. The three single mutants in the same wells came back +0.080 -- on target. The model predicts what it has seen and under-predicts what it has not. The caveat belongs in the record: those three singles are also the designs carried over from round 1, so they were in the training set, and in-sample fit and familiar mutation count are confounded here. Both readings point at the same action, and the next round separates them.",
+          "result": {
+            "by": "n_mutations",
+            "classes": {
+              "1": {
+                "mean_other": 0.765219,
+                "mean_residual": 0.07983,
+                "n": 3,
+                "n_fresh": 0,
+                "n_other": 42,
+                "sd": 0.509296,
+                "se": 0.294042,
+                "vs_other_classes": -0.685389
+              },
+              "2": {
+                "mean_other": 0.07983,
+                "mean_residual": 0.765219,
+                "n": 42,
+                "n_fresh": 42,
+                "n_other": 3,
+                "sd": 0.725137,
+                "se": 0.111891,
+                "vs_other_classes": 0.685389
+              }
+            },
+            "frame": {
+              "authority": "unruled",
+              "offset_applied": 0.0
+            },
+            "n": 45,
+            "n_scored": 45,
+            "note": "2 classes by n_mutations; class means span 0.685 around an overall 0.720. A design with two mutations belongs to two position classes, so the classes overlap and n is what says whether a class could move the round",
+            "overall": {
+              "mean": 0.719526,
+              "n": 45,
+              "sd": 0.729148,
+              "se": 0.108695
+            },
+            "range_of_class_means": 0.685389,
+            "round": 2,
+            "scope": "all",
+            "scored_excludes": "construct failures, censored wells, and designs the batch carried no prediction for",
+            "test": "residual_by_mutation_class"
+          },
+          "source": "core.diagnostics.residual_by_mutation_class"
+        },
+        {
+          "args": {},
+          "claim": "The model's predictive intervals cannot be trusted over this region, independently of where its means sit.",
+          "diagnostic": "calibration_by_region",
+          "id": "h6",
+          "inputs": {
+            "batch": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81",
+            "model_run": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d",
+            "snapshot": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d"
+          },
+          "reading": "supported",
+          "reasoning": "Coverage of the 80% interval is 0.333 over 45 designs, against 0.76 held out at fit time. It degrades from 0.42 in the lowest quarter of predicted values to 0.18 in the highest, and the mean residual in that top quarter is +1.117. A model that is worst where it is most confident of an improvement is describing a region it has no evidence about.",
+          "result": {
+            "bins": 4,
+            "by_predicted_value": [
+              {
+                "coverage": 0.416667,
+                "mean_residual": 0.608351,
+                "n": 12,
+                "pred_max": 9.072292,
+                "pred_min": 9.043528
+              },
+              {
+                "coverage": 0.454545,
+                "mean_residual": 0.605512,
+                "n": 11,
+                "pred_max": 9.072605,
+                "pred_min": 9.072292
+              },
+              {
+                "coverage": 0.272727,
+                "mean_residual": 0.557652,
+                "n": 11,
+                "pred_max": 9.072803,
+                "pred_min": 9.072605
+              },
+              {
+                "coverage": 0.181818,
+                "mean_residual": 1.116696,
+                "n": 11,
+                "pred_max": 9.077497,
+                "pred_min": 9.073417
+              }
+            ],
+            "coverage": 0.333333,
+            "frame": {
+              "authority": "unruled",
+              "offset_applied": 0.0
+            },
+            "interval": 0.8,
+            "mean_residual": 0.719526,
+            "n": 45,
+            "n_scored": 45,
+            "nominal_coverage": 0.8,
+            "note": "45 designs, 4 bins by predicted value",
+            "offset_applied": 0.0,
+            "round": 2,
+            "scope": "all",
+            "scored_excludes": "construct failures, censored wells, and designs the batch carried no prediction for",
+            "test": "calibration_by_region"
+          },
+          "source": "core.diagnostics.calibration_by_region"
+        },
+        {
+          "args": {
+            "offset": "bridge"
+          },
+          "claim": "If the round were an assay shift after all, moving it by the bridge estimate would improve the model's coverage.",
+          "diagnostic": "calibration_by_region",
+          "id": "h7",
+          "inputs": {
+            "batch": "sha256:b02ff99d452af5da49b549839d8dfd296ac0545bab0a5e15b7cfa63946083d81",
+            "model_run": "sha256:65a5f4b268fb216f19c00db938f6b0d90f1c57226447e9de0c5d8fe0f632829d",
+            "snapshot": "sha256:4e9d491ec33e0415aeaf54589397eda4fe50b1a66578db9b4669953fc68f6a1d"
+          },
+          "reading": "not supported",
+          "reasoning": "It does the opposite. Applying the -0.167 pKD bridge estimate takes coverage from 0.333 down to 0.267 and the mean residual from +0.720 up to +0.886. This is the counterfactual that h1 rests on, run rather than argued: the correction available is not merely too small, it is pointed the wrong way.",
+          "result": {
+            "bins": 4,
+            "by_predicted_value": [
+              {
+                "coverage": 0.333333,
+                "mean_residual": 0.774952,
+                "n": 12,
+                "pred_max": 9.072292,
+                "pred_min": 9.043528
+              },
+              {
+                "coverage": 0.454545,
+                "mean_residual": 0.772113,
+                "n": 11,
+                "pred_max": 9.072605,
+                "pred_min": 9.072292
+              },
+              {
+                "coverage": 0.181818,
+                "mean_residual": 0.724253,
+                "n": 11,
+                "pred_max": 9.072803,
+                "pred_min": 9.072605
+              },
+              {
+                "coverage": 0.090909,
+                "mean_residual": 1.283297,
+                "n": 11,
+                "pred_max": 9.077497,
+                "pred_min": 9.073417
+              }
+            ],
+            "coverage": 0.266667,
+            "frame": {
+              "authority": "unruled",
+              "offset_applied": 0.0
+            },
+            "interval": 0.8,
+            "mean_residual": 0.886127,
+            "n": 45,
+            "n_scored": 45,
+            "nominal_coverage": 0.8,
+            "note": "45 designs, 4 bins by predicted value; residuals shifted by -0.167 before scoring, so this is the coverage a correction of that size would leave",
+            "offset_applied": -0.166601,
+            "round": 2,
+            "scope": "all",
+            "scored_excludes": "construct failures, censored wells, and designs the batch carried no prediction for",
+            "test": "calibration_by_region"
+          },
+          "source": "core.diagnostics.calibration_by_region"
+        }
+      ],
+      "pass": 1,
+      "recommendation": {
+        "action": "refit_only",
+        "alternative_considered": "h1, the assay-offset reading, which is the one a first look supports and the one that would license a correction. It is rejected on two counts the bridge itself supplies: the shared designs put the run at -0.167 pKD, the wrong sign, and applying that estimate takes interval coverage from 0.333 to 0.267 rather than restoring it. h4, a position-specific structure-activity effect, is rejected because no class large enough to move the round deviates from it.",
+        "confidence": "high",
+        "if_wrong": "The reading is that the model, not the assay and not the molecules, produced the surprise. It is falsified if round 3's double mutants -- now selected and predicted by a model that has seen 42 of them -- come back high again by a similar margin, because a refit that has absorbed the cause should remove it. It is also falsified if the three on-target singles turn out to be on target because they were in the training set rather than because they are singles; round 3 separates those, since it will contain doubles the model has seen and doubles it has not. If instead the whole round were an assay shift, the shared designs would have carried it too, and they carry the opposite.",
+        "parameters": {},
+        "rationale": "Nothing is wrong with the data, so nothing should be done to it. The round is a genuine result: 42 double mutants bound better than a model fit on single mutants alone could predict, by a mean of 0.765 pKD, and the three singles measured in the same plates came back where they were expected. The ad hoc cut says why in one number -- across those 42 picks the model's predictions span 0.009 pKD while its own predictive standard deviation averages 0.406, so it was not discriminating between them at all, it was reporting the parent value with wide error bars. Refit on the pooled rounds, which is the first fit that has ever seen a double mutant, and let round 3 be selected by a model with epistasis in its training set. Correcting the frame here would subtract a real gain and record it as an artifact."
+      },
+      "ruling": {
+        "at": "2026-09-19T17:53:15+00:00",
+        "by": "d.webster",
+        "note": "Agreed, and the ad hoc cut is the convincing part: a prediction range of 0.009 pKD is not a model with an opinion about these designs. Refit and carry on. I want the singles-versus-doubles confound in h5 looked at again after round 3.",
+        "requested": null,
+        "verdict": "accepted"
+      }
+    }
+  ],
+  "provenance_note": "every number under result came from the named core/ function, re-run by record_decision.py against the hashed inputs below. Nothing in ad_hoc did, and it is labelled accordingly",
+  "recommendation": {
+    "action": "refit_only",
+    "alternative_considered": "h1, the assay-offset reading, which is the one a first look supports and the one that would license a correction. It is rejected on two counts the bridge itself supplies: the shared designs put the run at -0.167 pKD, the wrong sign, and applying that estimate takes interval coverage from 0.333 to 0.267 rather than restoring it. h4, a position-specific structure-activity effect, is rejected because no class large enough to move the round deviates from it.",
+    "confidence": "high",
+    "if_wrong": "The reading is that the model, not the assay and not the molecules, produced the surprise. It is falsified if round 3's double mutants -- now selected and predicted by a model that has seen 42 of them -- come back high again by a similar margin, because a refit that has absorbed the cause should remove it. It is also falsified if the three on-target singles turn out to be on target because they were in the training set rather than because they are singles; round 3 separates those, since it will contain doubles the model has seen and doubles it has not. If instead the whole round were an assay shift, the shared designs would have carried it too, and they carry the opposite.",
+    "parameters": {},
+    "rationale": "Nothing is wrong with the data, so nothing should be done to it. The round is a genuine result: 42 double mutants bound better than a model fit on single mutants alone could predict, by a mean of 0.765 pKD, and the three singles measured in the same plates came back where they were expected. The ad hoc cut says why in one number -- across those 42 picks the model's predictions span 0.009 pKD while its own predictive standard deviation averages 0.406, so it was not discriminating between them at all, it was reporting the parent value with wide error bars. Refit on the pooled rounds, which is the first fit that has ever seen a double mutant, and let round 3 be selected by a model with epistasis in its training set. Correcting the frame here would subtract a real gain and record it as an artifact."
+  },
+  "round": 2,
+  "ruling": {
+    "at": "2026-09-19T17:53:15+00:00",
+    "by": "d.webster",
+    "note": "Agreed, and the ad hoc cut is the convincing part: a prediction range of 0.009 pKD is not a model with an opinion about these designs. Refit and carry on. I want the singles-versus-doubles confound in h5 looked at again after round 3.",
+    "requested": null,
+    "verdict": "accepted"
+  },
+  "schema_version": 1,
+  "status": "ruled",
+  "trigger": "42 fresh designs came back a mean +0.765 pKD above the model's prediction, against a trigger of 0.50. The flag fires on the size of the discrepancy and not its sign, so a round that came back better than forecast stops the loop exactly as a round that came back worse would."
+}

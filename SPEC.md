@@ -533,11 +533,11 @@ This audience will ask. Put this table in the README and be able to recite it, b
 | The LIMS | **Staged.** A mock server with a deliberately narrow write path, reachable over MCP and byte-compatible with the CLI |
 | Sequence embeddings | **Not built.** One-hot is the only feature block; the provider interface exists and `esm_live` is unwired |
 | Structure prediction | **Stubbed.** Returns nulls and says it predicted nothing. No confidence score is invented and nothing downstream reads it |
-| The agent's reasoning in the browser | **Real Claude** while the daily budget holds. Verified replay of a committed record otherwise, with the evidence recomputed live |
+| The agent's reasoning in the browser | **Phase 7.** As of phase 6 the browser replays the committed round-4 sequence with every number recomputed in Pyodide, and offers the five library tests read-only on a round it has no record for. Live Claude while the daily budget holds is what phase 7 adds |
 | The agent's reasoning in the CLI | **Real.** Claude Code runs the diagnosis unaided; this is acceptance criterion 3 |
-| Rounds run in the browser | **Real.** The same Python, on state held in the browser and never written back to the repository |
+| Rounds run in the browser | **Real, and checked against the CLI.** The repository's own modules mounted into Pyodide byte for byte; `check.py` requires 26 of 28 artifacts to match a CLI run of the same sequence. State lives in the browser and is never written back |
 | The web app's chrome | **A wireframe.** It renders the layer the 5b audit found missing, in the host's own grammar. The panels, the Python, the state and the hashes inside it are real |
-| The skill and connectors inside Claude Science | **Not yet.** Beta access confirmed and the plugin installs locally; whether it loads in the host is phase 5b's first question |
+| The skill and connectors inside Claude Science | **Real, and exercised end to end in phase 5b.** All eight tools run under the host's interpreter inside its sandbox, and the round-4 diagnosis reproduces every number and every input hash |
 
 ## Packaging for Claude Science
 

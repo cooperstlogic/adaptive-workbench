@@ -8,3 +8,11 @@ web/public/core/
 
 # Assay exports are regenerable from the LIMS store, which is committed.
 lims_store/exports/
+
+# The browser's runtime is staged from node_modules and the pyodide CDN by
+# web/scripts/stage-pyodide.mjs, with the wheel's sha256 checked against
+# pyodide's own lock file. Regenerable, and 18 MB.
+web/public/pyodide/
+web/.playwright-cli/
+web/*.png
+web/*.yaml

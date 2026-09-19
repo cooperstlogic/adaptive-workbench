@@ -1,0 +1,44 @@
+{
+  "computed_thresholds": [
+    {
+      "direction": "minimize",
+      "name": "hydrophobicity",
+      "threshold": 0.55
+    },
+    {
+      "direction": "minimize",
+      "name": "liability_count",
+      "threshold": 0
+    }
+  ],
+  "constraints_enforced": {
+    "forbidden_motifs": [
+      "NG",
+      "DG",
+      "C"
+    ],
+    "max_mutations": 2
+  },
+  "editable_region": [
+    99,
+    107
+  ],
+  "enumerated": 10261,
+  "feasible": 7294,
+  "hash": "sha256:2efb37ab59a03173ebba1bce8dc15145606ed893f03093274e82d8f7fdb56ddf",
+  "inputs": {
+    "designs": "sha256:01fb6463ad0a57dfe03ecce8c96d02e73bf314a4f83f28fee455112a3af15c33",
+    "objectives": "sha256:e459b8c9eb21e34feda142cc7cae4c4695eaa5d915d42ea0907b095d87ac92c3"
+  },
+  "max_mutations": 2,
+  "pool_fingerprint": "sha256:67969dda3b8ec30e63a12ba2b96b93d1f455d1b5099a7956de2891172e7335ad",
+  "pool_order": "core.candidates.enumerate_variants then constraint_report; deterministic, so the pool is hashed rather than stored",
+  "removed": 2967,
+  "removed_by_reason": {
+    "hydrophobicity_above_threshold": 1625,
+    "introduces_liability": 1342
+  },
+  "round": 2,
+  "schema_version": 1,
+  "unit": "pKD"
+}

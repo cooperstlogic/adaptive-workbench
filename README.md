@@ -38,7 +38,7 @@ in `core/` has heard of it.
 ```bash
 python3.12 -m venv .venv
 .venv/bin/pip install numpy matplotlib mcp
-.venv/bin/python check.py      # 131 invariant checks, all should pass
+.venv/bin/python check.py      # 147 invariant checks, all should pass
 ```
 
 `.venv/` is gitignored. Everything else needed — including the generated landscape — is
@@ -52,7 +52,7 @@ committed, so a fresh clone plus the two commands above reproduces the current s
 .venv/bin/python -m data.build_oracle        # regenerate the landscape (deterministic)
 .venv/bin/python simulate_campaign.py        # the evaluator: 20 seeds, 3 arms, chart, ~35 s
 .venv/bin/python plot_campaign.py            # re-render the chart alone, ~1 s
-.venv/bin/python check.py                    # verify every documented invariant, ~22 s
+.venv/bin/python check.py                    # verify every documented invariant, ~32 s
 ```
 
 And the product path, which is the same science through the CLI:
@@ -90,6 +90,21 @@ claude                                                      # .mcp.json loads bo
 
 `.mcp.json` registers both servers, so opening this repo in Claude Code connects them
 with no further setup.
+
+And the same science again in a browser, with no server and no key:
+
+```bash
+cd web && npm install && npm run sync   # copy core/ into the bundle, stage Pyodide
+npm run dev                             # http://localhost:5173
+npm run build                           # static output in web/dist, ~19 MB
+node scripts/pyodide-check.mjs          # run the browser's Python path without a browser
+```
+
+`npm run sync` is two steps. `python ../web/bundle.py` copies `core/`, `data/`, `lims.py`
+and the seven skill scripts into `web/public/workbench/` byte for byte, in the repo's own
+directory shape, with a sha256 per file; `check.py` fails if any of them drifts.
+`scripts/stage-pyodide.mjs` puts the Python runtime and the numpy wheel on this site's own
+origin, checking the wheel against pyodide's lock file before writing it.
 
 Installing the same skill and connectors elsewhere uses the host's own distribution
 mechanism, described in the host's own words — *"Save any pipeline as a reusable skill,
@@ -189,7 +204,7 @@ live git tree, and it splits the project directory in two, which is the one thin
 beat 5 cannot survive — the batch hashes only mean something if both surfaces read the
 same state.
 
-`check.py` runs 132 checks in about half a minute and is the handoff contract. Every
+`check.py` runs 147 checks in about half a minute and is the handoff contract. Every
 check in it corresponds to a rule in `CLAUDE.md` or a number recorded in `DECISIONS.md`,
 so a failure means the state has drifted from what is documented.
 
@@ -366,7 +381,7 @@ diagnostics itself and refuses any payload that arrives carrying its own numbers
 | 4 | `core/diagnostics.py`, `run_diagnostic.py`, `record_decision.py`, decision records | **Done** |
 | 5 | Both connectors, `.mcp.json`, the installable plugin, end-to-end run driven by an agent | **Done — gate passed** |
 | 5b | The plugin installed into Claude Science, the gate re-run there, and the gap audit written | **Done** — skill and both connectors installed, all eight tools exercised, the round-4 diagnosis reproduced in the host, and the audit written. Three of four claimed gaps survive narrowed, three unclaimed ones were found |
-| 6 | Web app: Pyodide boot, the Claude Science-shaped shell, artifact tabs, approve loop | Not started |
+| 6 | Web app: Pyodide boot, the Claude Science-shaped shell, artifact tabs, approve loop | **Done** — the round loop runs in the browser on the repository's own modules, approve in 1.5 s and advance in 2.7 s, and the browser and the CLI write byte-identical artifacts |
 | 7 | The agent in the session: tool-call stream, two tools, push-back round trip, budget cap, verified replay | Not started |
 | 8 | Committed demo project at round 3, Netlify deploy, public README | Not started |
 | 9 | Demo script and rehearsal | Not started |
@@ -725,6 +740,94 @@ not an audit: local stdio connectors run, approval carries four scopes, skills i
 from a private repository with their commit, the kernel reproduced every number, and the
 sandbox error named the exact key and remedy. The `bio` safeguard never fired.
 
+### Phase 6 results — the browser
+
+The web app boots Pyodide, mounts the repository's own modules into its filesystem, and
+runs the round loop against the visitor's own copy of the project. Nothing is sent
+anywhere and nothing is written back.
+
+| | |
+| --- | --- |
+| Runtime | Pyodide 314.0.7, Python 3.14.2, numpy 2.4.6 — the runtime and the wheel served from the site's own origin |
+| Boot | ~1.7 s to a usable home screen, 25 modules mounted |
+| Approve round 4 | **1.5 s** — re-select, submit to the registry, pull, import, score |
+| Diagnose | **20 ms** — all eight hypotheses recomputed from the shipped claims |
+| Act on the ruling and select round 5 | **2.7 s** — re-import under `decision_004`, re-score, fit, enumerate, select |
+| Page weight | 89 kB gzipped of JavaScript and CSS, 1.6 MB of project and code, 16 MB of Python runtime |
+
+**It reproduces the campaign's numbers under a different Python and a different numpy.**
+Round 4 comes back flagged at a mean signed residual of **−2.046272** pKD with a bridge
+estimate of **−1.014229**, identical to the committed snapshot; accepting the
+recommendation takes interval coverage from 0.065 to **0.565217**, identical to what the
+decision record claims it would.
+
+**And the browser and the CLI write the same bytes.** `check.py` runs the whole round-4
+loop in Pyodide, then drives the CLI scripts over the same starting state in the same
+order, and compares every file: **26 of 28 artifacts are byte-identical**, including
+`batch_005.json`, which is acceptance criterion 7. The two that differ are
+`decision_004.json`, which carries the moment a person ruled, and `rounds.json`, which
+carries the moments the graph was rewritten. Not one number differs.
+
+**What the bundle is.** `web/bundle.py` copies `core/`, `data/`, `lims.py` and the seven
+skill scripts into `web/public/workbench/` **byte for byte, in the repository's own
+directory shape**, with a sha256 per file in a manifest. Pyodide then imports the same
+modules the CLI imports — every `sys.path` walk and every `dirname(__file__)` inside them
+resolves the way it does on a laptop. `check.py` fails if any copy drifts from its source.
+The only new Python is `web/py/wb_driver.py`, which calls each script's `main(argv)` and
+computes nothing.
+
+**What the visitor opens on is derived, not hand-written.** The bundle rewinds the
+committed project to the moment before round 4 was approved — its snapshot, evaluation and
+decision removed, its registry ids un-minted — and then proves the rewind by replaying
+round 4 forward through the real LIMS and `import_round.py` and requiring the returned
+snapshot to match the committed one field by field.
+
+**The batch that ships is unapproved, and that is the point.** `--approved-by` stamps
+`approval.at` inside the hashed body, so an approved batch record can never be reproduced
+on another machine. Unsigned, it is a pure function of the pool, the model run and the
+objectives, and every surface that selects it prints `ff8df7984a20`. An approval timestamp
+propagates down the chain — batch to snapshot to model run to next batch — so the
+cross-surface hash claim is made on selection records, which carry no time.
+
+**The diagnosis is recomputed, never carried across.** What ships beside the bundle is
+`decision_004.json` with every `result`, `source` and `inputs` block stripped out: the
+claims, the choice of test for each, the reading, and the recommendation. The browser
+hands that to `record_decision.py`, which re-runs all eight tests and writes the numbers it
+gets. The writer refuses a payload carrying its own results, so there is no channel for a
+figure that was not recomputed here.
+
+**What the shell renders, and which audited gap each piece answers.**
+
+| Piece | Gap |
+| --- | --- |
+| Four ruling verbs bound to code paths, with hashed evidence and an `if_wrong` line, deliberately *not* in the composer | 105 — a ruling has no type. The composer is present and inert, and says why |
+| **Rounds**, the one item added to the rail: the campaign as a hash chain, pool → batch → snapshot → evaluation → decision → model | 106 — `rounds.json` has nowhere to render |
+| The Notebook tab: click any figure and get the `core/` function, its file, that file's sha256, its arguments and its input hashes | 107, narrowed to one component as the audit said to narrow it |
+| A requirements table in the template gallery, assembled from `plugin.json`, `marketplace.json` and the connector modules, with a column for what each row cost by hand in the host | 109 — a connector cannot declare what it needs |
+
+Gap 108 is not leaned on: the gallery says plainly that instantiating a second project is
+not wired up in this build.
+
+**Two things building it found.**
+
+`evaluate_prior.py` has to run again after a correcting re-import, and `SKILL.md` did not
+say so. The evaluation records the hash of the snapshot it scored against, so a ruling that
+moves the frame leaves that pointer aimed at a snapshot that no longer exists. Step 9 of
+the diagnosis procedure now says to re-score before fitting.
+
+**Round 5 flags too, at −0.818 pKD**, and the CLI reproduces it to the digit. The
+evaluator's fully-corrected guided arm does not flag it, because that arm corrects every
+round at import; the product path corrects a flagged round only under a ruling, so the
+model that selects round 5 is a different model. This is `decision_004`'s own `if_wrong`
+clause coming true in the half that predicted it — *the refit still over-predicts*. Phase 6
+handles it honestly: the round stays open, the five library tests are offered read-only,
+and the page says that composing them into a recommendation is the agent's job and lands in
+phase 7. **It also means phase 7 has a round to diagnose that nothing in this repository
+has diagnosed before**, which is a better test of the agentic claim than replaying round 4.
+
+**The chrome is a wireframe and the page says so**, in a strip across the top of every
+screen. The panels, the Python, the state and the hashes inside it are real.
+
 ## Repo map
 
 | Path | Contents |
@@ -756,9 +859,14 @@ sandbox error named the exact key and remedy. The `bio` safeguard never fired.
 | `lims_store/` | The registry's own records, outside the project. Exports are gitignored |
 | `simulate_campaign.py` | The evaluator. The only thing permitted to read landscape values |
 | `web/public/assets/campaign.json` | The proof chart's data, written by the evaluator |
+| `web/bundle.py` | Copies the repository into the browser's bundle, derives the demo state, and proves the derivation by replaying round 4 |
+| `web/py/wb_driver.py` | The browser's hands: calls each script's `main(argv)` and computes nothing |
+| `web/src/` | The shell. React, no router, no state library, no charting library |
+| `web/public/workbench/` | The bundle: the repository's modules, the rewound project, and the reference records |
+| `web/scripts/pyodide-check.mjs` | Runs the browser's Python path outside a browser, for `check.py` to compare against the CLI |
 | `plot_campaign.py` | Renders the proof chart from `campaign.json`. matplotlib lives here, never in `core/` |
 | `gates/` | The two agent gates: the transcripts, and the script that re-runs them |
-| `check.py` | Invariant verification, 132 checks. Run it after any phase |
+| `check.py` | Invariant verification, 147 checks. Run it after any phase |
 
 ## What is real and what is staged
 
@@ -778,11 +886,14 @@ sandbox error named the exact key and remedy. The `bio` safeguard never fired.
 | Sequence embeddings | **Not built.** One-hot only. The provider interface is real and served over MCP; `esm_live` is declared and unwired, and asking for it returns an error naming what is missing rather than one-hot in disguise |
 | Structure prediction | **Stubbed.** `predict_structures` returns nulls and a note saying it predicted nothing. It invents no confidence score, and nothing downstream reads it |
 | The agent's reasoning in the browser | **Real Claude** while the daily budget holds — it chooses and sequences the diagnostics live, and a named human rules. Verified replay of the committed record otherwise, animated through the same component |
-| The web app's chrome | **A wireframe.** It renders the layer the phase-5b audit found missing, in the host's own grammar. The panels, the Python, the state and the hashes inside it are real |
+| The web app's chrome | **A wireframe, and labelled one on every screen.** It renders the layer the phase-5b audit found missing, in the host's own grammar. The rail's host-only items are drawn and inert rather than faked, and each says what the host does with it |
 | The two connectors | **Real.** MCP stdio, five tools and three, each one call into `lims.py` or `core/`. `check.py` drives both over the protocol and compares them against the CLI |
 | The skill and connectors inside Claude Science | **Real, and exercised end to end.** The skill imported from GitHub with its commit recorded; both connectors serve their tools under the host's interpreter, inside its sandbox. All eight tools run, the kernel executes the pipeline scripts from the repo, and the round-4 diagnosis reproduces every number and every input hash. `gates/5b-host-round4.md`, and the install is written up under *Installing into Claude Science* |
 | The agent's reasoning in the CLI | **Real, and the transcripts are committed.** Two headless Claude Code sessions on `claude-opus-5`: one diagnosed round 4 and wrote its record, one ran a full round unaided. `gates/` |
-| Rounds run in the browser | **Real.** The same Python, state held in the browser, never written back |
+| Rounds run in the browser | **Real, and checked against the CLI.** The repository's own modules, mounted into Pyodide byte for byte and imported rather than ported. Approve, import, diagnose, rule, correct, refit and select all run client-side; `check.py` compares the artifacts they write against a CLI run of the same sequence and requires 26 of 28 to be byte-identical. State lives in the browser and is never written back |
+| The browser's tool-call stream | **Real commands.** Each chip is a script that ran against the visitor's copy of the project, with its exit code and both output streams. It is not an animation |
+| The browser's diagnosis | **Recomputed, not replayed.** The shipped proposal carries the agent's claims and no numbers; `record_decision.py` re-runs all eight tests in the browser. The reasoning itself is the hour-5 gate's, written by Claude Code, and the page says so |
+| The agent choosing what to run in the browser | **Not built — phase 7.** Round 4 replays a recorded sequence with the evidence recomputed. A round with no recorded diagnosis gets the five library tests read-only and an honest sentence, and stays open |
 
 Rows for components that do not exist yet describe what they will be, and the build
 status table above says which of them are built.
