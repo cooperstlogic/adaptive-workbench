@@ -2,14 +2,19 @@
   "anomaly_flag": {
     "expected_outside": 0.2,
     "interval": 0.8,
-    "trigger_above": 0.35
+    "min_designs": 8,
+    "note": "A round is flagged when its fresh designs sit on average more than 0.5 pKD from where the model put them. 0.5 pKD is a three-fold change in apparent KD and 3.3 times the assay's noise sigma, so it is a discrepancy a scientist would stop for. Signed and not two-sided-scattered: a batch chosen by expected improvement always lands where the model is least certain, so an interval miss rate fires on every round and carries no information. A run offset and a real activity cliff trip this statistic identically, which is the point -- the flag says a round needs deciding, never which explanation wins.",
+    "scope": "fresh_designs",
+    "statistic": "mean_signed_residual",
+    "trigger_abs_pkd": 0.5
   },
   "batch": {
     "controls": 2,
     "exploration_slots": 2,
     "replicates": 2,
     "round1_policy": "single_mutant_scan",
-    "round1_policy_note": "Round 1 is a diversity-maximizing scan restricted to single mutants. This is what an affinity maturation campaign actually does first, it teaches the surrogate site effects before it has to reason about combinations, and it makes round 1 structurally incapable of reaching the threshold.",
+    "round1_policy_note": "Round 1 is a single-mutant scan: every editable position, six substitutions each, chosen round-robin so the surrogate sees every position before it has to reason about combinations. The scan residues span chemistry -- A small, D acidic, K basic, S polar, L aliphatic, W aromatic -- which is how a protein engineer lays out a CDR scan. Restricting round 1 to singles also makes it structurally incapable of reaching the threshold, since no single mutant in the pool can.",
+    "round1_scan_residues": "ADKSLW",
     "size": 48
   },
   "constraints": {
@@ -20,7 +25,7 @@
     ],
     "max_mutations": 2
   },
-  "created": "2026-09-19T07:09:02+00:00",
+  "created": "2026-09-19T15:30:01+00:00",
   "diagnostics": [
     "offset_from_controls",
     "residual_by_plate",
@@ -32,7 +37,7 @@
     99,
     107
   ],
-  "hash": "sha256:9fe07853c3b3928615c98b6c1a4287a56bdab1c274777aeaca340407c442fc89",
+  "hash": "sha256:9b0d85c530f225599d84cf49717c3483a8d6026f445c63c0296cbdedf260be5f",
   "model_recipes": [
     "ridge_onehot",
     "gp_pca64"

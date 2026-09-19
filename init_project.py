@@ -12,7 +12,7 @@ import argparse
 import os
 import sys
 
-from core import candidates, encode, project, schema
+from core import candidates, project, schema
 
 REPO = os.path.dirname(os.path.abspath(__file__))
 
@@ -54,14 +54,7 @@ def main(argv=None):
 
     parent = state["designs"]["parent"]
     policy = batch.get("round1_policy", "diversity")
-    if policy == "single_mutant_scan":
-        draw = [s for s in kept if encode.n_mutations(parent, s, region) <= 1]
-    else:
-        draw = kept
-    seed_idx = candidates.diversity_seed_batch(
-        draw, batch["size"], region, seed_index=draw.index(parent)
-    )
-    seed = [draw[i] for i in seed_idx]
+    seed, draw = candidates.round1_batch(kept, parent, region, batch["size"], policy)
     added = project.add_designs(state, seed, origin="round1_diversity_seed", round_id=1)
 
     pool_rec = schema.stamp({

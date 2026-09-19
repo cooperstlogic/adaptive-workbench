@@ -111,3 +111,69 @@ def max_min_distance(sequences, editable_region):
     D = encode.hamming_matrix(sequences, editable_region)
     np.fill_diagonal(D, np.inf)
     return float(D.min())
+
+
+SCAN_RESIDUES = "ADKSLW"
+
+
+def single_mutant_scan(feasible, parent, editable_region, size, scan_residues=SCAN_RESIDUES):
+    """A scan that actually scans: every editable position, chemistry spread.
+
+    Greedy max-min Hamming is the right diversity criterion over the whole
+    pool and the wrong one here. Among single mutants every pair is one or two
+    apart, and once the parent is taken every remaining candidate sits at
+    distance one forever, so the greedy degenerates into enumeration order and
+    spends all forty-eight wells on the first four positions. A scan that
+    misses half the editable region is not a scan, and the surrogate would
+    enter round two knowing nothing about the positions it never saw.
+
+    So positions are taken round-robin, and within a position the declared
+    scan residues come first: small, acidic, basic, polar, aliphatic,
+    aromatic. That is what a CDR scan looks like when a protein engineer lays
+    one out, and it is deterministic.
+    """
+    sl = encode.region_slice(editable_region)
+    by_position = {p: [] for p in range(sl.start, sl.stop)}
+    for s in feasible:
+        muts = encode.mutations(parent, s, editable_region)
+        if len(muts) == 1:
+            by_position[muts[0][0]].append(s)
+
+    rank = {a: i for i, a in enumerate(scan_residues)}
+    for pos, seqs in by_position.items():
+        seqs.sort(key=lambda s: (rank.get(s[pos], len(scan_residues)), s[pos]))
+
+    batch, cursor = [parent], {p: 0 for p in by_position}
+    positions = sorted(by_position)
+    while len(batch) < size:
+        progressed = False
+        for pos in positions:
+            if len(batch) >= size:
+                break
+            i = cursor[pos]
+            if i < len(by_position[pos]):
+                batch.append(by_position[pos][i])
+                cursor[pos] = i + 1
+                progressed = True
+        if not progressed:
+            break
+    return batch
+
+
+def round1_batch(feasible, parent, editable_region, size, policy="diversity",
+                 scan_residues=SCAN_RESIDUES):
+    """The seed batch both arms of the comparison start from.
+
+    -> (batch, draw_pool). Under ``single_mutant_scan`` the draw is restricted
+    to single mutants: that is what an affinity maturation campaign does
+    first, it teaches the surrogate site effects before it has to reason about
+    combinations, and it makes round 1 structurally incapable of reaching the
+    threshold. Lives here rather than in the campaign script so the evaluator
+    and the product start from the same batch by construction.
+    """
+    if policy == "single_mutant_scan":
+        draw = [s for s in feasible if encode.n_mutations(parent, s, editable_region) <= 1]
+        return single_mutant_scan(draw, parent, editable_region, size, scan_residues), draw
+    draw = list(feasible)
+    idx = diversity_seed_batch(draw, size, editable_region, seed_index=draw.index(parent))
+    return [draw[i] for i in idx], draw
