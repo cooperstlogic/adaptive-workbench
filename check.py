@@ -113,11 +113,15 @@ def main():
         check("a project is created from the template", ok, r.stderr.strip()[:80])
         if ok:
             st = project.load(root)
-            designs = st["designs"]["designs"]
-            check("round-1 designs written", len(designs) == 48, "%d designs" % len(designs))
-            check("round 1 is a single-mutant scan",
-                  all(x["n_mutations"] <= 1 for x in designs),
-                  "max %d mutations" % max(x["n_mutations"] for x in designs))
+            check("instantiation writes no designs and no pool",
+                  not st["designs"]["designs"] and not st["rounds"]["rounds"]
+                  and not os.listdir(os.path.join(root, "candidates")),
+                  "round 1 goes through generate_candidates and select_batch like every "
+                  "other round")
+            check("the template's constraints and recipes are copied into the project",
+                  st["objectives"]["constraints"]["max_mutations"] == 2
+                  and st["objectives"]["model_recipes"] == list(surrogate.RECIPES),
+                  ", ".join(st["objectives"]["model_recipes"]))
             check("every record verifies against its own hash",
                   all(schema.verify(st[k]) for k in ("project", "objectives", "designs", "rounds")))
 
@@ -284,6 +288,202 @@ def main():
     check("the interquartile bands separate", gate["interquartile_bands_separate"],
           "at rounds %s" % gate["rounds_where_bands_separate"])
     check("GATE: guided separates from random", gate["passed"], gate["statement"][:58] + "...")
+
+    print("\nPhase 3: boundaries of the pipeline scripts and the skill")
+    skill_dir = os.path.join(REPO, "skills", "adaptive-optimization")
+    scripts_dir = os.path.join(skill_dir, "scripts")
+    expected = ["evaluate_prior.py", "fit_surrogates.py", "generate_candidates.py",
+                "import_round.py", "select_batch.py"]
+    present = sorted(f for f in os.listdir(scripts_dir) if f.endswith(".py"))
+    check("the five pipeline scripts are present", present == expected, ", ".join(present))
+
+    # Same method as the core boundary check above: read the imports rather than
+    # grep the prose, because a docstring is allowed to name the oracle.
+    leaked, banned_pkgs = {}, {"scipy", "sklearn", "pandas"}
+    for name in present:
+        path = os.path.join(scripts_dir, name)
+        names = set()
+        for node in ast.walk(ast.parse(open(path).read(), filename=path)):
+            if isinstance(node, ast.Import):
+                names.update(a.name for a in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                names.add(node.module)
+        bad = {n for n in names
+               if n.split(".")[0] in ({"data", "lims"} | banned_pkgs)}
+        if bad:
+            leaked[name] = sorted(bad)
+    check("no pipeline script imports the simulated lab or the LIMS",
+          not leaked, str(leaked) if leaked else
+          "the workbench sees only what a lab reported, never ground truth")
+
+    lims_src = open(os.path.join(REPO, "lims.py")).read()
+    lims_imports = set()
+    for node in ast.walk(ast.parse(lims_src)):
+        if isinstance(node, ast.ImportFrom) and node.module:
+            lims_imports.add(node.module)
+    check("the oracle lives behind the LIMS, which is where core/ cannot reach it",
+          "data.oracle" in lims_imports or "data" in lims_imports,
+          "lims.py imports %s" % ", ".join(sorted(i for i in lims_imports if i.startswith("data"))))
+
+    skill_md = open(os.path.join(skill_dir, "SKILL.md")).read()
+    check("SKILL.md declares the skill name and a description that fires on the domain",
+          skill_md.startswith("---\nname: adaptive-optimization\n")
+          and "lead optimization" in skill_md and "batch selection" in skill_md)
+    rules = ["Never change objectives without explicit approval",
+             "Never pool measurements across assay versions without a bridging set",
+             "Never invent a model recipe outside the registry",
+             "Never write a number into a decision record that did not come from a named"]
+    flat = " ".join(skill_md.split())
+    check("SKILL.md carries all four rules the agent may not break",
+          all(r in flat for r in rules),
+          "%d of 4 present" % sum(1 for r in rules if r in flat))
+    check("SKILL.md labels the two phase-4 scripts as not built",
+          skill_md.count("**Not built yet**") == 2 and "Do not simulate them." in skill_md,
+          "CLAUDE.md failure mode 1: if something is stubbed, label it stubbed")
+
+    print("\nPhase 3: six rounds through the CLI (phase 3 done-condition)")
+    camp_naive = camp["runs"]["guided_naive"][0]
+    camp_guided = camp["runs"]["guided"][0]
+
+    def cli_run(tmp, name, offset):
+        """One full campaign through the CLI scripts, as subprocesses."""
+        store = os.path.join(tmp, "store.json")
+        r = subprocess.run([sys.executable, "init_project.py", "--name", name,
+                            "--projects-dir", tmp], cwd=REPO, capture_output=True, text=True)
+        if r.returncode != 0:
+            return None, r.stderr
+        r = subprocess.run([sys.executable, "run_rounds.py",
+                            "--project", os.path.join(tmp, name), "--rounds", "6",
+                            "--ignore-flags", "--offset", offset,
+                            "--approved-by", "check.py",
+                            "--results-dir", os.path.join(tmp, "exports"),
+                            "--lims-store", store],
+                           cwd=REPO, capture_output=True, text=True)
+        if r.returncode != 0:
+            return None, (r.stderr or r.stdout)[-300:]
+        return project.load(os.path.join(tmp, name)), ""
+
+    with tempfile.TemporaryDirectory() as tmp:
+        st, err = cli_run(tmp, "cli", "never")
+        check("six rounds run end to end through the five scripts and the LIMS",
+              st is not None, err)
+        if st is not None:
+            entries = st["rounds"]["rounds"]
+            check("rounds.json links every round's pool, batch, snapshot, evaluation and model",
+                  len(entries) == 6 and all(
+                      all(k in e for k in ("pool", "batch", "snapshot", "evaluation", "model"))
+                      for e in entries),
+                  "%d rounds, %d fully linked"
+                  % (len(entries), sum(1 for e in entries if len(e) >= 7)))
+            refs = [(e[k]["file"], e[k]["hash"]) for e in entries
+                    for k in ("pool", "batch", "snapshot", "evaluation", "model")]
+            mismatched = [f for f, h in refs
+                          if schema.read_json(os.path.join(st["paths"]["root"], f))["hash"] != h]
+            check("every hash in the round graph matches the record it points at",
+                  not mismatched, "%d artifacts checked" % len(refs))
+            bad = [f for f, _ in refs
+                   if not schema.verify(schema.read_json(os.path.join(st["paths"]["root"], f)))]
+            check("every artifact verifies against its own content hash", not bad,
+                  "%d artifacts recomputed" % len(refs))
+
+            b1 = project.read_artifact(st, "batches", 1)
+            designs = {x["design_id"]: x for x in st["designs"]["designs"]}
+            check("round 1 is a 48-design single-mutant scan chosen without a model",
+                  len(b1["approved"]) == 48 and b1["mode"] == "seed"
+                  and all(designs[x]["n_mutations"] <= 1 for x in b1["approved"]),
+                  "%s, max %d mutations" % (b1["round1_policy"],
+                                            max(designs[x]["n_mutations"]
+                                                for x in b1["approved"])))
+            b2 = project.read_artifact(st, "batches", 2)
+            c2 = b2["composition"]
+            check("batch size stays inclusive of its control, replicate and exploration slots",
+                  len(b2["approved"]) == 48 and (c2["control"], c2["replicate"],
+                                                 c2["exploration"], c2["pick"]) == (2, 2, 2, 42),
+                  "48 wells = %d control, %d replicate, %d exploration, %d picks"
+                  % (c2["control"], c2["replicate"], c2["exploration"], c2["pick"]))
+            samples = {r["sample_id"] for r in st["designs"]["external_refs"]}
+            ids = set(designs)
+            check("the registry's sample ids are never design ids",
+                  not (samples & ids) and len(samples) == 288,
+                  "%d samples over six rounds, joined through the reference table"
+                  % len(samples))
+            prints = {project.read_artifact(st, "candidates", r)["pool_fingerprint"]
+                      for r in range(1, 7)}
+            check("the candidate pool hashes to the same value in all six rounds",
+                  len(prints) == 1, schema.short_hash(prints.pop()))
+
+            snap4 = project.read_artifact(st, "evidence", 4)
+            check("round 4 flags and its frame does not move without a ruling",
+                  snap4["flagged"] and snap4["frame"]["offset_applied"] == 0.0
+                  and snap4["frame"]["authority"] == "unruled",
+                  "estimate %+.3f recorded, applied %+.3f, authority %r"
+                  % (snap4["frame"]["offset_estimate"]["offset"],
+                     snap4["frame"]["offset_applied"], snap4["frame"]["authority"]))
+
+            worst_b = worst_o = 0.0
+            for r in range(1, 7):
+                pooled = reconcile.pool(project.measurement_records(st, through=r))
+                snap = project.read_artifact(st, "evidence", r)
+                ref = camp_naive[r - 1]
+                worst_b = max(worst_b, abs(max(v["value"] for v in pooled.values())
+                                           - ref["best_observed"]))
+                worst_o = max(worst_o, abs(snap["frame"]["offset_estimate"]["offset"]
+                                           - ref["offset_estimated"]))
+            check("GATE: the CLI reproduces the evaluator's uncorrected arm to file precision",
+                  worst_b < 5e-6 and worst_o < 5e-6,
+                  "worst best-observed delta %.0e, worst offset delta %.0e over six rounds"
+                  % (worst_b, worst_o))
+
+    with tempfile.TemporaryDirectory() as tmp:
+        st, err = cli_run(tmp, "cli", "always")
+        check("the same six rounds run with every round corrected from its bridge",
+              st is not None, err)
+        if st is not None:
+            worst_b = 0.0
+            for r in range(1, 7):
+                pooled = reconcile.pool(project.measurement_records(st, through=r))
+                worst_b = max(worst_b, abs(max(v["value"] for v in pooled.values())
+                                           - camp_guided[r - 1]["best_observed"]))
+            check("GATE: the CLI reproduces the evaluator's corrected arm to file precision",
+                  worst_b < 5e-6,
+                  "worst best-observed delta %.0e; the CLI and the evaluator select the same "
+                  "288 wells" % worst_b)
+            quiet = [project.read_artifact(st, "evidence", r)["flagged"] for r in (5, 6)]
+            check("correcting round 4 makes the rounds after it go quiet", not any(quiet),
+                  "rounds 5 and 6 flagged: %s" % quiet)
+
+    print("\nPhase 3: the committed demo project")
+    demo = project.load(os.path.join(REPO, "projects", "demo-trastuzumab"))
+    entries = demo["rounds"]["rounds"]
+    check("the demo project is committed at four rounds", len(entries) == 4,
+          "rounds %s" % [e["round"] for e in entries])
+    check("its batches carry a named approver",
+          all(project.read_artifact(demo, "batches", e["round"])["approval"]["by"]
+              == "d.webster" for e in entries),
+          "the system proposes and a named person disposes")
+    snap4 = project.read_artifact(demo, "evidence", 4)
+    bridge = snap4["frame"]["offset_estimate"]
+    check("round 4 comes back flagged and unruled",
+          snap4["flagged"] and snap4["frame"]["authority"] == "unruled",
+          "mean signed residual %+.3f pKD over %d fresh designs"
+          % (snap4["anomaly"]["mean_signed_residual"], snap4["anomaly"]["n_compared"]))
+    check("round 4 is genuinely ambiguous rather than a bare offset",
+          bridge["n"] >= 3 and bridge["se"] is not None
+          and abs(bridge["offset"] - snap4["anomaly"]["mean_signed_residual"]) > 0.5,
+          "the bridge recovers %+.3f (se %.3f) while the fresh designs sit %+.3f -- an "
+          "offset alone does not account for the round"
+          % (bridge["offset"], bridge["se"], snap4["anomaly"]["mean_signed_residual"]))
+    eval4 = project.read_artifact(demo, "batches", 4, suffix=".eval")
+    check("the calibration collapse is recorded against the held-out estimate",
+          eval4["calibration"]["realized_coverage"] < 0.2
+          and eval4["calibration"]["drift_from_held_out"] < -0.5,
+          "coverage %.2f realized against %.2f held out at fit time"
+          % (eval4["calibration"]["realized_coverage"],
+             eval4["calibration"]["held_out_coverage_at_fit"]))
+    check("the unruled round is visible to the next fit rather than silently pooled",
+          4 in project.read_artifact(demo, "models", 4)["unruled_flagged_rounds"],
+          "run_004 records unruled flagged rounds %s"
+          % project.read_artifact(demo, "models", 4)["unruled_flagged_rounds"])
 
     if FAILS:
         print("\n%d of %d checks FAILED:" % (len(FAILS), TOTAL))

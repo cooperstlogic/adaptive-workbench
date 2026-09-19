@@ -304,3 +304,131 @@ direct argument in the build for why the decision record exists at all.
 The line to use: *not correcting does not change which molecules you make. It changes
 which one you believe is best, and in twelve of twenty runs you take the wrong one
 forward.*
+
+---
+
+**2026-09-19 (phase 3: the pipeline scripts, the skill, and the mock LIMS)**
+
+| # | Decision | Reasoning |
+| --- | --- | --- |
+| 45 | Round 1 goes through `generate_candidates.py` and `select_batch.py` like every other round; `init_project.py` writes no designs and no pool | It wrote both before, which meant round 1 was the only round with designs but no batch record — no rationale, no approval, no entry in the round graph, and a second code path writing the same designs the selection script would have written. SPEC.md already said round 1 needs no extra script; the fix was to stop giving it one. Instantiation now reports the constraint summary and stores nothing |
+| 46 | The candidate pool is hashed, not stored | Enumeration is deterministic, so `pool_NNN.json` carries counts, the removal reasons and a content hash over the ordered pool. Every later artifact indexes into that order, and each consumer re-enumerates and checks the hash. Storing the hash costs nine hundred bytes where storing 7,294 sequences costs most of a megabyte a round, and a mismatch is caught instead of silently misaligning every prediction by one |
+| 47 | A model run stores one prediction per pool member, in the pool's hashed order | SPEC.md asks `fit_surrogates` to store predictions for the whole candidate pool, and every consumer needs them: selection reads the mean and the standard deviation, the batch table shows them to a scientist, and `evaluate_prior` scores them. 205 kB a round, and the alternative — storing the fitted ridge model — is a 160×160 matrix, which is the same size and less useful |
+| 48 | The mock LIMS is `lims.py` at the repo root, not a module inside `mcp/` | `mcp/` holding an importable package named `mcp` would shadow the `mcp` PyPI distribution that FastMCP is built on, and phase 5 would lose an hour to an import error with no obvious cause. `mcp/` keeps the two server entry points and nothing importable; they will do `import lims` |
+| 49 | The lab stand-in is built now rather than in phase 5 | Phase 3's done-condition is six rounds through the CLI, and six rounds need something that mints sample identifiers and returns assay rows. Building it as a plain module now means phase 5 is a transport change of about eighty lines, and the alternative — a throwaway script writing sequence-keyed CSVs — would make reconciliation fake in phase 3 and rebuild it in phase 5 |
+| 50 | `import_round.py` never decides whether to correct a round. The caller passes `--offset {never,if-clear,always}` and must name an `--authority` | The reconciler estimates the offset and sets the flag; it does not rule. Routine control normalization on a round that did not flag is a *policy*, and `run_rounds.py` owns it and says so in the snapshot (`bridge_policy:...`). A flagged round stays in the raw assay frame under authority `unruled`, because an assay shift and a real activity cliff produce the same first look and correcting the wrong one erases the finding. Moving such a round takes `--offset always` and an authority that names the decision record |
+| 51 | `run_rounds.py` exists, shells out to the real scripts, prints every command, and stops on a flagged round | Phase 3 needs a way to run six rounds, and the honest way to provide one is a scheduler that is visibly a scheduler. It is also the argument: import, fit, generate, select, repeat needs no agent, and the place it stops is the place the agent is for. `--ignore-flags` continues without a ruling, which is what makes the naive-pooling arm reproducible from the CLI |
+| 52 | `evaluate_prior.py` scores against the project's own round-1 scan, not against random selection | SPEC.md asks for realized improvement "against the random baseline", and that baseline is a property of the evaluator: measuring it inside a live campaign would mean spending wells on designs nobody wanted. What a project can compare against honestly is its own round-1 batch, the only one chosen without a model. The random arm stays in `campaign.json`, labelled as coming from the evaluator. The claim was narrowed rather than faked |
+| 53 | Predictions are rounded to the stored precision inside `core/surrogate.py`, not at the file boundary | See below: this is the fix for a reproducibility bug, and the reason it belongs in `core/` is that all three surfaces have to select the same batch from the same snapshot. SPEC.md already makes this argument for hashes — fixed precision is what keeps a hash stable across numpy under WebAssembly and numpy on a laptop. Predictions that drive a selection get the same treatment, so the number written into the model run is the number the selection saw |
+| 54 | Exploration slots break their tie on the better developability margin, then on pool order | A stable sort alone would be enough for determinism and would pick by enumeration order, which is an accident. Breaking on the margin is the same tie-break `greedy_diverse` already applies to the fresh picks, so the rule is one rule, and the reason is statable to a scientist |
+| 55 | A batch records `recommended`, `approved` and `overrides`, and a batch with no named approver is labelled `unreviewed` | This is the governance claim in one file. `--drop DESIGN_ID --drop-note` records a removal with a note, an approver and a timestamp, and `evaluate_prior` scores predictions for the approved designs only, so the model is neither credited nor blamed for designs a scientist removed. A run with no `--approved-by` does not silently claim approval |
+| 56 | The assay export carries six decimals | The CSV is a file boundary and therefore has a precision. Four decimals moved the pooled best by 3 × 10⁻⁵ pKD, which is meaningless as chemistry and was enough to change a batch. Six matches `schema.FLOAT_PRECISION`, so the whole system quantizes at one place |
+
+### The bug phase 3 found: batch selection was not reproducible
+
+Building the CLI path gave a way to ask a question the evaluator alone cannot: does the
+product select the same batch the evaluator does? It did not. Rounds 1 and 2 agreed to
+1 × 10⁻⁶ pKD and round 3 diverged by 0.1 pKD, which is a different molecule.
+
+**The cause is a tie, and the tie is not a corner case — it is the normal case.** Under a
+one-hot ridge model, every double mutant at a pair of positions the model has not yet seen
+jointly carries *bit-identical* predictive variance. The top of an uncertainty ranking is
+therefore dozens of designs deep in exact ties: the ten highest standard deviations in the
+round-2 pool were all 0.406393579971. The exploration slots were selected with
+`np.argsort`, whose default is quicksort and is not stable, so which two of those dozens
+got measured depended on array order — and would differ on a different numpy build, and
+in Pyodide.
+
+That is not a cosmetic problem. Two of the demo's load-bearing claims are that clicking a
+batch walks back to the exact evidence that produced it, and that the browser runs the same
+Python as the CLI. A batch that cannot be reproduced from its own snapshot breaks both.
+
+**The fix, in two parts, both in `core/`.** Exploration slots are now ranked by
+`np.lexsort` on standard deviation, then the developability margin, then pool order. And
+predictions are rounded to `schema.FLOAT_PRECISION` where they are produced, so the
+selection consumes exactly the numbers that get written to disk. Two smaller cases went
+with it: the control and replicate sorts keyed on the value alone, and `measured` is a set
+of strings whose iteration order is salted per process, so a tie on the value — which
+censored designs, all sitting exactly at the detection limit, are guaranteed to produce —
+could pick a different control on a different run of the same project.
+
+**The gate was re-run and the verdict did not move.** Stated plainly, because the change
+was made after the gate had already passed:
+
+| | before the fix | after the fix |
+| --- | --- | --- |
+| Mean rounds to threshold, guided vs random | 2.00 vs 2.95 | **2.00 vs 2.95** |
+| Paired sign test | 8 wins, 0 losses, p = 0.0078 | **8 wins, 0 losses, p = 0.0078** |
+| Interquartile bands separate at | rounds 2, 5, 6 | **rounds 2, 5, 6** |
+| Final best observed, median, guided | 11.755 | 11.762 |
+| Final best observed, median, naive | 11.052 | 11.015 |
+| Round-4 offset recovery, mean error | −0.025 | −0.036 |
+| Advances a worse molecule, naive arm | 12 of 20 seeds, median 0.605 | 14 of 20 seeds, median 0.648 |
+
+**The random arm is bit-identical before and after**, which is the confirmation that the
+change touched only exploration-slot selection: the random arm has no exploration slots.
+Nothing about the landscape, the pre-registered parameters, the seed or the threshold
+moved, and the fix was motivated by a reproducibility failure found in a different phase
+rather than by any curve.
+
+### One overclaim in the README, corrected
+
+The phase-2 README said guided "reaches the feasible pool's global maximum of 11.674 pKD by
+round 5 in every run". That was wrong when it was written: it was 18 of 20 runs at round 5,
+not 20, and the 11.674 figure is the *median*, which reaches the maximum because more than
+half the runs do. It now reads that the median run reaches it by round 5 and 17 of 20
+individual runs reach it by round 6. Worth recording because it is exactly CLAUDE.md's
+third failure mode, found by re-deriving a number instead of copying it forward.
+
+### Phase 3 results
+
+**Six rounds run end to end through the five scripts and the mock LIMS, and they select the
+same wells the evaluator does.** The CLI reproduces the evaluator's uncorrected arm to
+1 × 10⁻⁶ pKD and its corrected arm to 7 × 10⁻⁷ pKD on every round, and all six batches are
+identical in membership and order — 288 of 288 wells. The residual 10⁻⁶ is the CSV's own
+storage precision and nothing else. `check.py` runs both campaigns and compares them, so
+the claim is checked rather than asserted, and it is the strongest available statement that
+non-negotiable 2 holds.
+
+**The round graph is complete and self-verifying.** Thirty artifacts over six rounds, every
+hash matching the record it points at, every record recomputing its own hash from canonical
+JSON. The registry's 288 sample identifiers never coincide with a design identifier, so the
+join in `import_round` is real work.
+
+### Two things about the demo project that phase 4 needs to know
+
+**There are two flagged rounds, not one, and they want opposite rulings.** Round 2 flags
+*positively*, at +0.765 pKD: a model fit on single mutants alone under-predicts the first
+double mutants, so the designs came back better than forecast. The right action is
+`refit_only` and nothing to the data. Round 4 flags negatively at −2.046 and wants a
+correction. The same statistic, two correct answers, which is the argument for the decision
+record made by the data rather than by the spec. `DECISIONS.md` decision 39 already
+recorded round 2's positive flag as a true signal with a clean explanation; what is new is
+that the product stops for it.
+
+**Round 4 is ambiguous for two reasons, and correcting the offset accounts for only half of
+it.** SPEC.md asked whether the ambiguity would arise on its own before engineering it. It
+does, and it is richer than the single-cause story the spec sketched:
+
+| Round 4 in `projects/demo-trastuzumab` | |
+| --- | --- |
+| Assay version | v1.3, first seen this round, so nothing about it is characterized |
+| Fresh designs | 42, a mean −2.046 pKD from where the model put them |
+| Interval coverage | 0.07 realized against 0.80 nominal and 0.82 held out at fit time |
+| Bridge | 3 shared designs, offset −1.014 pKD, se 0.059 |
+| Residual by mutated position | flat, −1.57 to −2.42 across seven positions |
+| Cliff-hitting designs | 2, mean residual −2.196 against −2.039 for everything else |
+
+The bridge recovers about a pKD of assay shift and the fresh designs are two pKD low, so
+**the offset does not account for the round**. The residual is flat across mutated
+positions and the cliff-hitting designs are indistinguishable from the rest, so it is
+**not** the cliff either — which is the evidence `residual_by_mutation_class` exists to
+produce. What remains is the model: the project's pooled incumbent had drifted to 11.837
+pKD against a true pool maximum of 11.674, because a cumulative best observed is a maximum
+over noisy reads and is flattered by every round of them, so the surrogate was fit on
+values that do not exist and extrapolated from there.
+
+A phase-4 diagnosis that corrects the offset and stops is wrong about half of round 4. The
+correct recommendation is a partial correction plus a statement about calibration, and
+`if_wrong` has something real to say: if the whole discrepancy were the assay, the bridge
+and the fresh designs would agree, and they do not.

@@ -1,6 +1,131 @@
 {
-  "hash": "sha256:112fe29f797a235adf0eca8bd0384b4d498638a94364c760fb988aba547b7b47",
+  "hash": "sha256:06f92b23fb79b79dcd8a472cc96b5fe2b82484dac8d9bb9cd3d7862e30249a70",
   "project": "demo-trastuzumab",
-  "rounds": [],
+  "rounds": [
+    {
+      "batch": {
+        "file": "batches/batch_001.json",
+        "hash": "sha256:8cf4bcdf2c2af5a2ae4b6c9551f1fe80c47356b7e023d86dd1d4fb6c16002309"
+      },
+      "evaluation": {
+        "file": "batches/batch_001.eval.json",
+        "hash": "sha256:004e7adf1fe2ebacc28629a93cf7bc3ee0fc6f43d37981df6f111d3b62d2288e"
+      },
+      "flagged": false,
+      "model": {
+        "file": "models/run_001.json",
+        "hash": "sha256:173ad41534c8242db72eb081d9beb2f3704df718aa9f67c7f1f3b47ca61bdf18"
+      },
+      "pool": {
+        "file": "candidates/pool_001.json",
+        "hash": "sha256:1c303cb3dc17ff07a90e9b87d964ab2e4762c4bdb958c448e3014a81f730574c"
+      },
+      "round": 1,
+      "snapshot": {
+        "file": "evidence/snapshot_001.json",
+        "hash": "sha256:be6c183dd9753369bbd8e7f6b7f2ed8c6db791e06a2a7a39907cfd1ad8e225b8"
+      },
+      "submission": {
+        "assay_version": "v1.2",
+        "n_samples": 48,
+        "registry": "mock-lims",
+        "round_id": "R1"
+      },
+      "updated": "2026-09-19T16:43:25+00:00"
+    },
+    {
+      "batch": {
+        "file": "batches/batch_002.json",
+        "hash": "sha256:941ce644042a96fb7e4c4869144ec5485b781f9cf60f9035f83079d7a7c9ece2"
+      },
+      "evaluation": {
+        "file": "batches/batch_002.eval.json",
+        "hash": "sha256:5a05abf8e9457fb81e44cb4b97bc9fb14ff2eb7fb51c516d794ed9ce9053253e"
+      },
+      "flagged": true,
+      "model": {
+        "file": "models/run_002.json",
+        "hash": "sha256:902dfe0e774522f3adb0365a439daae52945618230bcdb8894c0361871ec6e4c"
+      },
+      "pool": {
+        "file": "candidates/pool_002.json",
+        "hash": "sha256:138cecb7dd999b59e07935cc406b4d24099cc9863f7aff1f234bd9fe0cafa3ca"
+      },
+      "round": 2,
+      "snapshot": {
+        "file": "evidence/snapshot_002.json",
+        "hash": "sha256:b6fb78ca0627d17061859281d8930593d835c57c44883687a034857181805cb9"
+      },
+      "submission": {
+        "assay_version": "v1.2",
+        "n_samples": 48,
+        "registry": "mock-lims",
+        "round_id": "R2"
+      },
+      "updated": "2026-09-19T16:43:26+00:00"
+    },
+    {
+      "batch": {
+        "file": "batches/batch_003.json",
+        "hash": "sha256:4c974764005adab40ab3fbab8f2b814006d85452bf3901fad0c936173f91a2f0"
+      },
+      "evaluation": {
+        "file": "batches/batch_003.eval.json",
+        "hash": "sha256:08f3adda427a808988ea54dcc5db5527c3d4b166865a0e47da286b1691596ccc"
+      },
+      "flagged": false,
+      "model": {
+        "file": "models/run_003.json",
+        "hash": "sha256:20d8a0b534c614191c2012fcfae270de38128dc0619747ecb6a835b2d4aa2915"
+      },
+      "pool": {
+        "file": "candidates/pool_003.json",
+        "hash": "sha256:d6b5dbd34d50866458b93a35e0622b3362bf24ca2597a40027307ba4baae4dc4"
+      },
+      "round": 3,
+      "snapshot": {
+        "file": "evidence/snapshot_003.json",
+        "hash": "sha256:8c8a9b0b3cc84d820e0e850e0f630e25dddfcfa4f3e4442f721bf695686a1951"
+      },
+      "submission": {
+        "assay_version": "v1.2",
+        "n_samples": 48,
+        "registry": "mock-lims",
+        "round_id": "R3"
+      },
+      "updated": "2026-09-19T16:43:28+00:00"
+    },
+    {
+      "batch": {
+        "file": "batches/batch_004.json",
+        "hash": "sha256:62192ef53049dc1f4c959828b272a5d9e1377b4d5c332bad0600a17ed4492ffb"
+      },
+      "evaluation": {
+        "file": "batches/batch_004.eval.json",
+        "hash": "sha256:eb504f3cf06a74a4e23e727008c6832d96191b590791508e7decce00619a0f44"
+      },
+      "flagged": true,
+      "model": {
+        "file": "models/run_004.json",
+        "hash": "sha256:de70db48802a935216cb1e4152502489ab981fc36afa73e98f456d2aa82a523f"
+      },
+      "pool": {
+        "file": "candidates/pool_004.json",
+        "hash": "sha256:d68013db7e62dc4109c9b800dea79711d431dc9bace9056e5f610381f9b81ed7"
+      },
+      "round": 4,
+      "snapshot": {
+        "file": "evidence/snapshot_004.json",
+        "hash": "sha256:60e4ff1b7676c344d1a0cd1f7d3ef5dfee512851c4d48830af89c3e5e8569116"
+      },
+      "submission": {
+        "assay_version": "v1.3",
+        "n_samples": 48,
+        "registry": "mock-lims",
+        "round_id": "R4"
+      },
+      "updated": "2026-09-19T16:43:29+00:00"
+    }
+  ],
   "schema_version": 1
 }

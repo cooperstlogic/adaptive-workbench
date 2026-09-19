@@ -20,7 +20,7 @@ Tobit likelihood and it is not worth the hour.
 
 import numpy as np
 
-from . import encode
+from . import encode, schema
 
 RECIPES = ("ridge_onehot", "gp_pca64")
 DEFAULT_COMPONENTS = 64
@@ -357,15 +357,35 @@ def fit_surrogates(features, observations, recipes=RECIPES, folds=CV_FOLDS, pred
     if predict_pool:
         D = features.X if winner == "ridge_onehot" else features.Z
         mu, sd = _PREDICT[winner](models[winner], D)
-        run["pool_mean"] = mu
-        run["pool_sd"] = sd
+        run["pool_mean"], run["pool_sd"] = quantize(mu, sd)
     return run
+
+
+def quantize(*arrays):
+    """Round predictions to the precision at which they are stored.
+
+    Three surfaces have to select the same batch from the same snapshot: the
+    CLI scripts, the evaluator, and numpy under WebAssembly in the browser.
+    They do not agree in the last bits of a float, and they do not have to,
+    because the ties here are not corner cases -- every double mutant at a
+    pair of positions the model has not seen jointly carries bit-identical
+    predictive variance, so the top of an uncertainty ranking is dozens of
+    designs deep in exact ties and a difference at the fifteenth decimal
+    decides which one is measured.
+
+    The project already hashes canonical JSON at fixed precision for exactly
+    this reason. Predictions that drive a selection get the same treatment, so
+    the number written into the model run is the number the selection saw.
+    """
+    out = tuple(np.round(np.asarray(a, dtype=np.float64), schema.FLOAT_PRECISION)
+                for a in arrays)
+    return out[0] if len(out) == 1 else out
 
 
 def predict(run, features, sequences, recipe=None):
     recipe = recipe or run["winner"]
     D = _design_matrix(features, sequences, recipe)
-    return _PREDICT[recipe](run["models"][recipe], D)
+    return quantize(*_PREDICT[recipe](run["models"][recipe], D))
 
 
 def run_summary(run):

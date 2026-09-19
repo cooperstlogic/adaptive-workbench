@@ -5,3 +5,6 @@ node_modules/
 web/dist/
 web/public/core/
 .DS_Store
+
+# Assay exports are regenerable from the LIMS store, which is committed.
+lims_store/exports/

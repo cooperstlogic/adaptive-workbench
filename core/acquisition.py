@@ -140,8 +140,13 @@ def compose_batch(features, policy, *, parent, observed, previous_batch, mean=No
     # mean, not a run offset, so it is deliberately excluded from the bridge.
     take(parent, "control", "parent, carried in every round as the anchor of the bridging set",
          bridge=True)
+    # Sorted on the value and then on the sequence. ``measured`` is a set of
+    # strings, whose iteration order is salted per process, so a tie on the
+    # value alone -- which censored designs, all sitting exactly at the
+    # detection limit, are guaranteed to produce -- would pick a different
+    # control on a different run of the same project.
     ranked = sorted((s for s in measured if s != parent),
-                    key=lambda s: -float(observed[s]["value"]))
+                    key=lambda s: (-float(observed[s]["value"]), s))
     for seq in ranked:
         if sum(1 for s in slots if s["slot"] == "control") >= n_controls:
             break
@@ -153,7 +158,7 @@ def compose_batch(features, policy, *, parent, observed, previous_batch, mean=No
     # than its top. Spanning is what makes the mean shift an estimate of the
     # run offset instead of an estimate of how lucky the top hits were.
     prev_ranked = sorted((s for s in (previous_batch or []) if s in measured and s not in taken),
-                         key=lambda s: float(observed[s]["value"]))
+                         key=lambda s: (float(observed[s]["value"]), s))
     if prev_ranked and n_replicates:
         m = len(prev_ranked)
         wanted = [prev_ranked[min(m - 1, int((i + 0.5) / n_replicates * m))]
@@ -171,10 +176,25 @@ def compose_batch(features, policy, *, parent, observed, previous_batch, mean=No
     if mean is not None and sd is not None:
         extrap_cut = extrapolation_threshold(sd)
 
+    margins = None
+    if sd is not None or mode == "guided":
+        margins = developability_margins(pool, parent, features.editable_region, objectives)
+
     # Exploration: deliberately the least certain designs available. This is
     # the visible difference between exploiting and gathering information.
+    #
+    # The tie is not a corner case, it is the normal case. Under a one-hot
+    # ridge model every double mutant at a pair of positions the model has not
+    # seen jointly carries the *same* predictive variance, so the top of this
+    # ranking is dozens of designs at bit-identical sd. numpy's default sort is
+    # quicksort and is not stable, so ranking on sd alone picks a different
+    # pair on a different numpy build -- and a batch that cannot be reproduced
+    # in the browser from the same snapshot breaks the lineage claim the whole
+    # demo rests on. So the tie is broken on a stated reason, the better
+    # developability margin, and then on pool order, which is deterministic.
     if n_exploration and sd is not None:
-        for pos in fresh_idx[np.argsort(-sd[fresh_idx])][: n_exploration * 4]:
+        rank = np.lexsort((fresh_idx, -margins[fresh_idx], -sd[fresh_idx]))
+        for pos in fresh_idx[rank][: n_exploration * 4]:
             if sum(1 for s in slots if s["slot"] == "exploration") >= n_exploration:
                 break
             take(pool[int(pos)], "exploration",
@@ -194,7 +214,6 @@ def compose_batch(features, policy, *, parent, observed, previous_batch, mean=No
                      bridge=False)
         else:
             ei = expected_improvement(mean, sd, incumbent)
-            margins = developability_margins(pool, parent, features.editable_region, objectives)
             order = greedy_diverse(
                 ei, X, remaining, L,
                 already=[features.index[s] for s in taken],

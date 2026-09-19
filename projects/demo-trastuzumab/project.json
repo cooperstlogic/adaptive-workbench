@@ -1,7 +1,7 @@
 {
-  "created": "2026-09-19T15:30:01+00:00",
+  "created": "2026-09-19T16:43:23+00:00",
   "feature_block": "onehot",
-  "hash": "sha256:437dfd4982e15ba2b441e2899cb6cb758a2b4bccfa6f9ff5afb9dc876b996c6d",
+  "hash": "sha256:dec27c78024a849027e1401b78264b048d85944dc4b839d4d49b1c5badef4a35",
   "id": "demo-trastuzumab",
   "lead": {
     "chain": "VH",
@@ -24,7 +24,9 @@
     }
   },
   "target": "HER2",
-  "team": [],
+  "team": [
+    "d.webster"
+  ],
   "template": {
     "id": "antibody-affinity-maturation",
     "version": "1.0.0"

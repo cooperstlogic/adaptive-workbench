@@ -144,3 +144,157 @@ def feasible_pool(state):
         pool, parent, obj["editable_region"], obj["objectives"], obj["constraints"]
     )
     return kept, removed, candidates.removal_summary(removed)
+
+
+# --- the round graph -------------------------------------------------------
+#
+# rounds.json is the artifact that matters: the thin longitudinal link from
+# recommendation to tested constructs to returned evidence to diagnosis to
+# updated model to next batch. Everything else in a project could be
+# regenerated from the snapshots; this could not.
+
+
+def pool_fingerprint(sequences):
+    """A content hash over the ordered feasible pool.
+
+    Every later record indexes into this order -- a model run stores one
+    prediction per pool member and nothing else -- so the order is part of the
+    lineage and is hashed rather than assumed. Enumeration is deterministic,
+    so storing the hash costs nine hundred bytes where storing the pool costs
+    most of a megabyte, and a mismatch is caught instead of silently
+    misaligning every prediction by one.
+    """
+    return schema.content_hash({"pool": list(sequences)})
+
+
+def artifact_ref(root, path, record):
+    """A round-graph pointer: where the record is, and what it hashed to."""
+    return {"file": os.path.relpath(path, root).replace(os.sep, "/"),
+            "hash": record["hash"]}
+
+
+def link_round(state, round_id, **artifacts):
+    """Attach artifacts to a round and rewrite rounds.json.
+
+    Called by every pipeline script at the end of its run, which is what keeps
+    the graph complete without any script knowing about the others.
+    """
+    rounds = state["rounds"].setdefault("rounds", [])
+    entry = next((r for r in rounds if int(r["round"]) == int(round_id)), None)
+    if entry is None:
+        entry = {"round": int(round_id)}
+        rounds.append(entry)
+        rounds.sort(key=lambda r: int(r["round"]))
+    entry.update(artifacts)
+    entry["updated"] = _now()
+    state["rounds"] = schema.stamp({k: v for k, v in state["rounds"].items() if k != "hash"})
+    schema.write_json(state["paths"]["rounds"], state["rounds"])
+    return entry
+
+
+def round_entry(state, round_id):
+    for r in state["rounds"].get("rounds", []):
+        if int(r["round"]) == int(round_id):
+            return r
+    return None
+
+
+def artifact_path(state, kind, round_id, suffix=""):
+    return os.path.join(state["paths"][kind],
+                        schema.numbered(_STEM[kind], int(round_id)) + suffix + ".json")
+
+
+_STEM = {"candidates": "pool", "batches": "batch", "evidence": "snapshot",
+         "models": "run", "decisions": "decision"}
+
+
+def read_artifact(state, kind, round_id, suffix=""):
+    """Load a numbered artifact, or None when that round has not reached it."""
+    path = artifact_path(state, kind, round_id, suffix)
+    return schema.read_json(path) if os.path.exists(path) else None
+
+
+def snapshots(state, through=None):
+    """Every evidence snapshot the project holds, in round order."""
+    out = []
+    for name in sorted(os.listdir(state["paths"]["evidence"])):
+        if not (name.startswith("snapshot_") and name.endswith(".json")):
+            continue
+        rec = schema.read_json(os.path.join(state["paths"]["evidence"], name))
+        if through is not None and int(rec["round"]) > int(through):
+            continue
+        out.append(rec)
+    return sorted(out, key=lambda r: int(r["round"]))
+
+
+def measurement_records(state, through=None):
+    """Flatten every snapshot into the record shape ``reconcile.pool`` eats.
+
+    One implementation of "what does this project believe it has measured",
+    shared by the fitting script, the selection script and the browser.
+    """
+    records = []
+    for snap in snapshots(state, through=through):
+        for m in snap["measurements"]:
+            rec = dict(m)
+            rec["round"] = int(snap["round"])
+            records.append(rec)
+    return records
+
+
+def known_version_offsets(state, through=None):
+    """What the project has already established about each assay version.
+
+    A version first seen in round N is by definition uncharacterized when
+    round N lands -- which is exactly why that round is the one that needs a
+    ruling, and why the rounds after it do not: they are compared against a
+    fact the project has since recorded. Derived from the snapshots rather
+    than stored, so there is no second place for it to go stale.
+    """
+    known = {}
+    for snap in snapshots(state, through=through):
+        version = snap["assay_version"]
+        if version not in known:
+            known[version] = float(snap["frame"]["offset_applied"])
+    return known
+
+
+def designs_by_id(state):
+    return {d["design_id"]: d for d in state["designs"]["designs"]}
+
+
+def register_external_refs(state, refs):
+    """Store the registry's identifiers for designs we submitted.
+
+    The workbench owns the link and nothing about the samples themselves. This
+    table is the only way back from a returned row to a design, which is what
+    makes reconciliation real work rather than a lookup by sequence.
+    """
+    table = state["designs"].setdefault("external_refs", [])
+    seen = {(r["sample_id"]) for r in table}
+    added = []
+    for ref in refs:
+        if ref["sample_id"] in seen:
+            continue
+        seen.add(ref["sample_id"])
+        table.append(dict(ref))
+        added.append(ref)
+    by_id = designs_by_id(state)
+    for ref in refs:
+        d = by_id.get(ref["design_id"])
+        if d is not None and not d.get("registry_id"):
+            d["registry_id"] = ref["construct_id"]
+    state["designs"] = schema.stamp({k: v for k, v in state["designs"].items() if k != "hash"})
+    schema.write_json(state["paths"]["designs"], state["designs"])
+    return added
+
+
+def sequence_by_sample(state):
+    """sample_id -> sequence, through the external reference table only."""
+    by_id = designs_by_id(state)
+    out = {}
+    for ref in state["designs"].get("external_refs", []):
+        d = by_id.get(ref["design_id"])
+        if d is not None:
+            out[ref["sample_id"]] = d["sequence"]
+    return out

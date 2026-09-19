@@ -5,14 +5,16 @@ every choice already settled.
 
 ## Where the build is
 
-**Phases 1 and 2 are done and the hour-3 gate passed. Phase 3 is next.** Full status,
+**Phases 1, 2 and 3 are done and the hour-3 gate passed. Phase 4 is next.** Full status,
 results and commands are in `README.md`; every settled choice and its reasoning is in
-`DECISIONS.md`. Read both before writing code.
+`DECISIONS.md`. Read both before writing code, and read
+`skills/adaptive-optimization/SKILL.md` before touching anything in the round loop.
 
 - Use `.venv/bin/python`, never `python3` — the system interpreter has no numpy.
-- Run `.venv/bin/python check.py` before and after any phase. It verifies 47 invariants
+- Run `.venv/bin/python check.py` before and after any phase. It verifies 73 invariants
   that correspond to rules here and numbers in `DECISIONS.md`; a failure means the state
-  drifted from what is documented.
+  drifted from what is documented. It takes about twenty seconds, because it runs two full
+  six-round campaigns through the CLI and checks them against the evaluator.
 - **The threshold is already fixed at 10.762 pKD**, pre-registered and recorded before any
   campaign ran. Do not recompute, re-pick, or adjust it. Do not change the landscape or
   its parameters. If guided does not separate from random, say so.
@@ -82,6 +84,9 @@ trustworthy and inspectable.
    and left-censored values, so `import_round` has real reconciliation work to do.
    `simulate_campaign.py` is the one exception: it is the evaluator, not the product, and
    it reads landscape values to score the diagnostic line. Nothing on a product path may.
+   In this build the registry is `lims.py` at the repo root; `mcp/` holds only the two
+   server entry points, because an importable package named `mcp` would shadow the PyPI
+   distribution FastMCP is built on.
 5. Never build sample inventory, plate design, or assay authoring. Their absence is the
    argument.
 6. Constraints declared in a template are enforced in code before optimization runs, not
@@ -114,6 +119,11 @@ trustworthy and inspectable.
   claim fails and that is worth an hour taken from the web app.
 - Prefer the boring implementation. Where the spec leaves a choice open, take the one
   with fewer moving parts and record it in `DECISIONS.md`.
+- **Selection must be reproducible, and it is checked.** Ties in predictive uncertainty
+  are the normal case rather than a corner case, so anything that ranks candidates breaks
+  its ties on a stated reason and then on pool order, never on array order. `check.py`
+  runs the CLI and the evaluator over the same six rounds and requires that they choose
+  the same 288 wells.
 - If something in the spec is wrong, underspecified, or would blow its hour budget, say
   so before building it rather than working around it silently.
 - Don't add dependencies without asking. The dependency list is a design constraint, not

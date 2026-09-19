@@ -25,9 +25,9 @@
   ],
   "enumerated": 10261,
   "feasible": 7294,
-  "hash": "sha256:1c303cb3dc17ff07a90e9b87d964ab2e4762c4bdb958c448e3014a81f730574c",
+  "hash": "sha256:d68013db7e62dc4109c9b800dea79711d431dc9bace9056e5f610381f9b81ed7",
   "inputs": {
-    "designs": "sha256:2d648856cc327d16aca81e825cbf9e5e92b3a3d2945b22d9bbaa9fcc96e6b098",
+    "designs": "sha256:a8cfc96898cd8cf1d49eccd05482e605949c81a63303b3b45fafd4271615c051",
     "objectives": "sha256:8ae096d4f819312e47981ae1453c90a8325d953829f61ff0ccced2bcd2360195"
   },
   "max_mutations": 2,
@@ -38,7 +38,7 @@
     "hydrophobicity_above_threshold": 1625,
     "introduces_liability": 1342
   },
-  "round": 1,
+  "round": 4,
   "schema_version": 1,
   "unit": "pKD"
 }

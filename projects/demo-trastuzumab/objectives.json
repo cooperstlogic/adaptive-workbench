@@ -25,7 +25,7 @@
     ],
     "max_mutations": 2
   },
-  "created": "2026-09-19T15:30:01+00:00",
+  "created": "2026-09-19T16:43:23+00:00",
   "diagnostics": [
     "offset_from_controls",
     "residual_by_plate",
@@ -37,7 +37,7 @@
     99,
     107
   ],
-  "hash": "sha256:9b0d85c530f225599d84cf49717c3483a8d6026f445c63c0296cbdedf260be5f",
+  "hash": "sha256:8ae096d4f819312e47981ae1453c90a8325d953829f61ff0ccced2bcd2360195",
   "model_recipes": [
     "ridge_onehot",
     "gp_pca64"

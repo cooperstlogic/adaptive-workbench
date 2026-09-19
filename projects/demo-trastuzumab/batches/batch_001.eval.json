@@ -1,0 +1,38 @@
+{
+  "baseline": {
+    "best": null,
+    "gain_in_best": null,
+    "gain_in_mean": null,
+    "kind": "unguided_round_1",
+    "mean": null,
+    "n": 0,
+    "note": "this round is the baseline; there is nothing un-guided to compare it to"
+  },
+  "calibration": null,
+  "hash": "sha256:004e7adf1fe2ebacc28629a93cf7bc3ee0fc6f43d37981df6f111d3b62d2288e",
+  "improvement": {
+    "best_fresh_this_round": 9.969072,
+    "best_this_round": 9.969072,
+    "gain_over_incumbent": null,
+    "incumbent_at_selection": null,
+    "mean_fresh": 9.054593
+  },
+  "inputs": {
+    "batch": "sha256:8cf4bcdf2c2af5a2ae4b6c9551f1fe80c47356b7e023d86dd1d4fb6c16002309",
+    "model_run": null,
+    "snapshot": "sha256:be6c183dd9753369bbd8e7f6b7f2ed8c6db791e06a2a7a39907cfd1ad8e225b8"
+  },
+  "model_run": null,
+  "model_winner": null,
+  "n_approved": 48,
+  "n_overridden": 0,
+  "n_recommended": 48,
+  "n_returned": 48,
+  "n_scored": 0,
+  "overrides_note": "predictions are scored for approved designs only; the model is neither credited nor blamed for designs a scientist removed",
+  "per_design": [],
+  "round": 1,
+  "schema_version": 1,
+  "scored_excludes": "construct failures, censored wells, and round-1 designs with no prior model",
+  "unit": "pKD"
+}

@@ -1,18 +1,24 @@
 #!/usr/bin/env python3
-"""Instantiate a project directory from a template and write round-1 designs.
+"""Instantiate a project directory from a template.
 
     python init_project.py --template antibody-affinity-maturation \
                            --name demo-trastuzumab --lead trastuzumab --target HER2
 
 Project creation is not part of the round loop, so it is not one of the skill's
 seven scripts -- the skill operates on a project that already exists.
+
+It writes no designs and no candidate pool. Round 1 goes through
+generate_candidates.py and select_batch.py like every other round, because a
+round-1 batch written by a second code path is a round-1 batch with no batch
+record, no rationale and no approval. The pool summary printed below is a
+report on the template's constraints, not a stored artifact.
 """
 
 import argparse
 import os
 import sys
 
-from core import candidates, project, schema
+from core import project, schema
 
 REPO = os.path.dirname(os.path.abspath(__file__))
 
@@ -51,35 +57,19 @@ def main(argv=None):
     kept, removed, summary = project.feasible_pool(state)
     obj = state["objectives"]
     region, batch = obj["editable_region"], obj["batch"]
-
     parent = state["designs"]["parent"]
-    policy = batch.get("round1_policy", "diversity")
-    seed, draw = candidates.round1_batch(kept, parent, region, batch["size"], policy)
-    added = project.add_designs(state, seed, origin="round1_diversity_seed", round_id=1)
-
-    pool_rec = schema.stamp({
-        "schema_version": schema.SCHEMA_VERSION,
-        "round": 1,
-        "enumerated": len(kept) + len(removed),
-        "feasible": len(kept),
-        "removed": len(removed),
-        "removed_by_reason": summary,
-        "round1_policy": policy,
-        "round1_draw_size": len(draw),
-        "max_mutations": obj["constraints"]["max_mutations"],
-        "editable_region": region,
-    }, inputs={"objectives": obj["hash"]})
-    schema.write_json(os.path.join(state["paths"]["candidates"], "pool_001.json"), pool_rec)
 
     print("project         %s" % root)
     print("template        %s v%s" % (tpl["id"], tpl["version"]))
     print("editable region %s -> %s" % (region, parent[region[0]:region[1]]))
     print("enumerated      %d" % (len(kept) + len(removed)))
     print("feasible        %d  (removed %d: %s)" % (len(kept), len(removed), summary))
-    print("round 1 policy  %s  (drawing from %d of %d feasible)" % (policy, len(draw), len(kept)))
-    print("round 1 designs %d  (%d new), min pairwise distance %.0f"
-          % (len(seed), len(added), candidates.max_min_distance(seed, region)))
-    print("parent in batch %s" % (parent in seed))
+    print("batch policy    %d wells: %d control, %d replicate, %d exploration"
+          % (batch["size"], batch["controls"], batch["replicates"], batch["exploration_slots"]))
+    print("round 1 policy  %s" % batch.get("round1_policy", "diversity"))
+    print("recipes         %s" % ", ".join(obj["model_recipes"]))
+    print("diagnostics     %s" % ", ".join(obj["diagnostics"]))
+    print("designs         0 -- run generate_candidates.py then select_batch.py for round 1")
     print("objectives hash %s" % obj["hash"])
     return 0
 
