@@ -67,6 +67,18 @@ const DIAGNOSTICS = [
   { test: "calibration_by_region", label: "… --offset bridge", args: { offset: "bridge" } },
 ];
 
+// What each verb takes once it is pressed, and what its button says gets
+// recorded. `record_decision.py --rule` refuses a modification or a rejection
+// with no note, so those two wait for one; a push-back is named for its test.
+const RULING = {
+  accepted: { ask: "a note for the record, optional", commit: "Accept the recommendation" },
+  accepted_with_modification: { ask: "what changes", required: true,
+                                commit: "Accept with this modification" },
+  more_evidence_requested: { ask: "why, optional" },
+  rejected: { ask: "why — the agent works from this next", required: true,
+              commit: "Reject the recommendation" },
+};
+
 // What the word beside the lab control means, as a tooltip and nowhere else.
 // The button moves the simulated laboratory's clock; it moves nothing else,
 // and the sentence that says so belongs here rather than on the page.
@@ -217,6 +229,7 @@ export default function Session({ ctx, stored, history }) {
     }
   }, [verdict, recorded, note, replaying, canLive]);
 
+  const ready = !!verdict && !(RULING[verdict].required && !note.trim());
   const rule = async () => {
     const req = verdict === "more_evidence_requested" ? request : null;
     const rec = await onRule(verdict, note, req);
@@ -658,34 +671,38 @@ export default function Session({ ctx, stored, history }) {
         <div className="verbs">
           {VERBS.map((v) => (
             <button key={v.id} className="verb" aria-pressed={verdict === v.id}
-                    onClick={() => setVerdict(v.id)}>
+                    onClick={() => setVerdict(verdict === v.id ? null : v.id)}>
               <b>{v.label}</b><span>{v.blurb}</span>
             </button>
           ))}
         </div>
-        {verdict === "more_evidence_requested" && (
-          <div className="row" style={{ marginTop: 10 }}>
-            <span className="small muted">test to run</span>
-            {lockedRequest ? (
-              <span className="mono small" title="the recorded push-back; a live session could ask for any test">
+        {verdict && (
+          // The pressed verb opens one line: what it takes, and a button that
+          // says what gets recorded. The line is not there until a verb is,
+          // so the only box under the stream at rest is the composer.
+          <form className="ruling"
+                onSubmit={(e) => { e.preventDefault(); if (ready && !busy) rule(); }}>
+            {verdict === "more_evidence_requested" && (lockedRequest ? (
+              <span className="mono small"
+                    title="the recorded push-back; a live session could ask for any test">
                 {lockedRequest} <span className="faint">· recorded</span>
               </span>
             ) : (
-              <select className="field" style={{ width: "auto" }} value={request}
+              <select className="field" value={request}
                       onChange={(e) => setRequest(e.target.value)}>
                 {view.objectives.diagnostics.map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
-            )}
-          </div>
+            ))}
+            <input className="field" autoFocus placeholder={RULING[verdict].ask}
+                   value={note} onChange={(e) => setNote(e.target.value)} />
+            <button type="submit" className="btn primary" disabled={!ready || busy}>
+              {spin("rule")}
+              {verdict === "more_evidence_requested"
+                ? <>Ask for <span className="mono">{request}</span></>
+                : RULING[verdict].commit}
+            </button>
+          </form>
         )}
-        <textarea className="field" style={{ marginTop: 10 }} rows={2}
-                  placeholder="your reason, your modification, or your ask"
-                  value={note} onChange={(e) => setNote(e.target.value)} />
-        <div className="row" style={{ marginTop: 10 }}>
-          <button className="btn primary" disabled={!verdict || busy} onClick={rule}>
-            {spin("rule")} Rule
-          </button>
-        </div>
       </Turn>
     ));
   }
