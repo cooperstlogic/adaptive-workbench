@@ -7,6 +7,13 @@
 // by decision records and read by check.py, and it is carried unchanged.
 export const APP = "Shannon Science";
 export const APP_STAGE = "Beta";
+
+// The person at the workbench. The host knows who is signed in, so nothing
+// here asks them to type their name; this build seats one person, and this is
+// who the record says approved a batch or ruled on a round. A record still
+// names its signer -- the Batch and Decision tabs show it -- and the shipped
+// rounds keep whoever signed them at the time.
+export const SEAT = "a.turing";
 export const TEMPLATE_TITLES = {
   "antibody-affinity-maturation": "Adaptive antibody optimization",
   "enzyme-thermostability": "Enzyme thermostability",

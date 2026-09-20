@@ -67,7 +67,7 @@ export default function Home({ epoch, bump, dialog }) {
     }
     for (const p of blanks) {
       for (const s of p.sessions || []) {
-        out.push({ ...s, project: p.id, blankTitle: p.title,
+        out.push({ ...s, title: s.title || "New session", project: p.id, blankTitle: p.title,
                    subtitle: `${s.turns.length} message${s.turns.length === 1 ? "" : "s"}` });
       }
     }
