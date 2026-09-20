@@ -7,7 +7,7 @@
 // against this copy of the project.
 //
 // The badge is where the mode is stated, once, above the turn and on no
-// other kind of turn: `live · Opus 5`, or `replayed · 8 of 8 recomputed
+// other kind of turn: `live · Sonnet 5`, or `replayed · 8 of 8 recomputed
 // match`, or `stopped · daily budget spent`. Nothing under the turn explains
 // it.
 

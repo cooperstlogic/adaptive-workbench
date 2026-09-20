@@ -1414,6 +1414,16 @@ def main():
                   and browser["created"]["n_designs"] == 48,
                   "%s, %d designs -- no batch written by a second code path"
                   % (browser["created"]["mode"], browser["created"]["n_designs"]))
+            rl = browser.get("reload") or {}
+            check("a project created in the browser survives the reload that follows it",
+                  rl.get("dropped") == ["decisions", "evidence", "models"]
+                  and rl.get("broke_before") is True and rl.get("lists_after") is True
+                  and [r["project"] for r in rl.get("reasserted", [])]
+                      == ["harness-instantiated"]
+                  and rl["reasserted"][0]["created"] == ["decisions", "evidence", "models"],
+                  "the overlay drops %d still-empty directories and the driver re-asserts "
+                  "them at boot -- without it one created project takes the home list down "
+                  "with it" % len(rl.get("dropped", [])))
             check("the status briefing is assembled from artifacts, not narrated",
                   browser["briefing"]["kind"] == "status"
                   and browser["briefing"]["source"] == "core.reconcile.pool"
@@ -1517,7 +1527,7 @@ def main():
             rq = fnr["request"]
             check("the request it builds is fixed: model allowlisted, effort low, adaptive "
                   "thinking, fallbacks on, the context block cached",
-                  rq["model"] == "claude-opus-5" and rq["effort"] == "low"
+                  rq["model"] == "claude-sonnet-5" and rq["effort"] == "low"
                   and rq["thinking"] == "adaptive" and rq["fallbacks"] == "default"
                   and rq["betas"] == ["server-side-fallback-2026-07-01"]
                   and rq["context_cached"] and rq["max_tokens"] == 16000,

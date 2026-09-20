@@ -35,8 +35,8 @@ import { createHmac, createHash, timingSafeEqual } from "node:crypto";
 import { account, check, costOf } from "./lib/budget.mjs";
 import { SKILL_MD, SKILL_PATH, SKILL_SHA256 } from "./lib/skill.mjs";
 
-export const MODELS = ["claude-opus-5", "claude-sonnet-5", "claude-haiku-4-5-20251001"];
-export const DEFAULT_MODEL = "claude-opus-5";
+export const MODELS = ["claude-sonnet-5", "claude-opus-5", "claude-haiku-4-5-20251001"];
+export const DEFAULT_MODEL = "claude-sonnet-5";
 export const KINDS = ["diagnose", "ask", "chat"];
 export const TURNS = ["diagnose", "question", "tool_results", "ruling"];
 export const FALLBACK_BETA = "server-side-fallback-2026-07-01";

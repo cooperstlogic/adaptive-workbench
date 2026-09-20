@@ -1593,6 +1593,36 @@ def reference(name):
 # --- persistence -----------------------------------------------------------
 
 
+def ensure_dirs():
+    """Re-assert the directory skeleton the overlay cannot carry.
+
+    ``dump_state`` returns files, so the overlay is a map of path to contents
+    and a directory with nothing in it yet does not survive a reload. A
+    project instantiated in this browser has five of them until its first
+    round writes into each, so the reload that follows its creation finds
+    ``project.json`` and no ``evidence/`` -- and ``snapshots`` raises before
+    the home screen can list anything, including the shipped campaign.
+
+    The skeleton is derivable rather than state: every project directory has
+    the same subdirectories, named once in ``schema.SUBDIRS``. Boot re-asserts
+    them instead of the overlay storing them, and nothing here writes a byte
+    into a file, so no artifact and no hash moves.
+    """
+    out = []
+    if not os.path.isdir(PROJECTS_DIR):
+        return out
+    for name in sorted(os.listdir(PROJECTS_DIR)):
+        root = os.path.join(PROJECTS_DIR, name)
+        if not os.path.isfile(os.path.join(root, "project.json")):
+            continue
+        missing = [d for d in schema.SUBDIRS
+                   if not os.path.isdir(os.path.join(root, d))]
+        if missing:
+            schema.ensure_project_dirs(root)
+            out.append({"project": name, "created": missing})
+    return out
+
+
 def dump_state():
     """Every mutable file, so the page can put the visitor's progress away."""
     out = {}

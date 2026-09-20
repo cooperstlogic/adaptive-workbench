@@ -1127,3 +1127,33 @@ they were; this is `Turn.jsx`, `Session.jsx`'s turn placement and the stylesheet
 suggested asks still answer from disk with no model and no badge, which is now the only
 thing that distinguishes a briefing from a model's answer on the page — and it is enough,
 because a briefing has never claimed to be anything else.
+
+---
+
+## The seat is Sonnet 5 — decision 154
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 154 | **The default model is `claude-sonnet-5`.** The function's `DEFAULT_MODEL`, the picker's first entry and the harness's scripted turns all name it; `claude-opus-5` and `claude-haiku-4-5-20251001` stay on the allowlist and in the picker. The request shape is unchanged — adaptive thinking, effort `low`, `fallbacks: "default"` under the `server-side-fallback-2026-07-01` beta, the context block cached — and one 64-token request on the day of the change confirmed Sonnet 5 accepts it exactly as built. Amends 11 and 151 | Decision 11 already said Sonnet 5 would be adequate and ~2.5× cheaper, and kept Opus for the ad hoc code path; phase 7 made that path a read-only guard whose output is evidence a person reads and never an input, and `record_decision.py` recomputes every number in the proposal before it writes — so what the model gets wrong is caught rather than trusted, and the case for paying Opus rates on every visitor's session went with it. At $2/$10 per million against $5/$25 the daily cap buys two and a half times as many sessions. The committed round-4 record and the three gate transcripts were written on Opus 5 and say so; nothing in them is re-run. The picker still offers Opus 5 for anyone who wants the comparison, which is the point of a picker that works |
+
+---
+
+## A project created in the browser did not survive its own reload — decision 155
+
+Creating a project from the template and reloading the page put the app in a state no
+Reset button was offered for: `[Errno 44] No such file or directory:
+'/workbench/projects/trastuzumab-affinity-2/evidence'` on the project, and the same line
+on the home screen with *no* projects listed — the shipped campaign included, because
+`projects()` lists every project's snapshots and the first one that raises takes the list
+with it. The shipped project never showed it: it arrives with a file in all five
+subdirectories.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 155 | **The driver re-asserts the project directory skeleton at boot, and `runtime.js` calls it after restoring the overlay.** `wb_driver.ensure_dirs()` walks `projects/`, and for anything holding a `project.json` re-creates whatever of `schema.SUBDIRS` is missing. It writes no file, so no artifact and no hash moves. `pyodide-check.mjs` drops exactly what the overlay drops from the project it instantiates and check.py asserts the listing breaks before the call and works after — check 180 | The overlay is a map of path to contents, because `dump_state` returns files; a directory with nothing in it yet has nothing to carry. A project instantiated in the browser has five such directories until its first round writes into each, and round 1 fills only `candidates/` and `batches/`. The skeleton is derivable rather than state — every project directory has the same subdirectories, named once in `core/schema.py` — so boot re-asserts it instead of the overlay growing a second entry kind and a migration. The read that raised was `core.project.snapshots`, and it was left alone: `core/` is the part an audience reads, the directory genuinely should exist, and a defensive branch there would have hidden the same gap on the write paths, which `schema.write_json` would have hit next — it does not create parents |
+
+Two notes for whoever reads this next. The failure needed a reload to appear, so it was
+invisible to every check that boots once and drives forward — which is all of them until
+now. And `MAX_CREATED` is 3, so a visitor could brick their own copy of the demo three
+clicks in; the fix is what makes the New project screen safe to show on a public URL,
+which phase 8 is about to do.

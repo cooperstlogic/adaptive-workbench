@@ -9,7 +9,7 @@
 // The one label left is the mode badge, and it marks the turns a model
 // wrote. Claude speaks only when a model wrote the words, or when the
 // record's own author did and the turn is a replay of it — CLAUDE.md's
-// non-negotiable 7, rendered as `live · Opus 5` or `replayed · 8 of 8 results
+// non-negotiable 7, rendered as `live · Sonnet 5` or `replayed · 8 of 8 results
 // match` above the prose. Prose the workbench assembled from artifacts has
 // nothing above it.
 
