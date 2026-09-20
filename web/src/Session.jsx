@@ -260,20 +260,38 @@ export default function Session({ ctx, stored, history }) {
   // that approved it needs something to answer; the hash is quoted only while
   // the batch is unsigned, since signing changes it. A round whose record
   // came from elsewhere has the same sentence from History instead.
+  //
+  // A seed round gets the sentence History gives it, for the same reason: it
+  // came from the template's policy and not from a fit, so there is no model
+  // to name and no round before it to have fit -- and its composition is
+  // three zeroes and a total, because `seed_batch` fills every slot with a
+  // pick.
   const pending = stage === "awaiting approval";
   const fromRecord = !!(record && record.steps.length);
   if (roundView.batch && !fromRecord && (pending || sendSteps.length > 0)) {
+    const proposed = pending ? "has proposed" : "proposed";
+    const hashed = pending && (
+      <> Unsigned, it hashes to <Hash value={roundView.batch.hash} />.</>
+    );
     put(selectionSteps.length ? selectionSteps[0].n : PAST, "proposed", (
       <Turn who="workbench">
-        <p>
-          The optimizer {pending ? "has proposed" : "proposed"} {roundView.batch.n} wells for
-          round {round} — {roundView.batch.composition.control} control,{" "}
-          {roundView.batch.composition.replicate} replicate,{" "}
-          {roundView.batch.composition.exploration} exploration and{" "}
-          {roundView.batch.composition.pick} fresh picks — from the{" "}
-          {roundView.batch.model_winner} fit of round {round - 1}.
-          {pending && <> Unsigned, it hashes to <Hash value={roundView.batch.hash} />.</>}
-        </p>
+        {roundView.batch.mode === "seed" ? (
+          <p>
+            Round {round} {pending ? "has" : "had"} no fit to select from, so the optimizer{" "}
+            {proposed} {roundView.batch.n} wells from the template's{" "}
+            <span className="mono">{batch?.policy?.round1_policy || "seed"}</span> policy,
+            all of them fresh picks.{hashed}
+          </p>
+        ) : (
+          <p>
+            The optimizer {proposed} {roundView.batch.n} wells for
+            round {round} — {roundView.batch.composition.control} control,{" "}
+            {roundView.batch.composition.replicate} replicate,{" "}
+            {roundView.batch.composition.exploration} exploration and{" "}
+            {roundView.batch.composition.pick} fresh picks — from the{" "}
+            {roundView.batch.model_winner} fit of round {round - 1}.{hashed}
+          </p>
+        )}
         <Chips entries={selectionSteps} />
       </Turn>
     ));
