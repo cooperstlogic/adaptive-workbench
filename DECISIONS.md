@@ -1284,11 +1284,25 @@ probe answers `live: true, store: upstash-redis` in 210 ms with the day read fro
 In a real browser on the live URL: Pyodide booted from the site's origin, the wasm served
 as `application/wasm`, no console errors; round 4 approved, the order written, the
 registry refusing with Sep 28 and then reporting, the flag at −0.50 pKD, and the recorded
-diagnosis replayed at *8 of 8 results match · 3 of 3 cuts reproduce*. **Not yet run: a
-live proposal turn on the deployed site.** The choice to defer it was made on the day; the
-300-second ceiling is the plan's documented maximum and the turn was measured at 70 to
-110 s, but the number that closes this decision is a turn streamed to its end on Vercel's
-clock, and it costs about sixty cents. The GitHub connection was refused — the repository
+diagnosis replayed at *8 of 8 results match · 3 of 3 cuts reproduce*.
+
+Then the live diagnosis, on the deployed site, the same day, $0.30. Eight calls, one per
+turn, which Vercel's own log confirms; the closing event of each carried its usage, its
+cost and the day's budget read back from Redis, which is the store's write path exercised.
+Sonnet 5 streamed at 67 to 101 output tokens a second across the eight turns, with 30 713
+tokens of prompt served from cache on every turn after the first. Two library tests, two
+more, then four ad hoc cuts — the first of which failed and three of which were the model
+finding the artifacts' shapes — then the proposal: **32.4 seconds, 2 900 output tokens,
+90 tokens a second, `decision_004` with five hypotheses, apply_offset_correction,
+confidence medium, the three ruling verbs offered.** Under Netlify's sixty. The estimate
+above was built from the committed record, which Opus 5 wrote at twice the length, and
+Sonnet 5 on this round wrote something shorter; so the measurement does not show that
+Netlify would have failed this turn, and this paragraph says so rather than pretending
+otherwise. The decision stands on the margin, not on the measurement: the turn's length is
+the model's and the round's to choose, the committed passes are two to two and a half
+times this one, and a ceiling five times the turn is what keeps the demo's beat from being
+the one that ends *the stream ended without a message*. Nothing was paid for the margin
+that would be wanted back. The GitHub connection was refused — the repository
 is private and Vercel's GitHub app is not authorized on the organization — so the deploy
 is `vercel deploy --prod` from `web/`, and push-to-deploy is one dashboard authorization
 away if it is ever wanted.
