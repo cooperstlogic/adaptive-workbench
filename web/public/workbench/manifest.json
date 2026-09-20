@@ -57,7 +57,7 @@
     },
     {
       "path": "data/synthetic.py",
-      "sha256": "ada94e20ecbd8316bc03a64209e3e19197b2818f4a7fd35a590e8fe1ea4e299f",
+      "sha256": "4779f2eab85706addcce89508388be25be0d2b24a3150fa4b64592d549ae5b8d",
       "verbatim": true
     },
     {
@@ -67,7 +67,7 @@
     },
     {
       "path": "data/landscape_manifest.json",
-      "sha256": "ac1aabd1b8e1baf50b1f900dd24fb5abd6ab8cc45d1314f345abf74b4bd4b8ff",
+      "sha256": "140903c2722d644b9463aacc49af9cfa297e70220e3d14d9321b3c5a43582b38",
       "verbatim": true
     },
     {
@@ -132,8 +132,8 @@
       "verbatim": false
     }
   ],
-  "commit": "7ca8bfd8a460c6b63c8c2dda7f041f28c4e5fbad",
-  "hash": "sha256:8c188dc42deaf64d13a7d7f304c28ed72ed6f51fdf9ea02ce18f05df55431854",
+  "commit": "3e583df56203ca0fc87d047fd0b03431f7e2ed99",
+  "hash": "sha256:1b94349a76ad014330cd6c744ee5ba6a6579e9a913f708399af45c5f636c12aa",
   "kind": "browser_bundle",
   "mount": "/workbench",
   "note": "code is copied byte for byte from the repository and laid out in the same shape, so Pyodide imports the same modules the CLI imports. state is the committed project rewound to before round 4 was submitted. reference is read for replay and never executed",
@@ -160,7 +160,7 @@
   "state": [
     {
       "path": "lims_store/demo-trastuzumab.json",
-      "sha256": "01565d4ce4d6c9d5fc0114852e07d2ab6001b1803042c9702d72cb4ecdd9c026"
+      "sha256": "640fb04e0cee5a05c0b107b1fc173cee966cb035762aec49d228650e2588e2fb"
     },
     {
       "path": "projects/demo-trastuzumab/batches/batch_001.eval.json",
@@ -248,7 +248,7 @@
     },
     {
       "path": "projects/demo-trastuzumab/rounds.json",
-      "sha256": "ce947eb18615fb67bc2e187a933350b32fdbd96bb9c4f952e9228f397661950d"
+      "sha256": "6c915259627099f8003de9ae9ae7e0979f77af69e4862678b7ba62e60690e11f"
     }
   ]
 }

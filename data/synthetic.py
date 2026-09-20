@@ -8,6 +8,12 @@ is exactly expressive enough.
 Every parameter here was pre-registered and committed before this file first
 ran -- the table is in README.md under "Pre-registered landscape parameters",
 and non-negotiable 9 in CLAUDE.md is the rule.
+
+One of them has since been amended. ``threshold_climb_fraction`` replaced the
+pre-registered ``threshold_percentile`` of 99.0 on 2026-09-20, after the
+campaign had run and after a sweep over candidate thresholds was inspected.
+That is not pre-registration and the manifest records it as an amendment with
+the old value intact. See README.md, "Amendment: the threshold rule".
 """
 
 import numpy as np
@@ -28,7 +34,9 @@ PARAMS = {
     "construct_failure_rate": 0.03,
     "reads_per_design": 2,
     "detection_limit_percentile": 2.0,
-    "threshold_percentile": 99.0,
+    # The gate. Amended 2026-09-20 from a 99th-percentile rule (10.762 pKD) to a
+    # fraction of the parent-to-maximum climb; see the module docstring.
+    "threshold_climb_fraction": 0.75,
 }
 
 

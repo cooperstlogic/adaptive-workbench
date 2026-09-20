@@ -117,7 +117,8 @@ export function ProofChart({ campaign, width = 430, height = 262 }) {
               y2={s.y(campaign.threshold_pkd)} stroke="var(--ink)" strokeWidth="1"
               strokeDasharray="1 3" opacity="0.5" />
         <text x={width - PROOF_PAD.r} y={s.y(campaign.threshold_pkd) - 4} textAnchor="end">
-          threshold {n(campaign.threshold_pkd, 2)}
+          {campaign.threshold_amendment?.length ? "amended threshold " : "threshold "}
+          {n(campaign.threshold_pkd, 2)}
         </text>
         {series.map((sr) => (
           <path key={sr.key} d={band(sr.points)} fill={sr.colour} opacity="0.11" />

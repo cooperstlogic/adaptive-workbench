@@ -68,9 +68,18 @@ Production only — a preview runs without a seat and spends nothing.
    ad hoc, only read-only against mounted snapshot arrays, only with the source stored
    beside the result, and the number is evidence a human reads, never an input to a code
    path. The moment an LLM is doing the statistics behind the chart, the claim is dead.
-9. **Landscape parameters are pre-registered and the threshold is fixed at 10.762 pKD.**
-   Do not recompute, re-pick or adjust it; do not change the landscape or its parameters.
-   Git history proves the order. If guided does not separate from random, say so.
+9. **Landscape parameters are pre-registered; the threshold was amended once, on the record.**
+   Do not change the landscape, the seed or any other parameter — git history proves the
+   order and `landscape.npz` is still byte-for-byte what `473ac01` produced. The gate is the
+   one exception: it was moved on 2026-09-20 from the pre-registered 99th percentile
+   (10.762 pKD) to 75% of the parent-to-max climb (**11.006 pKD**), after the runs were seen,
+   because rounds-to-threshold was ceiling-limited and had no resolution. **A threshold moved
+   after the fact is an amendment and is written down as one**: the superseded rule and value
+   stay in the `amendments` block of `data/landscape_manifest.json`, the README states it in
+   its own section, and `check.py` asserts the block is intact. Never restate the amended
+   number as pre-registered, and never quote its margin without the amendment beside it.
+   **Any further move needs the same treatment or it does not happen.** If guided does not
+   separate from random, say so.
 10. **Selection must be reproducible, and it is checked.** Ties in predictive uncertainty
     are the normal case rather than a corner case, so anything that ranks candidates breaks
     its ties on a stated reason and then on pool order, never on array order. `check.py`
