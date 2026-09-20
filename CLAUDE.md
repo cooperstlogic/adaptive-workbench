@@ -9,8 +9,13 @@ and what is staged, and how the loop works — read it first. Read
 A functional prototype of an adaptive therapeutic optimization workbench: a
 scientist-governed system that takes an antibody lead, learns from each round of
 experimental results, and recommends the next batch of variants to test. It is a pitch
-artifact aimed at Anthropic, arguing that the missing layer above Claude Science is
-**persistent decision state across experimental rounds**.
+artifact aimed at Anthropic, and the vision it articulates is this: Claude Science already
+offers broad connectors and skills, and building an adaptive optimization workflow on them
+still takes specialized know-how — the data mappings, the models, the decision logic and
+the review interface. **Templating those makes the workflow adoptable and repeatable, and
+the persistent record of objectives, predictions, experiments and outcomes accumulates
+project-specific value over rounds.** Frame it as that positive vision, not as a gap in
+the product.
 
 The audience is technically sophisticated and will poke at it. Optimize for a demo that
 survives scrutiny, not for feature count.

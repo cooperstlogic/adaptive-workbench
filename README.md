@@ -19,13 +19,23 @@ experimental results, and recommends the next batch of variants to test.
 
 ---
 
-## The argument
+## The idea
 
-Claude Science is excellent at one-shot analyses. A scientist asks a question, gets a
-rigorous answer, and the session ends. The missing layer above it is **persistent
-decision state across experimental rounds**.
+Claude Science already offers broad connectors and skills. Building an adaptive
+optimization workflow on top of them still takes specialized know-how: the data mappings
+between a LIMS and a model, the surrogate and its calibration, the decision logic for
+what to do when a round disagrees with the prediction, and an interface a scientist can
+review it through. **Templating those four things would make the workflow easier to adopt
+and to repeat.**
 
-That layer is thin. It is four things:
+And a template that persists its work accumulates something. The record of objectives,
+predictions, experiments and outcomes grows with every round, and it is project-specific
+in a way that nothing else in the stack is — the value of the twelfth round depends on
+the eleven before it being on disk, in a form the next session can read. That is
+accumulating value and natural stickiness, and it is the point of doing this as a layer
+rather than as a better prompt.
+
+The layer itself is thin. It is four things:
 
 - **A template** that instantiates a project — declaring the lead, the editable region,
   the objectives and their thresholds, the mutation budget, and which model recipes and
@@ -38,16 +48,15 @@ That layer is thin. It is four things:
   approved or not, and a flagged round is ruled on with one of four typed verbs bound to
   code paths.
 
-The reason that layer matters is that it is what lets a model exercise judgment *across*
-rounds instead of answering one question at a time.
+Together they are what lets a model exercise judgment *across* rounds rather than answer
+one question at a time.
 
 ### The layer has a name: Shannon Science
 
 The web app in this repository is a demonstration of what Claude Science looks like with
-that template installed, so its shell deliberately wears the host's interface — the claim
-is that this is a layer *inside* Claude Science rather than a product beside it, and the
-name is the same man's other one. **Shannon Science** is what the deployed site is titled
-and what its home screen is branded, `Beta` beneath.
+that template installed, so its shell deliberately wears the host's interface — this is a
+layer *inside* Claude Science rather than a product beside it. **Shannon Science** is what
+the deployed site is titled and what its home screen is branded, `Beta` beneath.
 
 It is also how the model in the centre seat is told where it is sitting. This is the
 opening of the system prompt `web/function/ask.mjs` builds, ahead of `SKILL.md` itself:
@@ -58,12 +67,12 @@ opening of the system prompt `web/function/ask.mjs` builds, ahead of `SKILL.md` 
 > Claude Code or in Claude Science.** Here its scripts are reachable as tools, and nothing
 > else is.
 
-Everything under that name is this repository's. Claude Science is the host it is arguing
-about, not a thing it ships.
+Everything under that name is this repository's. Claude Science is the host it runs on.
 
 **This is a prototype built in a day.** The skill, the connectors, the optimization code
 and the decision records are real and run in three places. The laboratory underneath them
 is simulated, and Shannon Science's outer chrome is a wireframe.
+
 
 ### The two things worth looking at
 
@@ -227,28 +236,29 @@ scripts from the repo, and **the round-4 diagnosis reproduced there — every fi
 three input hashes identical to `core/`, under a different Python and a different numpy.**
 That session's memo is [`gates/5b-host-round4.md`](gates/5b-host-round4.md).
 
-### Where the host's abstractions run out
+### What a template would add, tested against the product
 
-Running inside the host is the only way to find out whether the gap this artifact claims
-exists actually does. Four claimed gaps were audited against the product; three survived,
-narrowed:
+Installing into the host is the only way to find out which of this layer's claims are real
+and which Claude Science already covers. Four were written down beforehand and then audited
+against the product; three survived, each narrower than it was written:
 
-| Claimed gap | Verdict |
+| Claimed contribution | Verdict |
 | --- | --- |
 | A ruling has no type | **Survives, narrowed.** The host has scoped, revocable approval for folder access, code execution and each connector tool. It gates *access*, not *decisions*: no typed decision, no verbs bound to code paths, no hashed evidence, no `if_wrong` |
 | A round graph has nowhere to render | **Survives.** The rail lists chat threads named after what was asked. A campaign is a round graph and there is no view of one |
 | Traceability is an after-the-fact check | **Survives, heavily narrowed.** The host records skill provenance to the commit and flags skills behind their repository. What survives is only this: it versions the *skill*, and nothing versions the *number* back to the function and input hash that made it |
 | No project instantiation from a declaration | **Survives, but under-tested.** No template was instantiated in the host, so this rests on the product's shape rather than on an experiment — and nothing in this build leans on it |
 
-Three gaps were found that had not been claimed, and two are stronger than the four above:
+Three more were found that had not been claimed, and two are stronger than the four
+above:
 **a connector cannot declare what it needs** (interpreter, code location, writable state —
 three manual acts and an undocumented TOML key), **the connector sandbox and the agent
 sandbox hold separate grants** (a connector wrote a CSV the agent in the same session could
 not read), and **a local-command connector with a missing argument fails silently** rather
 than timing out.
 
-What the host does well is recorded beside it, because an audit that only finds fault is
-not an audit: local stdio connectors run, approval carries four scopes, skills import from
+What the host already does well is recorded beside them, because an audit that only finds
+fault is not an audit: local stdio connectors run, approval carries four scopes, skills import from
 a private repository with their commit, the kernel reproduced every number, and the sandbox
 error named the exact key and remedy.
 
@@ -466,7 +476,7 @@ control, a run offset or a left-censored value as something the *decision* has t
 neither has a named approver, a decision record, or a correction that must cite a ruling
 authorizing it. Round 4 of the demo project — where a new assay version appears, a clean
 bridge of three shared designs recovers −1.014 pKD, and correcting by it still leaves
-−0.927 unexplained — has no counterpart in either. **That gap is the claim.**
+−0.927 unexplained — has no counterpart in either. **That is what this layer is for.**
 
 ---
 
@@ -812,7 +822,7 @@ live model seat can diagnose it, and that beat is deliberately not in the test h
 | Structure prediction | **Stubbed.** `predict_structures` returns nulls and a note saying it predicted nothing. It invents no confidence score, and nothing downstream reads it |
 | The ad hoc sandbox | **A guard, not a sandbox, and labelled so in the source.** Model-written numpy runs read-only against the project directory behind a read-only `open`, an import denylist, a token check and a line budget. The claim is that `core/` never reads the oracle and that ad hoc output never enters a code path, which `record_decision.py` enforces on its own |
 | The function behind the live seat | **Real, stateless, and not a proxy.** It builds every request itself, accepts only transcripts it signed, reserves each call's maximum against a daily cap and a per-address counter before the call and settles to actual usage after, and opens the live seat only to a page carrying the link's access code |
-| Shannon Science's chrome | **A wireframe.** It renders the layer the host audit found missing, in the host's own grammar; the panels, the Python, the state and the hashes inside it are real and are running in your tab. The rail's host-only items are drawn and inert, with a tooltip saying so |
+| Shannon Science's chrome | **A wireframe.** It renders the layer the host audit pointed at, in the host's own grammar; the panels, the Python, the state and the hashes inside it are real and are running in your tab. The rail's host-only items are drawn and inert, with a tooltip saying so |
 | The proof chart | **Real, and the evaluator's.** Twenty simulated campaigns per arm, drawn as the *template's* validation — never on a project's own progress chart, which draws only what that project measured. A project cannot be compared against a random arm it never ran |
 | Round dates in the shipped campaign | **Display-level.** The shipped round graph's `updated` stamps are spread over about six weeks. No simulated date is written into a project artifact and no measurement moves |
 | The four other projects on the home screen | **Scenery, and empty.** Plausible titles with no template and no content, so the list reads like a workspace. Opening one shows exactly what it is |
