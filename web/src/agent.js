@@ -198,6 +198,10 @@ export async function runLive({
     verified: null, transcript: null, pending: null, restarted: null,
   };
   const push = (step) => { turn.steps.push(step); emit(step); save(turn); return step; };
+  // The turn exists before anything is spent on it, so the question is in
+  // the stream and the wait is visible from the moment it was asked, not
+  // from the first token back.
+  save(turn);
 
   let context = null;
   if (kind !== "chat") context = call("agent_context", { project, round_id: round ?? null });

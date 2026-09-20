@@ -178,7 +178,9 @@ export default function BlankProject({ route, project, bump, live, reprobe, mode
                   <Turn who="you"><p>{t.text}</p></Turn>
                   {reply && (
                     <Turn who="claude" badge={badgeFor(reply)}>
-                      <Prose text={reply.text} streaming={inflight} />
+                      {inflight && !reply.text && reply.status === "running"
+                        ? <p className="muted small"><span className="busy" /> thinking…</p>
+                        : <Prose text={reply.text} streaming={inflight} />}
                     </Turn>
                   )}
                 </div>

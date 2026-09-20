@@ -546,22 +546,16 @@ a.rail-item { text-decoration: none; }
   border-bottom: 1px solid var(--line); }
 .dialog-head h2 { margin: 0; font-size: 19px; }
 .dialog-body { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 20px 20px; }
-.dialog-foot { display: flex; justify-content: flex-end; gap: 8px;
+.dialog-foot { display: flex; justify-content: flex-end; align-items: center; gap: 8px;
   border-top: 1px solid var(--line); }
+/* The one way out of the dialog that is not Create: a link to the library,
+   because a template is chosen where templates are read. */
+.dialog-foot .from-template { margin-right: auto; font-size: 13.5px; }
 
 .field-group + .field-group { margin-top: 18px; }
 .field-label { display: block; font-size: 13.5px; font-weight: 600; margin-bottom: 6px; }
 .field-group .tiny.faint { margin: 6px 0 0; }
 .field.area { min-height: 62px; line-height: 1.45; }
-.field.declared { background: none; border-style: dashed; color: var(--muted); }
-.field.declared p { margin: 0; }
-
-.picks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.pick { display: flex; flex-direction: column; gap: 3px; text-align: left; padding: 10px 12px;
-  border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
-.pick:hover { border-color: var(--muted); }
-.pick[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
-.pick .small { line-height: 1.35; }
 
 /* --- the locked configuration screen ------------------------------------- */
 
@@ -596,7 +590,6 @@ table.grid.config tr.sub:hover td { background: none; }
 }
 
 @media (max-width: 620px) {
-  .picks { grid-template-columns: 1fr; }
   table.grid.config { min-width: 560px; }
 }
 
