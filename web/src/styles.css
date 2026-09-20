@@ -198,7 +198,7 @@ h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
 .body.is-resizing .centre, .body.is-resizing .panel { pointer-events: none; }
 .scrim { display: none; position: fixed; inset: 0; z-index: 24;
   background: rgba(20, 18, 16, 0.35); }
-.panel-toggle { margin-left: auto; }
+.panel-toggle { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; }
 .panel-tabs { display: flex; gap: 2px; padding: 8px 10px 0; border-bottom: 1px solid var(--line);
   overflow-x: auto; flex: none; }
 .panel-tab { border: 0; background: none; padding: 7px 10px 9px; color: var(--muted);

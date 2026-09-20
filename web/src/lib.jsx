@@ -145,35 +145,53 @@ export function CentreHead({ title, sub, lead, aside, children }) {
   );
 }
 
+// The glyph on both side toggles, the host's: a frame with a pane marked off
+// at one side, and that pane filled when `filled`. One drawing, so the two
+// states of a toggle differ only in the fill and the two toggles differ only
+// in the side; the font's box characters gave each a different weight.
+function PaneGlyph({ side, filled }) {
+  const x = side === "left" ? 6.2 : 9.8;
+  const pane = side === "left"
+    ? "M6.2 2.2H3.9A2.2 2.2 0 0 0 1.7 4.4v7.2a2.2 2.2 0 0 0 2.2 2.2h2.3z"
+    : "M9.8 2.2h2.3a2.2 2.2 0 0 1 2.2 2.2v7.2a2.2 2.2 0 0 1-2.2 2.2H9.8z";
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+         strokeWidth="1.4" aria-hidden="true">
+      {filled && <path d={pane} fill="currentColor" stroke="none" />}
+      <rect x="1.7" y="2.2" width="12.6" height="11.6" rx="2.2" />
+      <path d={`M${x} 2.2v11.6`} />
+    </svg>
+  );
+}
+
 // The one control over the rail: the same button at the right end of the
 // rail's header while the rail is open, and at the left end of the centre
 // column's title bar while it is hidden. Hidden means gone -- the whole rail,
 // not a strip of its icons -- which is what the host does. `lead` marks the
 // title bar's copy, which is only drawn when there is no rail to hold it.
+// Where the button sits already says which state it is in, so its pane is
+// never filled.
 export function RailToggle({ rail, lead }) {
   if (!rail || (lead && !rail.hidden)) return null;
   return (
     <button className="rail-toggle" onClick={rail.toggle}
             title={rail.hidden ? "Show the sidebar" : "Hide the sidebar"}>
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-           strokeWidth="1.4" aria-hidden="true">
-        <rect x="1.7" y="2.2" width="12.6" height="11.6" rx="2.2" />
-        <path d="M6.2 2.2v11.6" />
-      </svg>
+      <PaneGlyph side="left" />
     </button>
   );
 }
 
 // The one control over the artifact panel: it sits at the right end of the
 // title bar, and it is the same button whether the panel is a column beside
-// the conversation or, under the narrow breakpoint, a sheet over it.
+// the conversation or, under the narrow breakpoint, a sheet over it. It stays
+// where it is in both states, so the pane is filled while the panel is open.
 export function PanelToggle({ panel }) {
   if (!panel) return null;
   return (
     <button className="glyph wide panel-toggle" aria-pressed={panel.open}
             title={panel.open ? "Hide the artifact panel" : "Show the artifact panel"}
             onClick={panel.toggle}>
-      {panel.open ? "◨" : "▢"} Artifacts
+      <PaneGlyph side="right" filled={panel.open} /> Artifacts
     </button>
   );
 }
