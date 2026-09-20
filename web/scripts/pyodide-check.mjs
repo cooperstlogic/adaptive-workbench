@@ -153,13 +153,37 @@ say(`opening state     ${opening.rounds.length} rounds, round ${opening.pending_
   + `${opening.rounds.at(-1).batch.approval.status}, batch `
   + `${report.opening.batch_hash.slice(7, 19)}`);
 
+// What a round that ran somewhere else can still show. The shipped campaign's
+// first three rounds have no command log in this runtime -- they ran on a
+// laptop six weeks ago -- and their sessions are assembled from the artifacts
+// they wrote. Round 4 has been selected and not sent, so there is nothing to
+// read back and the page shows the approval instead.
+const historyOf = (r) => call("round_history", { round_id: r });
+const h3 = historyOf(3);
+report.history = {
+  pending: historyOf(4).steps.length,
+  past: [1, 2, 3].map((r) => historyOf(r).steps.map((x) => x.step)),
+  reads: h3.reads,
+  figures: h3.steps.flatMap((x) => Object.values(x)
+    .filter((v) => v && typeof v === "object" && "value" in v && "artifact" in v)
+    .map((v) => ({ source: v.source, artifact: v.artifact }))),
+};
+// Every figure that names a core/ function has to resolve to one, because the
+// Notebook tab opens on that name and "no such function" is the honesty claim
+// failing quietly.
+report.history.resolve = report.history.figures
+  .filter((f) => f.source)
+  .map((f) => ({ source: f.source, found: !call("lineage", { dotted: f.source }).error }));
+say(`round history     round 3 reads back as [${report.history.past[2]}] from `
+  + `${h3.reads.length} artifacts; round 4, still awaiting approval, has none`);
+
 // What the composer offers, at each state the opening screen can be in. The
 // card appears when the project's state earns it and not otherwise: round 4
 // is awaiting approval and offers nothing, round 2 is flagged and ruled and
 // offers nothing, a quiet round offers the one ask decision 66 is about.
 const keysOf = (r) => call("suggested_asks", { round_id: r }).map((a) => a.key);
 report.suggested = { awaiting_approval: keysOf(4), settled: keysOf(2), quiet: keysOf(3),
-                     adhoc: keysOf(null) };
+                     seed: keysOf(1), adhoc: keysOf(null) };
 
 bringBackRound4(call, timing, report);
 
@@ -319,13 +343,98 @@ say(`agent context     ${report.context.bytes} bytes, ${report.context.rows} bat
 report.commands = after.log.map((e) => e.command);
 report.files = JSON.parse(py.runPython("wb_driver.json.dumps(wb_driver.dump_state())"));
 
+// --- the laboratory, a second time, with the clock moved by hand -----------
+//
+// Round 5 was selected by the ruling above. Approving sends it; the registry
+// refuses the first ask with the date it expects; the release control says
+// the assay has finished, which is the demo's clock and nothing else; and the
+// same ask then pulls and imports it. Everything here runs after the file
+// comparison above has been taken, so the artifacts check.py compares against
+// a CLI run are the ones the run produced before any of it.
+const lab = {};
+const sent5 = call("approve", { round_id: 5, by: BY });
+lab.submitted = { status: sent5.status, expected: sent5.expected };
+const early5 = call("check_results", { round_id: 5 });
+lab.first_check = { ready: early5.ready, status: early5.status, expected: early5.expected };
+const releasedNow = call("release_run", { round_id: 5 });
+lab.released = { status: releasedNow.lab.status, by: releasedNow.lab.released_by };
+const v5 = call("view");
+const r5v = v5.rounds.find((r) => r.round === 5);
+lab.reported = {
+  status: r5v.status, reported: r5v.reported, at_lab: r5v.at_lab,
+  needs_you: v5.needs_you && v5.needs_you.kind,
+  landing: (await import(pathToFileURL(join(WEB, "src", "router.js")))).landing(v5),
+  asks: call("suggested_asks", { round_id: 5 }).map((a) => a.key),
+};
+say(`lab released      round 5 ${lab.first_check.status} on the first ask, expected `
+  + `${(lab.first_check.expected || "?").slice(0, 10)}; released by hand, now `
+  + `"${r5v.status}" with ${v5.needs_you && v5.needs_you.kind} waiting`);
+
+// The model's own registry tool, driven exactly as runLive drives it: it
+// pulls and imports the round the registry has reported, and refuses the
+// round it has already handed over and the round nobody submitted.
+const asAgent = (roundNo) => agent.runTool(
+  { name: "check_lab_results", input: { round: roundNo } },
+  { call, project: "demo-trastuzumab", round: roundNo, session: "r5" });
+const got5 = asAgent(5);
+const answer5 = JSON.parse(got5.content);
+lab.tool = {
+  commands: (got5.entries || []).map((e) => e.label),
+  ready: answer5.ready, flagged: answer5.flagged,
+  mean_signed_residual: answer5.anomaly && answer5.anomaly.mean_signed_residual,
+  rows: answer5.reconciliation && answer5.reconciliation.rows,
+  carries_no_commands: !("ran" in answer5),
+};
+const twice = asAgent(5);
+const never = asAgent(9);
+// The driver raises, so the message carries a traceback the model reads as
+// an error result; the harness keeps the sentence.
+const firstLine = (t) => String(t).split("\n")[0];
+lab.tool_refusals = {
+  imported: { refused: !!twice.refused, is_error: !!twice.is_error,
+              why: firstLine(twice.content) },
+  unsubmitted: { refused: !!never.refused, is_error: !!never.is_error,
+                 why: firstLine(never.content) },
+};
+lab.context = (() => {
+  const c = call("agent_context", { round_id: 5 });
+  const r = c.rounds.find((x) => x.round === 5);
+  return { has_lab: !!r.lab, status: r.lab && r.lab.status };
+})();
+// A round that came back quiet and has not been carried forward is the one
+// state the quiet ask belongs in, and the project created above is where one
+// can be had: round 1 carries no model predictions, so it cannot flag. Its
+// files were compared against the CLI before any of this ran.
+const made5 = made.id;
+call("approve", { round_id: 1, by: BY, project: made5 });
+call("release_run", { round_id: 1, project: made5 });
+call("check_results", { round_id: 1, project: made5 });
+const quietRound = call("view", { project: made5 }).rounds.find((r) => r.round === 1);
+lab.quiet = {
+  status: quietRound.status, flagged: quietRound.flagged,
+  asks: call("suggested_asks", { project: made5, round_id: 1 }).map((a) => a.key),
+};
+call("continue_unflagged", { round_id: 1, project: made5 });
+const settledRound = call("view", { project: made5 }).rounds.find((r) => r.round === 1);
+lab.settled = {
+  status: settledRound.status,
+  asks: call("suggested_asks", { project: made5, round_id: 1 }).map((a) => a.key),
+};
+say(`quiet round       ${made5} round 1 ${lab.quiet.status}: [${lab.quiet.asks}]; once `
+  + `fitted (${lab.settled.status}): [${lab.settled.asks}]`);
+
+report.lab = lab;
+say(`agent tool        ${lab.tool.commands.length} commands, round 5 flagged=`
+  + `${lab.tool.flagged} at ${Number(lab.tool.mean_signed_residual).toFixed(6)}; asked `
+  + `again: ${lab.tool_refusals.imported.why}`);
+
 // --- live: the loop through the function, scripted upstream -----------------
 
 process.env.WORKBENCH_UPSTREAM = "scripted";
 process.env.WORKBENCH_SCRIPT_FILE = join(BUNDLE, "reference", "decision_004.proposal.json");
 delete process.env.ANTHROPIC_API_KEY;
 const { default: handler } = await import(
-  pathToFileURL(join(WEB, "netlify", "functions", "ask.mjs")));
+  pathToFileURL(join(WEB, "function", "ask.mjs")));
 const fetchImpl = (url, init) => handler(new Request(`http://harness${url}`, init),
                                          { ip: "harness" });
 const live = { timing: {} };

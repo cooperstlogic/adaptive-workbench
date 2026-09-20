@@ -11,8 +11,8 @@
 // page.
 //
 //   #/                        home
-//   #/new                     the new-project sheet
-//   #/templates               the template gallery
+//   #/new                     home, with the New project dialog over it
+//   #/templates               the template library
 //   #/p/<id>                  a project, which redirects to where you left off
 //   #/p/<id>/s/new            a new, empty session
 //   #/p/<id>/s/<session-id>   a session -- a round, or an ad-hoc one
@@ -83,6 +83,8 @@ export function landing(view) {
   if (flagged) return `r${flagged.round}`;
   const pending = rounds.find((r) => r.status === "awaiting approval");
   if (pending) return `r${pending.round}`;
+  const reported = rounds.find((r) => r.reported);
+  if (reported) return `r${reported.round}`;
   const atLab = rounds.find((r) => r.at_lab);
   if (atLab) return `r${atLab.round}`;
   const recent = (view.sessions || [])[0];

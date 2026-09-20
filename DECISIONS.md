@@ -1241,3 +1241,263 @@ mean surprise against the 0.5 trigger, the three-design bridge at −1.014, cove
 collapsed from 0.816 to 0.065, and the v1.2 → v1.3 assay change with no characterized
 offset — saying which of those the flag does and does not establish, and proposing
 nothing, which is what it was asked for. *Synthetic* beside the numbers throughout.
+
+---
+
+## The host is Vercel, because the proposal turn is not short — decision 159
+
+Phase 7 left one line for phase 8 to verify: *Netlify's streaming-function limits under a
+proposal turn that can run a minute.* It was verified before a site existed, and it
+failed. Netlify's limit for a streaming function is a hard 60 seconds, not configurable,
+the same as its synchronous limit; its background functions run fifteen minutes but do
+not stream and cap a request at 256 KB, under the function's 400 KB context; its edge
+functions have no wall-clock limit on a streamed body but 50 ms of CPU per request, which
+a two-minute relay of SDK events would have to be rewritten as a raw passthrough to fit,
+and could only be tested on the deployed site. SPEC.md had assumed *each function
+invocation is one short model turn, which keeps every request inside Netlify's synchronous
+window*. Every turn is one model turn; the proposal turn is not short.
+
+The numbers. One $0.02 chat turn through the function, timed on the dev server: Sonnet 5
+streams at 84 output tokens a second after a two-second first byte. The two proposal
+passes in the committed `decision_004.json` carry 5 700 and 7 100 tokens of tool input by
+a chars-over-four estimate, before thinking, and JSON with code in it tokenizes denser
+than that. So a proposal turn runs 70 to 110 seconds, and the page would have shown *the
+stream ended without a message* a minute into the beat the demo exists for. Shortening
+the proposal to fit a host is bending the record to the platform; decision 146 is
+explicit that the proposal carries the record.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 159 | **The site deploys to Vercel, Hobby plan; the function is unchanged in shape and moved to `web/function/`; its budget store is Upstash Redis.** Vercel's Node functions stream for 300 seconds on the free plan, and `ask.mjs`'s web-standard Request-in, Response-out handler runs there as it is, re-exported as `GET` and `POST` by a two-line `web/api/ask.mjs`; `api/` holds nothing else, because the host builds every file under it into a function. The store keeps `budget.mjs`'s `get`/`set`-a-day-record interface with Upstash's REST client behind it and the same memory fallback, and the probe names it `upstash-redis`. `vercel.json` sets the function's ceiling to the plan's maximum. Supersedes 12 and 144 on where the key and the counter live, and the host named in 10, 13 and 100 | Vercel was the smallest change: the handler already had the shape its Node runtime wants, so the port is one directory move, one store, and one path. Cloudflare Workers would have done it on the paid plan — the free tier's 10 ms of CPU cannot relay a two-minute stream — at the cost of a larger port; Netlify Edge would have kept the host at the cost of rewriting the function for Deno against a CPU ceiling that fails mid-stream and can only be measured in production. The Hobby plan is non-commercial, which a pitch artifact is. The store is Redis rather than Vercel Blob because a cap read through a CDN with a sixty-second minimum cache is not a cap |
+
+Verified before the deploy: `check.py` at 186 of 186 with the function at its new path;
+the dev server answering the probe at `/api/ask`; `ask-check.mjs` refusing everything it
+refused before; the Redis branch of `budget.mjs` against a local double of Upstash's REST
+protocol, `get` then `set` with a three-day expiry then `get`.
+
+Verified on the deployed site, 2026-09-20. Project `adaptive-workbench` on the
+`cooper-st-logic-shop` hobby team, https://adaptive-workbench-iota.vercel.app, cloud
+build in 17 s from `web/` with `.vercelignore` keeping the key file, `dist/` and the
+runtime off the upload; the key a hidden production secret; the Redis provisioned from
+the marketplace on its free plan as `workbench-budget`, which sets `KV_REST_API_*`. The
+probe answers `live: true, store: upstash-redis` in 210 ms with the day read from Redis.
+In a real browser on the live URL: Pyodide booted from the site's origin, the wasm served
+as `application/wasm`, no console errors; round 4 approved, the order written, the
+registry refusing with Sep 28 and then reporting, the flag at −0.50 pKD, and the recorded
+diagnosis replayed at *8 of 8 results match · 3 of 3 cuts reproduce*.
+
+Then the live diagnosis, on the deployed site, the same day, $0.30. Eight calls, one per
+turn, which Vercel's own log confirms; the closing event of each carried its usage, its
+cost and the day's budget read back from Redis, which is the store's write path exercised.
+Sonnet 5 streamed at 67 to 101 output tokens a second across the eight turns, with 30 713
+tokens of prompt served from cache on every turn after the first. Two library tests, two
+more, then four ad hoc cuts — the first of which failed and three of which were the model
+finding the artifacts' shapes — then the proposal: **32.4 seconds, 2 900 output tokens,
+90 tokens a second, `decision_004` with five hypotheses, apply_offset_correction,
+confidence medium, the three ruling verbs offered.** Under Netlify's sixty. The estimate
+above was built from the committed record, which Opus 5 wrote at twice the length, and
+Sonnet 5 on this round wrote something shorter; so the measurement does not show that
+Netlify would have failed this turn, and this paragraph says so rather than pretending
+otherwise. The decision stands on the margin, not on the measurement: the turn's length is
+the model's and the round's to choose, the committed passes are two to two and a half
+times this one, and a ceiling five times the turn is what keeps the demo's beat from being
+the one that ends *the stream ended without a message*. Nothing was paid for the margin
+that would be wanted back. The GitHub connection was refused — the repository
+is private and Vercel's GitHub app is not authorized on the organization — so the deploy
+is `vercel deploy --prod` from `web/`, and push-to-deploy is one dashboard authorization
+away if it is ever wanted.
+
+---
+
+## The link carries a code, and the cap is reserved before the call — decisions 160 and 161
+
+The site was up for an hour with a key behind it before the question was asked: what
+stops a bot from finding the URL and spending through it? The design's answer was the
+daily cap, and it was mostly right — a crawler cannot reach spend, because a `POST` has
+to carry a project and a permitted-tests list that match the library or it is a 400
+before a token, and the probe spends nothing. Spend needs a person reading the page's
+JavaScript. Two things were still wrong with the answer. The cap was soft: `check()` read
+the day, the turn ran for five to thirty seconds, `account()` wrote — and every request
+arriving in between passed on the same stale read, a hundred at once being a hundred
+times a call's maximum before the store heard about any of them. `budget.mjs` called
+this "two requests can race past the cap by one call", which is true of polite traffic.
+And the seat was open to anyone, when the audience for a live seat on a pitch's URL is a
+handful of named people.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 160 | **The live seat opens only to a page carrying the link's access code.** `WORKBENCH_ACCESS_CODE` on the site; the link is `?code=…` before the hash; `agent.adoptCode()` keeps it in localStorage and takes it off the address bar before anything renders; every probe and every call sends it as `x-workbench-code`; the function compares in constant time, answers the probe with *no access code* or *access code not recognised*, and refuses a call with 401 — not 403, which the page reads as a transcript it must restart. Without the code the site is what it is without a key: replay, the composer saying why. Amends 12's *anyone can use it* to *anyone with the link* | A code in the link costs the people it is sent to nothing and makes a stranger's spend zero rather than capped. The alternatives were a bot-management product in front of the whole site, which challenges browsers it does not like and can only be tested by being wrong in front of someone, or leaving the cap to do the work, which the next row says it was not doing. The dev server has no code unless one is set, so local work is unchanged; `robots.txt`, a `noindex` meta and an `X-Robots-Tag` header keep the URL out of indexes, because being findable is most of being found |
+| 161 | **A call reserves its maximum from the day before it is made, atomically, and settles to its cost after.** `reserve()` increments the in-flight count, the day's spend by the call's maximum (every request byte as input written to cache, the kind's whole output cap), and the address's count, each increment's returned value being the check and each overshoot rolled back; `settle()` replaces the reservation with `costOf(usage)` and frees the seat; `release()` gives everything back when the API rejected the request outright, and anything else settles at the reservation, which over-counts and never under-counts. Six Redis primitives, `INCRBYFLOAT`, `INCRBY`, `HINCRBY`, `GET`, `HGET`, `EXPIRE`; the memory store keeps the same six on a Map. The in-flight count is a throttle with a ten-minute expiry, not a cap. Supersedes 144 on how the counter is kept | Increment-then-check is atomic where read-then-write is not, and Redis made it a small change — the reason the store is Redis at all (159). The in-flight count is there because reservations alone let a burst spend the whole day in a second and hand the demo a replay; four at once is more than a demo needs and less than a burst wants; its expiry is what a function killed mid-turn needs so as not to lock the seat. `check.py` fires eight reservations at once against a $1 cap and gets exactly three, settles them, seats two of five under an in-flight cap of two, and releases clean — the logic, in one process; Redis's atomicity is Redis's to keep |
+
+Set on the site the same day: the code; `WORKBENCH_DAILY_CAP_USD=25` and
+`WORKBENCH_IP_CAP=100`, so several people can work it over a few days without meeting a
+limit (a diagnosis is about $0.30 and eight calls; a day is eighty diagnoses); the
+in-flight cap at its default of four. Verified on the live URL: the probe answers *no
+access code*, *access code not recognised*, and `live: true` with the code; a `POST`
+without it is a 401; `robots.txt` disallows everything and the header and the meta both
+say `noindex`; and in a browser, the coded link opens the seat, the code is kept, and
+the address bar comes up clean. The $0.30 spent before the store's keys changed shape sits
+under the old key until it expires; today's counters start at zero.
+
+---
+
+## Three empty rooms, and the clock nobody could move — decisions 162 to 164
+
+Three complaints from a walk through the demo, all of them the same shape: the interface
+was telling the truth and saying nothing.
+
+**The sessions for rounds 1 and 3 were blank.** A round session renders this browser's
+command log, and the shipped campaign's first three rounds ran on a laptop six weeks ago,
+so there was nothing to render. Round 2 at least had a decision record to show. Rounds 1
+and 3 opened on a title and a composer, which reads as a product that forgot what it did
+rather than a campaign with four rounds behind it.
+
+**The laboratory could not be made to report.** Approving round 5 sends it; the first ask
+comes back *expected 28 Sep*; and the rule that the *second* ask releases it is written in
+`lims.py` where a visitor never looks. The beat the whole loop exists for — results come
+back, the round flags, the next round starts — was behind a guess.
+
+**And the seat could not see the laboratory at all.** Asked whether a round had finished,
+the model answered: *I don't have a live connection to the registry to check assay status
+myself (that's explicitly out of reach here), so I can't tell you today whether the round
+has actually finished; only that as of this snapshot it's still marked "at the lab."* It
+was right about its tools and wrong about the design: `SKILL.md`, which is its own system
+prompt, describes `check_run_status` as step 5 of the round loop, and Claude Code and
+Claude Science have had it on the registry connector since phase 6b. The browser seat was
+the only one of the three that had been handed the skill and not the step.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 162 | **A round that ran somewhere else reads back out of its own artifacts.** `wb_driver.round_history` assembles typed steps from the files a round wrote — the batch it was selected into, the approval stamp, the submission and its plates, the reconciliation, the anomaly verdict against its trigger, the frame move and its authority, the fit that followed — and `History.jsx` lays them out in the centre column, the approval as the one bubble on the right because a person gave it. It renders only when this browser's log holds nothing for that round, so a round the visitor ran keeps showing what actually ran here. It is a record and not a transcript: no command chip, nothing phrased as though someone said it, the artifacts named underneath, and the one date on screen is the registry's submission stamp, because a batch's approval time is inside its hash and the bundle cannot re-date it | The alternative was to ship a fake conversation for each past round, which is failure mode 1 with better prose. Everything worth saying about rounds 1 to 3 is already on disk with a hash over it; the only thing missing was reading it out. It also cost nothing to generalize — a project created in this browser gets the same history once its rounds are behind it |
+| 163 | **The demo's clock is a control, and it says it is one.** `lims.py release` and `Registry.release_run` mark a held run reported, writing `released_by` and `released_at` beside the status and touching nothing else; `wb_driver.release_run` calls it and logs it like every other command; the session shows it as *Have the lab report now* with **simulated** beside it and the reason in the tooltip. Because a released run is no longer running and not yet pulled, the round view gains a state it never had — `reported`, rendered *results ready* — and the rail, the home card, the landing route and the suggested asks all learned it. Asking twice still releases a round (130 is untouched); this is the same release with something on the screen to press | *Not yet, expected the 27th* is what made the laboratory believable, and it is also what made the demo stop. The rule that the next ask releases it was a schedule nobody could see, so the honest fix was a device that names itself rather than a shorter timeout that lies quietly. The `reported` state is the part that had to exist anyway: before the control, the same ask released the round and imported it in one call, so the moment between the lab finishing and anyone pulling it lasted no time and had no name. With the control it is a place a person can stand, and it is where the model's new tool is most useful |
+| 164 | **The seat can ask the registry itself.** A fourth tool, `check_lab_results`, on the diagnose and ask turns: it is `check_run_status`, and, when the run has reported, the pull, the import and the scoring that follow — steps 5 to 8 of the skill's own table, run through the same scripts every other surface runs. It refuses a round that was never submitted and a round already imported, and the refusal goes back to the model as an error result rather than ending the turn, exactly as the writer's does. Each round's `lab` line is now in `agent_context`, read with a peek that does not release anything, so the model knows where a round stands before it decides to ask. It still cannot select, submit or rule | The model was refusing to answer a question its own prompt told it it could answer, which is worse than a missing feature: it reads as the layer being thinner than it claims. This is the one tool that writes, and what it writes is a round the laboratory reported — no number in it is the model's, `import_round.py` and `evaluate_prior.py` compute every one, and non-negotiable 7 is untouched. The alternative, a status-only read, would have left the model saying *the results are in, ask someone else to fetch them*, which is the same gap one step further along |
+
+`check.py` goes from 188 to 195. The new seven: the history of rounds 1 to 3 is the
+expected steps out of six artifacts each and a round awaiting approval has none; every
+figure in it either names a `core/` function that resolves or names none at all; releasing
+a held run changes only the status keys and the rows pull the same; the release is not on
+the registry's tool list and releasing twice is a no-op; a round released by hand lands in
+*results ready* with the right landing route and the right card; the model's tool runs four
+commands and brings round 5 back flagged at **−0.818 pKD**, the number the product path
+already gets; and it refuses a round already imported and a round never submitted.
+
+Two figures had been naming functions that do not exist — `core.diagnostics.anomaly_check`
+and `core.reconcile.estimate_offset`, where the real ones are `core.reconcile.anomaly_flag`
+and `core.reconcile.offset_from_bridge`. Every briefing since the redesign had carried
+them, and clicking one opened the Notebook tab on *no such function*, which is decision
+107's claim failing quietly. Fixed, and check 212 now requires every source a history
+figure names to resolve.
+
+Verified in a browser against the dev server, and then live with the key. Rounds 1, 2 and
+3 read back as campaigns rather than blanks — round 2's ends with its seven hypotheses and
+d.webster's ruling, which were always on disk and never on screen. Round 4 approved, asked
+(*expected 28 Sep*, the pull refused and shown), released by the control, asked again,
+imported and flagged; ruled from the replayed record; round 5 selected, approved, sent.
+Then the seat, on Sonnet 5: *"Has round 5 come back from the lab yet? Check for yourself
+rather than reading it off the project files."* — it called `check_lab_results`, got
+*running, expected 2026-09-28*, and said so. The lab released by hand, asked again, and it
+pulled, imported, reconciled and read round 5 in one turn: 41 fresh designs a mean −0.818
+pKD below prediction at z −8.11, 46% outside an 80% interval, the bridge estimate −1.097
+against the −1.014 carried from round 4's ruling, *"the opposite pattern from round 4,
+where the bridge only explained about half the gap"*, and the loop stopped where the skill
+says to stop — flagged, unruled, no refit. Four calls, $0.23.
+
+---
+
+## A settled round has no open question in it — decision 165
+
+Rounds 1 and 3 stopped being blank (162) and immediately showed what had been wrong with
+the card over the composer all along: under the round's whole history — proposed, signed,
+ordered, returned, scored, fitted, next batch out — sat *Round 3 came back and did not
+flag. Anything to decide in round 3?* Nothing, and the page had just spent nine paragraphs
+saying so.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 165 | **The quiet-round ask is offered only while the round is still the open question.** `suggested_asks` gates it on `status == "imported"` — the round came back, it did not flag, and nobody has fitted it yet, which is exactly the state where the column is still offering *Fit round N and propose round N+1*. Once that button is pressed the round is `complete` and earns nothing, like every other settled round. Amends 66 and 158 | Decision 66 is that the agent speaks on quiet rounds too, and it is right about the moment it was written for: a round has just come back, the flag says nothing is wrong, and *is it as quiet as the flag says?* is a real question with a real answer. It is not a question about a round from six weeks ago with three rounds behind it. 158 already said a settled round earns nothing; the quiet ask was gated on `flagged is False`, which is true of a settled round forever, so the rule and the code disagreed and nobody could see it until the column had something else in it |
+
+`check.py` 195 → 196, and one existing assertion changed rather than relaxed: the harness
+used to require `["live", "agent"]` on round 3 and now requires `[]` on rounds 1, 2 and 3
+alike. The positive case is round 1 of a project created in the browser, imported and not
+yet fitted — it cannot flag, because round 1 carries no model predictions — which offers
+`["live", "agent"]`, and offers nothing once `continue_unflagged` has run. Both directions
+of the rule, on real state, in the same harness pass.
+
+---
+
+## The panel is a column you can drag, or a sheet you have to open — decision 166
+
+Under 980 pixels the body stacked its three regions and the artifact panel became a
+fourth row under the centre with no height cap. The batch table is taller than any
+viewport, so the panel took the page and the conversation was squeezed to nothing: a
+laptop with a docked inspector open showed the right panel and nothing else. Above that,
+the panel was a fixed 470 pixels, 400 under 1180, and there was no way to give a wide
+table more room or a long diagnosis less.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 166 | **Beside the conversation the artifact panel is dragged from its left edge and hidden from the title bar; under 980 pixels it is a sheet over the conversation that the same title-bar control opens and its own ✕, the scrim or Escape closes, and it starts closed.** The width persists per browser and is floored at 340, so the tab strip always fits; the stylesheet also caps it so the centre keeps about four hundred pixels, and the fixed 400-under-1180 rule is gone because the cap makes it. Double-click on the grip resets. Crossing the breakpoint resets open/closed to that side's default. A click on a figure's lineage opens the panel on the Notebook tab whatever the width; nothing else opens it by itself | The centre column is the claim and the panel is the frame — CLAUDE.md's *cut order* rule about the shell. When both cannot fit, the conversation is what stays, because approving, ruling and asking all happen there and the panel is read-only artifacts. A sheet that starts closed is honest about that ordering; a fourth row that hid the composer was the opposite. The drag is there because the batch table and the round graph are genuinely wider than a diagnosis is, and one fixed number was wrong for at least one of them on every screen |
+
+Verified in a browser at 1400, 1000, 820 and 390 pixels: the drag clamps at both ends and
+survives a reload, the sheet closes three ways, and the strip across the top no longer
+wraps the project id. `check.py` unchanged at 196; nothing it reads moved.
+
+---
+
+## Both edges drag, and nothing is drawn that does not work — decision 167
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 167 | **The rail drags from its right edge the way the panel drags from its left** — 180 to 420 pixels, persisted per browser, double-click resets, no grip while collapsed or under the narrow breakpoint — and the panel's cap now subtracts whatever the rail was dragged to, so the centre keeps its four hundred pixels whichever edge moved. **The controls that did nothing are gone**: Search, Customize and Compute from both rails, Search from the home header, and the attach, tools and dictate glyphs from the composer, which is now the model picker and the send arrow. The default placeholder is *Ask anything…*; a round's composer still says which round. Files went the same way a commit later, so the rail beneath the project is New, Rounds and the sessions | A disabled button with a tooltip saying it is not wired was decision 60's honesty in miniature, and it fails the same way the banner did: it tells instead of showing, and it invites a click the page cannot answer. The host's chrome was imitated to make the claim that this is a layer inside it; the claim does not need every item on the host's rail to make it, and each unwired one was a place a sceptic could press and get nothing. The rail drag is there because the session list carries titles that do not fit 232 pixels |
+
+Along the way the collapsed rail was found spilling its labels — the rule hid
+`span:not(.ic)` and the labels were bare text — and its Reset button wrapping into three
+lines. Both are wrapped now, and a collapsed rail is icons and nothing else. The strip the rail
+becomes under 980 pixels had its items spread across the whole width, because `.rail-item`
+is `width: 100%` for the column and a row shares that out; the strip sets them to their own
+width, so they sit together at the left.
+
+---
+
+## A project starts in a dialog, and what it starts from is the choice — decisions 168 to 171
+
+Four complaints from a walk through project creation, all of them about the same screen.
+**`+ New project` went to a page**, not to the dialog Claude Science opens — a name, a
+description, instructions Claude reads in every session — so the one place the host asks
+*what is this project?* had no counterpart here. **The template gallery's margin carried a
+requirements table** headed *what a templated project needs before a round can run*, five
+rows and two connector cards sitting beside the configure screen and answering a question
+nobody on that page had asked. **The configure screen never named the connectors or the
+skill**, although a project cannot run a round without them. And **the Validation card
+opened on the word "Validation" and a chart running to round 6**, leaving a reader to
+work out whose campaign it was and what would have counted as failing.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 168 | **`#/new` is a dialog over the home screen, and the first thing in it is what the project starts from.** Name, description and instructions, with Claude Science's own helper lines under the second and third, and above them two options: *From a template* and *Blank project*. Blank creates the project and opens it. From a template replaces the instructions box with one line saying the template declares them, turns Create into **Choose a template**, and hands the name and the description to `#/templates` — which is now titled *Template library* and is a single column: the tiles, the configure screen a chosen tile opens, and the projects this browser has made. The library has no *New project* control of its own, because it is where that control leads | The dialog is where Claude Science asks what a project is, and answering it with a paragraph is exactly the thing this prototype is arguing against. Putting the two answers side by side as a radio group makes the argument in one control and costs a sentence: either you write the instructions, or a file declares them and code enforces them before the model is asked anything. Handing off rather than embedding the tiles is because choosing a template means *reading* what each one declares, and that is a page and not a row of chips |
+| 169 | **The instructions are real, and the description never reaches Python.** A blank project's instructions go to the seat as a second system block on a `chat`, quoted as the person's words rather than merged into the function's, capped at 4 000 characters; on any kind that carries a template the function refuses them with a 400, because there the instructions *are* the template. The description is a note in this browser: it appears under the project on the home screen and in the configure screen, and nothing in the round loop reads it | A field in a dialog that goes nowhere is failure mode 1 with a text cursor in it. Wiring the instructions costs fifteen lines and turns the blank project from an empty chat into a chat with a brief — which is the honest version of the comparison, because that is all Claude Science can give a project. The description stops at the browser for the opposite reason: `project.json` is compared byte for byte against what `init_project.py` writes in a terminal, and a free-text line nothing computes with is not worth spending that claim on |
+| 170 | **The requirements table is now the bottom of the configure screen's declaration, under *Needed before a round can run*, and every locked row names the file it was read out of.** The interpreter, the skill and the two stdio connectors — each with its transport, every tool it exposes and the four the registry withholds — then the two sandbox grants, badged **nothing declares this** in the same column where the rows above say `template.json`. The connector block is drawn under whichever need's value is the server list itself, so the page cannot drift from the manifest, and `check.py` holds the two together | Gap 109 was true and in the wrong place: a table in the margin headed with an audit's question reads as a finding parked beside a product screen, which is why it was the first thing a visitor called distracting. In the same list as the objectives it is the same sentence continued — this is what the project is, this is what it needs to run, this is where each line came from — and the two rows with an empty source column make the finding without a heading having to announce it. The third column is what carries it: it was a lock icon with a tooltip, and a tooltip cannot be compared against the row above it |
+| 171 | **The Validation card says what it is, and what it had to show.** A line under the heading — this template's benchmark, not a project's data, 20 paired seeds per arm of a 6-round campaign, run by `simulate_campaign.py` on a landscape whose true values it is allowed to read — then `gate.criterion` as the first row, the threshold with `threshold_provenance` under it, and the result. Both axes are named on the chart, and `.chart` is capped at 520 pixels so an SVG that scales its own type does not grow axis labels into headings on a wide card | Every word of it was already in `campaign.json` and none of it was on screen, so the card was reporting five statistics about a question it never stated. A pre-registered threshold that the page does not say was pre-registered is worth nothing to the sceptic it exists for, and *criterion* first means the gate is read as a bet that was placed rather than a summary written afterwards. This is decision 134's line exactly: it reports what the chart is, and it still does not explain why the interface is shaped this way |
+
+`check.py` goes from 196 to 198. The two new ones: a blank project's instructions are a
+second system block on a chat, quoted and toolless, and a 400 on any kind that has a
+template; and the configure screen's connector row is the server list it draws underneath,
+with two servers, every tool on each, and exactly two rows nothing declares.
+
+Verified in a browser at 1440 and 400 pixels. The dialog fills and hands off — name and
+description arrive in the configure screen — a templated project is created from it and
+shows its description on the home card, and a blank one created beside it carries its
+instructions in the rail under *Instructions for Claude*. The configure table scrolls
+inside its own card at phone width rather than taking the page with it.
+
+---
+
+## The sandbox grants are a finding about the host — decision 172
+
+Moving the requirements table into the configure screen (170) brought two rows with it
+that do not belong on a project's page: *read access to the code and the project* and
+*write access, and only here*, each badged **nothing declares this**.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 172 | **The configure screen draws only the rows a manifest declares** — the interpreter, the skill and the two connectors. The two sandbox grants stay in `requirements.json`, where `bundle.py` still assembles them with what each one cost by hand in Claude Science, and `check.py` still counts them; they are not on the screen. Amends 170 | The other rows answer *what is this project?* The grants answer *what did installing this cost in someone else's host?*, which is a real question about Claude Science and a non sequitur beside an antibody's editable region. Gap 109 is not weakened by taking it off a product screen: it is the sharpest finding of the phase-5b audit and it is made in `DECISIONS.md`, in the README's gap table and in `requirements.json` itself, which is where a reader who wants it goes. What was on the page was a badge saying something was missing, on a list of things that are present |

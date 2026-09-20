@@ -14,7 +14,7 @@ import { n, pct } from "./lib.jsx";
 
 const PAD = { t: 10, r: 12, b: 26, l: 38 };
 
-function scales({ w, h, xs, ys, minSpan = 0, nice = false }) {
+function scales({ w, h, xs, ys, minSpan = 0, nice = false, pad = PAD }) {
   const x0 = Math.min(...xs), x1 = Math.max(...xs);
   let y0 = Math.min(...ys), y1 = Math.max(...ys);
   if (y1 - y0 < minSpan) {
@@ -32,8 +32,8 @@ function scales({ w, h, xs, ys, minSpan = 0, nice = false }) {
     hi = Math.ceil(hi / step) * step;
   }
   return {
-    x: (v) => PAD.l + ((v - x0) / (x1 - x0 || 1)) * (w - PAD.l - PAD.r),
-    y: (v) => h - PAD.b - ((v - lo) / (hi - lo || 1)) * (h - PAD.t - PAD.b),
+    x: (v) => pad.l + ((v - x0) / (x1 - x0 || 1)) * (w - pad.l - pad.r),
+    y: (v) => h - pad.b - ((v - lo) / (hi - lo || 1)) * (h - pad.t - pad.b),
     lo, hi, x0, x1,
   };
 }
@@ -68,7 +68,13 @@ const ARMS = [
     label: "random from the feasible pool" },
 ];
 
-export function ProofChart({ campaign, width = 430, height = 244 }) {
+// Both axes are named here and on no other chart, because this is the one a
+// reader meets before they have read anything else about the project: a bare
+// `pKD` over six unlabelled integers does not say that the line is a running
+// maximum or that the numbers underneath are rounds.
+const PROOF_PAD = { ...PAD, b: 42, l: 42 };
+
+export function ProofChart({ campaign, width = 430, height = 262 }) {
   if (!campaign) return null;
   const rounds = campaign.summary.guided.per_round.map((r) => r.round);
   const series = ARMS.map((arm) => ({
@@ -81,7 +87,7 @@ export function ProofChart({ campaign, width = 430, height = 244 }) {
     ...series.flatMap((s) => s.points.flatMap((p) => [p.q1, p.q3, p.median])),
     campaign.threshold_pkd,
   ];
-  const s = scales({ w: width, h: height, xs: rounds, ys });
+  const s = scales({ w: width, h: height, xs: rounds, ys, pad: PROOF_PAD });
   const line = (pts, key) =>
     pts.map((p, i) => `${i ? "L" : "M"}${s.x(p.round)},${s.y(p[key])}`).join(" ");
   const band = (pts) =>
@@ -94,19 +100,23 @@ export function ProofChart({ campaign, width = 430, height = 244 }) {
            aria-label="cumulative best observed affinity by round">
         {ticks(s.lo, s.hi).map((t) => (
           <g key={t}>
-            <line className="grid-line" x1={PAD.l} x2={width - PAD.r} y1={s.y(t)} y2={s.y(t)} />
-            <text x={PAD.l - 6} y={s.y(t) + 3} textAnchor="end">{t.toFixed(1)}</text>
+            <line className="grid-line" x1={PROOF_PAD.l} x2={width - PROOF_PAD.r}
+                  y1={s.y(t)} y2={s.y(t)} />
+            <text x={PROOF_PAD.l - 6} y={s.y(t) + 3} textAnchor="end">{t.toFixed(1)}</text>
           </g>
         ))}
-        <line className="axis" x1={PAD.l} x2={width - PAD.r}
-              y1={height - PAD.b} y2={height - PAD.b} />
+        <line className="axis" x1={PROOF_PAD.l} x2={width - PROOF_PAD.r}
+              y1={height - PROOF_PAD.b} y2={height - PROOF_PAD.b} />
         {rounds.map((r) => (
-          <text key={r} x={s.x(r)} y={height - PAD.b + 13} textAnchor="middle">{r}</text>
+          <text key={r} x={s.x(r)} y={height - PROOF_PAD.b + 13} textAnchor="middle">{r}</text>
         ))}
-        <line x1={PAD.l} x2={width - PAD.r} y1={s.y(campaign.threshold_pkd)}
+        <text x={(PROOF_PAD.l + width - PROOF_PAD.r) / 2} y={height - 6} textAnchor="middle">
+          experimental round
+        </text>
+        <line x1={PROOF_PAD.l} x2={width - PROOF_PAD.r} y1={s.y(campaign.threshold_pkd)}
               y2={s.y(campaign.threshold_pkd)} stroke="var(--ink)" strokeWidth="1"
               strokeDasharray="1 3" opacity="0.5" />
-        <text x={width - PAD.r} y={s.y(campaign.threshold_pkd) - 4} textAnchor="end">
+        <text x={width - PROOF_PAD.r} y={s.y(campaign.threshold_pkd) - 4} textAnchor="end">
           threshold {n(campaign.threshold_pkd, 2)}
         </text>
         {series.map((sr) => (
@@ -116,8 +126,9 @@ export function ProofChart({ campaign, width = 430, height = 244 }) {
           <path key={sr.key} d={line(sr.points, "median")} fill="none" stroke={sr.colour}
                 strokeWidth="1.6" strokeDasharray={sr.dash || undefined} />
         ))}
-        <text x={PAD.l - 30} y={PAD.t + 4} transform={`rotate(-90 ${PAD.l - 30} ${PAD.t + 4})`}
-              textAnchor="end">pKD</text>
+        <text x={11} y={(height - PROOF_PAD.b + PROOF_PAD.t) / 2}
+              transform={`rotate(-90 11 ${(height - PROOF_PAD.b + PROOF_PAD.t) / 2})`}
+              textAnchor="middle">cumulative best observed, pKD</text>
       </svg>
       <div className="legend">
         {series.map((sr) => (
@@ -125,7 +136,8 @@ export function ProofChart({ campaign, width = 430, height = 244 }) {
         ))}
       </div>
       <p className="tiny faint" style={{ marginTop: 6 }}>
-        Median of {campaign.n_seeds} seeds per arm; the band is the interquartile range.
+        Each line is the median of {campaign.n_seeds} seeds; the band around it is the
+        interquartile range. Higher is tighter binding.
       </p>
     </div>
   );
@@ -179,8 +191,9 @@ export function ProgressChart({ progress, target, width = 430, height = 244 }) {
             )}
           </g>
         ))}
-        <text x={PAD.l - 30} y={PAD.t + 4} transform={`rotate(-90 ${PAD.l - 30} ${PAD.t + 4})`}
-              textAnchor="end">pKD</text>
+        <text x={11} y={(height - PROOF_PAD.b + PROOF_PAD.t) / 2}
+              transform={`rotate(-90 11 ${(height - PROOF_PAD.b + PROOF_PAD.t) / 2})`}
+              textAnchor="middle">cumulative best observed, pKD</text>
       </svg>
     </div>
   );

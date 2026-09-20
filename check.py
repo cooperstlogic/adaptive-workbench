@@ -1186,6 +1186,18 @@ def main():
               ("core/diagnostics.py", "data/oracle.py", "lims.py",
                "skills/adaptive-optimization/scripts/import_round.py")),
           "core/, data/, lims.py and the scripts, where dirname(__file__) expects them")
+    reqs = schema.read_json(os.path.join(OUT, "reference", "requirements.json"))
+    server_names = ", ".join(sv["name"] for sv in reqs["servers"])
+    undeclared = [nd for nd in reqs["needs"] if nd["declared_in"] == "nothing declares this"]
+    check("the configure screen draws what a manifest declares, and its connector row "
+          "is the server list it draws underneath",
+          any(nd["value"] == server_names for nd in reqs["needs"])
+          and len(reqs["servers"]) == 2 and all(sv["tools"] for sv in reqs["servers"])
+          and len(reqs["needs"]) - len(undeclared) == 3 and len(undeclared) == 2,
+          "%s under the three declared rows; the %d the manifests cannot express (%s) "
+          "stay in requirements.json and are made in the audit, not on a project's "
+          "configure screen -- decision 172" % (server_names, len(undeclared),
+                                                ", ".join(nd["value"] for nd in undeclared)))
     check("nothing under web/src/ is Python, and no driver logic hides in the page",
           not [f for _d, _s, fs in os.walk(os.path.join(REPO, "web", "src"))
                for f in fs if f.endswith(".py")],
@@ -1296,6 +1308,35 @@ def main():
               "expected %s on the first ask, %d rows on the second"
               % ((first["expected"] or "?")[:10], second["n_rows"]))
 
+        # The other way to the same place: the demo's clock, which a person
+        # presses when eight days is not a thing a demo can wait for.
+        bench = os.path.join(tmp, "bench.json")
+        shutil.copyfile(os.path.join(REPO, "web", "public", "workbench", "lims_store",
+                                     "demo-trastuzumab.json"), bench)
+        bench_root = os.path.join(tmp, "bench-copy")
+        shutil.copytree(lab_root, bench_root)
+        lims_mod.submit_project_batch(bench_root, 4, bench, stagger=True)
+        before_release = schema.read_json(bench)["rounds"]["R4"]
+        released = lims_mod.release_run("R4", bench_root, bench, reason="check.py")
+        after_release = schema.read_json(bench)["rounds"]["R4"]
+        check("the clock can be moved by hand instead, and it moves nothing but the clock",
+              released["released_now"] and before_release["status"] == "running"
+              and after_release["status"] == "complete"
+              and set(after_release) - set(before_release) == {"released_by", "released_at"}
+              and all(after_release[k] == before_release[k]
+                      for k in before_release if k != "status")
+              and lims_mod.pull_to_csv("R4", bench_root, bench)["n_rows"]
+              == before_release["n_rows"],
+              "released by %r: the same %d rows, measured at submission, handed over on "
+              "the day someone asked rather than the day the registry named"
+              % (after_release["released_by"], after_release["n_rows"]))
+        check("and it is a demo device rather than a registry tool, so it is not on the "
+              "list that answers 'does this replace the LIMS'",
+              "release_run" not in [name for name, _ in lims_mod.TOOLS]
+              and lims_mod.release_run("R4", bench_root, bench)["released_now"] is False,
+              "%d tools, none of which finishes an assay; releasing an already-released "
+              "round is a no-op that says so" % len(lims_mod.TOOLS))
+
         order = lims_mod.export_order("R4", lab_root, held)
         submitted = schema.read_json(held)["rounds"]["R4"]["samples"]
         measured = {"value", "unit", "status", "well", "replicate"}
@@ -1400,6 +1441,83 @@ def main():
                   % (browser["round4"]["rows"], browser["round4"]["n_failed"],
                      browser["round4"]["n_censored"]))
 
+            # The rounds that ran somewhere else. A session for one of them
+            # used to be a title and a composer, because the command log is
+            # the tab's and theirs is six weeks old on another machine.
+            hist = browser["history"]
+            check("a round that ran before this browser opened reads back out of its own "
+                  "artifacts",
+                  hist["past"] == [
+                      ["proposed", "approved", "submitted", "returned", "scored", "fitted"],
+                      ["proposed", "approved", "submitted", "returned", "scored", "fitted"],
+                      ["proposed", "approved", "submitted", "returned", "scored", "frame",
+                       "fitted"]]
+                  and hist["pending"] == 0
+                  and set(hist["reads"]) == {
+                      "batches/batch_003.json", "candidates/pool_003.json", "designs.json",
+                      "evidence/snapshot_003.json", "batches/batch_003.eval.json",
+                      "models/run_003.json"},
+                  "rounds 1 to 3 in %d steps from %d artifacts each; round 4, selected and "
+                  "not sent, has nothing to read back"
+                  % (len(hist["past"][2]), len(hist["reads"])))
+            check("and every figure in it either names a core/ function that exists or "
+                  "names none at all",
+                  hist["resolve"] and all(f["found"] for f in hist["resolve"])
+                  and all(f["artifact"] for f in hist["figures"]),
+                  "%d of %d figures carry a source and all %d resolve; the rest were "
+                  "computed inside a pipeline script and claim nothing"
+                  % (len(hist["resolve"]), len(hist["figures"]), len(hist["resolve"])))
+
+            lab = browser["lab"]
+            check("the demo's clock is a control, and it is the only thing in the driver "
+                  "that moves one",
+                  lab["submitted"]["status"] == "running"
+                  and lab["first_check"]["ready"] is False
+                  and lab["released"]["status"] == "complete"
+                  and lab["released"]["by"] == "the demo control"
+                  and lab["reported"]["status"] == "results ready"
+                  and lab["reported"]["reported"] is True
+                  and lab["reported"]["at_lab"] is False
+                  and lab["reported"]["needs_you"] == "results"
+                  and lab["reported"]["landing"] == "r5"
+                  and lab["reported"]["asks"][0] == "results_back",
+                  "round 5 refused with %s, released by hand, and then waiting to be "
+                  "pulled rather than waiting for approval"
+                  % (lab["first_check"]["expected"] or "?")[:10])
+            check("and the model can ask the registry itself, which is what the seat was "
+                  "missing",
+                  lab["tool"]["commands"] == ["registry: check_run_status",
+                                              "registry: pull_assay_results",
+                                              "import round 5",
+                                              "score round 5 against its predictions"]
+                  and lab["tool"]["ready"] and lab["tool"]["flagged"]
+                  and lab["tool"]["rows"] == 96
+                  and abs(lab["tool"]["mean_signed_residual"] + 0.818061) < 5e-7
+                  and lab["tool"]["carries_no_commands"]
+                  and lab["context"]["has_lab"],
+                  "four commands from one tool call; round 5 comes back flagged at "
+                  "%.6f pKD, the same number the product path gets"
+                  % lab["tool"]["mean_signed_residual"])
+            check("a round that came back quiet earns an ask only until it is carried "
+                  "forward, and then it earns nothing",
+                  lab["quiet"]["status"] == "imported"
+                  and lab["quiet"]["flagged"] is False
+                  and lab["quiet"]["asks"] == ["live", "agent"]
+                  and lab["settled"]["status"] == "complete"
+                  and lab["settled"]["asks"] == [],
+                  "round 1 of a project created here: [%s] while the column is still "
+                  "offering to fit it, [] once it has"
+                  % ", ".join(lab["quiet"]["asks"]))
+            check("it refuses a round already imported and a round never submitted, and "
+                  "the refusal goes back as a result rather than ending the turn",
+                  lab["tool_refusals"]["imported"]["refused"]
+                  and lab["tool_refusals"]["imported"]["is_error"]
+                  and "already imported" in lab["tool_refusals"]["imported"]["why"]
+                  and lab["tool_refusals"]["unsubmitted"]["refused"]
+                  and "has not been submitted" in lab["tool_refusals"]["unsubmitted"]["why"],
+                  "a round comes back once: %s"
+                  % lab["tool_refusals"]["imported"]["why"].split("; ")[0])
+
             made_same, made_drift = cli_instantiation_of(browser["files"])
             check("a project instantiated in the browser is one the CLI would have written",
                   sorted(made_drift) == ["rounds.json"] and len(made_same) == 5
@@ -1456,12 +1574,13 @@ def main():
                       pb["verified"]["of_diagnostics"])) if pb else "no recorded push-back")
             sg = browser.get("suggested") or {}
             check("the composer suggests nothing until the project's state earns it, and "
-                  "a flagged round earns it (decision 158)",
+                  "a flagged round earns it (decisions 158 and 165)",
                   sg.get("awaiting_approval") == [] and sg.get("settled") == []
-                  and sg.get("adhoc") == [] and sg.get("quiet") == ["live", "agent"]
+                  and sg.get("adhoc") == [] and sg.get("quiet") == []
+                  and sg.get("seed") == []
                   and sg.get("flagged") == ["why_flagged", "whats_waiting", "agent"],
-                  ("nothing on a batch awaiting approval, a settled round or an ad-hoc "
-                   "session; [%s] once round 4 flags, led by %r"
+                  ("nothing on a batch awaiting approval, an ad-hoc session, or any of "
+                   "rounds 1 to 3, which are settled; [%s] once round 4 flags, led by %r"
                    % (", ".join(sg.get("flagged", [])), sg.get("lead"))) if sg else "none")
             check("and every suggested ask is a prompt for the model, the agent's option "
                   "last, with the briefing still answering each keyed one without a seat",
@@ -1582,15 +1701,26 @@ def main():
                   and hk["system_blocks"] == rq["system_blocks"],
                   "Haiku 4.5 rejects both fields by name; everything else about its "
                   "request -- prompt, tools, cap, fallbacks -- is the other model's")
-            check("the model is offered two read tools and one way to hand back, and no way "
-                  "to name a test the template does not permit",
-                  rq["tools"] == ["run_diagnostic", "execute_analysis", "propose_decision"]
-                  and rq["ask_tools"] == ["run_diagnostic", "execute_analysis"]
+            check("the model is offered two read tools, the registry, and one way to hand "
+                  "back, and no way to name a test the template does not permit",
+                  rq["tools"] == ["run_diagnostic", "execute_analysis",
+                                  "check_lab_results", "propose_decision"]
+                  and rq["ask_tools"] == ["run_diagnostic", "execute_analysis",
+                                          "check_lab_results"]
                   and rq["chat_tools"] == []
                   and rq["run_diagnostic_enum"] == list(diagnostics.TESTS)
                   and rq["run_diagnostic_strict"],
-                  "run_diagnostic's enum is the context's permitted list, strict; a chat "
-                  "gets no tools")
+                  "two reads, the registry, and one way to hand back; run_diagnostic's "
+                  "enum is the context's permitted list, strict; a chat gets no tools")
+            check("a blank project's own instructions reach the seat, and a templated "
+                  "project cannot have any",
+                  rq["chat_system_blocks"] == 1 and rq["chat_instructed_blocks"] == 2
+                  and rq["chat_instructions_quoted"]
+                  and rq["chat_instructed_tools"] == []
+                  and rq["instructions_on_templated"] == 400,
+                  "what someone typed into the New project dialog is a second system "
+                  "block on a chat, quoted and toolless; on any kind with a template it "
+                  "is a 400, because there the instructions are the template")
             check("its system prompt is the skill itself",
                   rq["system_has_skill"] and rq["system_blocks"] == 3
                   and fnr["probe"]["skill_sha256"] == hashlib.sha256(
@@ -1598,6 +1728,34 @@ def main():
                            "rb").read()).hexdigest(),
                   "SKILL.md sha256 %s, as the function carries it -- one file drives Claude "
                   "Code, Claude Science and the browser" % fnr["probe"]["skill_sha256"][:12])
+            ac = fnr["access_code"]
+            check("with an access code configured, the live seat is closed to a call that "
+                  "does not carry it, and the probe says so",
+                  ac["probe_without"]["live"] is False
+                  and ac["probe_without"]["reason"] == "no access code"
+                  and ac["probe_without"]["code_required"] is True
+                  and ac["probe_wrong"]["reason"] == "access code not recognised"
+                  and ac["probe_right"]["reason"] == "no key configured"
+                  and ac["call_without"] == 401 and ac["call_wrong"] == 401
+                  and ac["call_right"] == 503,
+                  "401 without it, 401 with the wrong one, 503 with the right one -- the "
+                  "code is checked before anything else, and the right one goes as far as "
+                  "the key")
+            rv = fnr["reservation"]
+            check("a call reserves its maximum before it is made, so a burst cannot pass "
+                  "the cap on a stale read",
+                  rv["burst_admitted"] == 3 and rv["burst_refused"] == 5
+                  and rv["burst_reason"] == "daily budget spent"
+                  and abs(rv["spent_after_settle"] - 0.15) < 1e-6
+                  and rv["in_flight_after_settle"] == 0
+                  and rv["crowd_seated"] == 2
+                  and rv["crowd_reason"] == "the seat is busy; try again in a moment"
+                  and abs(rv["spent_after_release"] - 0.15) < 1e-6
+                  and rv["in_flight_after_release"] == 0
+                  and rv["calls_after_release"] == 3,
+                  "8 at once against $1: 3 admitted at $0.30 and 5 refused; settled to "
+                  "$%.2f; 2 of 5 seated under an in-flight cap of 2; released clean"
+                  % rv["spent_after_settle"])
 
     print("\nPhase 7: the committed record is two-pass, and the second pass is a gate's")
     p1, p2 = dec4["passes"][0], (dec4["passes"][1] if dec4["n_passes"] > 1 else None)

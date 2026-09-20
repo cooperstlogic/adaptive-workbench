@@ -41,9 +41,9 @@ that appeared in the browser without being recomputed there would be exactly
 the failure mode non-negotiable 7 exists to prevent.
 
 **The model's system prompt is the skill, and it is copied here too.** Phase 7
-puts a model behind `web/netlify/functions/ask.mjs`, and what that function
+puts a model behind `web/function/ask.mjs`, and what that function
 hands it is `skills/adaptive-optimization/SKILL.md` -- the same file Claude
-Code and Claude Science load -- written into `web/netlify/functions/lib/skill.mjs`
+Code and Claude Science load -- written into `web/function/lib/skill.mjs`
 as a string with its sha256 beside it, because a function bundler carries a
 module and not a path. `check.py` requires the string to be the file.
 """
@@ -94,7 +94,7 @@ DRIVER = "web/py/wb_driver.py"
 # The skill, which is the model's system prompt on every surface. The function
 # bundler ships modules, so the file becomes a module carrying the file.
 SKILL = "skills/adaptive-optimization/SKILL.md"
-SKILL_MODULE = "web/netlify/functions/lib/skill.mjs"
+SKILL_MODULE = "web/function/lib/skill.mjs"
 
 # The shipped campaign spans weeks, because a campaign that does not is not a
 # campaign. The project was generated in one sitting, so every round carries

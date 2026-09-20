@@ -101,9 +101,10 @@ export default function App() {
 
   const shared = { runtime, campaign, proposal, epoch, bump, live, reprobe, model, setModel };
 
-  if (route.kind === "new" || route.kind === "templates") {
-    return <NewProject {...shared} />;
-  }
+  // #/new is the dialog over the home screen, as in Claude Science; the
+  // template library is a page, because choosing a template means reading
+  // what each one declares.
+  if (route.kind === "templates") return <NewProject {...shared} />;
 
   if (route.kind === "project" || route.kind === "session" || route.kind === "rounds") {
     // A blank project has no Python state at all, so it gets its own shell
@@ -113,5 +114,5 @@ export default function App() {
     return <Project key={route.project} route={route} {...shared} />;
   }
 
-  return <Home {...shared} />;
+  return <Home {...shared} dialog={route.kind === "new"} />;
 }

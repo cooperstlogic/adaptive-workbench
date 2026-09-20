@@ -24,13 +24,41 @@
 // is passed in, so `web/scripts/pyodide-check.mjs` drives the same code in
 // node and hands the artifacts to check.py.
 
-export const ENDPOINT = "/.netlify/functions/ask";
+export const ENDPOINT = "/api/ask";
+
+// --- the access code --------------------------------------------------------
+//
+// The live seat on the public URL is open to whoever was sent the link, and
+// the link carries the code: `?code=…` before the hash. The page keeps it in
+// localStorage, takes it off the address bar, and sends it on every call.
+// Without it the function answers its probe with the reason and the page is
+// in replay, which is the same page a visitor without a key gets.
+
+const CODE_KEY = "workbench-code";
+const CODE_HEADER = "x-workbench-code";
+
+export function adoptCode(loc = globalThis.location, storage = globalThis.localStorage) {
+  try {
+    const url = new URL(loc.href);
+    const code = url.searchParams.get("code");
+    if (!code) return;
+    storage.setItem(CODE_KEY, code);
+    url.searchParams.delete("code");
+    history.replaceState(null, "", url.pathname + url.search + url.hash);
+  } catch { /* a private window, or no window at all */ }
+}
+
+function headers(extra = {}) {
+  let code = null;
+  try { code = localStorage.getItem(CODE_KEY); } catch { /* private window */ }
+  return code ? { ...extra, [CODE_HEADER]: code } : extra;
+}
 
 // --- the probe --------------------------------------------------------------
 
 export async function probe(fetchImpl = globalThis.fetch, base = "") {
   try {
-    const res = await fetchImpl(`${base}${ENDPOINT}`, { method: "GET" });
+    const res = await fetchImpl(`${base}${ENDPOINT}`, { method: "GET", headers: headers() });
     if (!res.ok) return { live: false, reason: `probe returned ${res.status}` };
     return await res.json();
   } catch (err) {
@@ -63,6 +91,12 @@ async function* sse(body) {
 }
 
 // --- tools, as the driver runs them ----------------------------------------
+//
+// Each one is a `wb_driver` call the buttons already make, so a tool the
+// model chose and a control a person pressed leave the same entry in the
+// same log. `check_lab_results` is four commands rather than one -- a status,
+// a pull, an import and a scoring -- and the chip the stream shows is the
+// last of them, with the rest in the log where the column renders them.
 
 /** The arguments a test takes and nothing else, so the log reads as the CLI. */
 export function diagnosticArgs(input) {
@@ -93,6 +127,23 @@ export function runTool({ name, input }, { call, project, round, session, verify
       verified: out.verified,
       stdout: out.stdout,
     };
+  }
+  if (name === "check_lab_results") {
+    const target = Number.isInteger(input && input.round) ? input.round : round;
+    try {
+      const out = call("check_results", { round_id: target, project, session });
+      // One call, up to four commands -- the status, the pull, the import and
+      // the scoring -- so the turn shows all of them. What goes back to the
+      // model is what the registry said and what the round turned out to be,
+      // without the commands, which it did not write.
+      const { ran, ...answer } = out;
+      return { entries: ran || [], content: JSON.stringify(answer) };
+    } catch (err) {
+      // A round that was never submitted, or one that is already imported.
+      // The refusal is the boundary working, so it goes back as a result the
+      // model can read rather than ending the turn.
+      return { content: String(err.message || err), is_error: true, refused: true };
+    }
   }
   if (name === "propose_decision") {
     const payload = {
@@ -126,12 +177,16 @@ const MAX_TURNS = 24;
  * record with a more_evidence_requested ruling. `transcript` is the
  * session's signed conversation so far and `pending` the tool result
  * answering the proposal it ended on, if it did; both come off the previous
- * turn's `transcript` and `pending`. `emit` receives every step as it
- * happens; `save` receives the accumulated turn whenever it changes.
+ * turn's `transcript` and `pending`. `instructions` is a blank project's own
+ * prose brief, and only a chat carries one -- the function refuses it on any
+ * other kind, because a templated project's instructions are its template.
+ * `emit` receives every step as it happens; `save` receives the accumulated
+ * turn whenever it changes.
  */
 export async function runLive({
   kind, project, round, session, question, model, ruling, transcript = null, pending = null,
-  call, emit = () => {}, save = () => {}, fetchImpl = globalThis.fetch, base = "",
+  instructions = null, call, emit = () => {}, save = () => {},
+  fetchImpl = globalThis.fetch, base = "",
   id = `live-${Date.now()}`, at = new Date().toISOString(),
 }) {
   // `task` and not `kind`: the driver stamps `kind: "agent"` on every stored
@@ -164,8 +219,9 @@ export async function runLive({
   for (let i = 0; i < MAX_TURNS; i++) {
     const res = await fetchImpl(`${base}${ENDPOINT}`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ kind, model, context, transcript: signed, turn: nextTurn }),
+      headers: headers({ "content-type": "application/json" }),
+      body: JSON.stringify({ kind, model, context, transcript: signed, turn: nextTurn,
+                             ...(instructions ? { instructions } : {}) }),
     });
     if (!res.ok) {
       let why = `${res.status}`;
@@ -267,12 +323,13 @@ export async function runLive({
     let proposed = false;
     for (const c of calls) {
       const out = runTool(c, { call, project, round: toolRound, session });
-      if (out.entry) {
-        // The entry rides on the step while the turn streams, so the chip can
-        // render before the page re-reads the log; the stored copy drops it
-        // and finds the entry by its number.
-        push({ type: "tool", name: c.name, n: out.entry.n, input: summarize(c.name, c.input),
-               verified: out.verified || null, entry: out.entry });
+      // The entry rides on the step while the turn streams, so the chip can
+      // render before the page re-reads the log; the stored copy drops it and
+      // finds the entry by its number. A tool that ran several commands
+      // pushes a step for each, in the order they ran.
+      for (const e of out.entries || (out.entry ? [out.entry] : [])) {
+        push({ type: "tool", name: c.name, n: e.n, input: summarize(c.name, c.input),
+               verified: out.verified || null, entry: e });
       }
       if (out.decision) {
         proposed = true;
@@ -306,6 +363,7 @@ export async function runLive({
 function summarize(name, input) {
   if (name === "run_diagnostic") return diagnosticArgs(input || {});
   if (name === "execute_analysis") return { question: (input || {}).question };
+  if (name === "check_lab_results") return { round: (input || {}).round };
   if (name === "propose_decision") {
     const p = input || {};
     return { hypotheses: (p.hypotheses || []).length,

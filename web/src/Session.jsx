@@ -31,11 +31,12 @@ import { useEffect, useState } from "react";
 import AgentStream, { agentBadge } from "./AgentStream.jsx";
 import Briefing from "./Briefing.jsx";
 import Composer from "./Composer.jsx";
+import History from "./History.jsx";
 import Tool from "./Tool.jsx";
 import Turn from "./Turn.jsx";
 import { recordedPushback } from "./agent.js";
 import {
-  ACTION_LABEL, Badge, CentreHead, Hash, VERBS, dayMonth, n, pct, signed,
+  ACTION_LABEL, Badge, CentreHead, Hash, PanelToggle, VERBS, dayMonth, n, pct, signed,
 } from "./lib.jsx";
 
 // The template's own list, with the two arguments that change what a test
@@ -52,6 +53,14 @@ const DIAGNOSTICS = [
   { test: "calibration_by_region", label: "… --offset bridge", args: { offset: "bridge" } },
 ];
 
+// What the word beside the lab control means, as a tooltip and nowhere else.
+// The button moves the simulated laboratory's clock; it moves nothing else,
+// and the sentence that says so belongs here rather than on the page.
+const LAB_TIP =
+  "The laboratory is an oracle replaying a generated landscape. This says the assay has "
+  + "finished, now, instead of on the date the registry named; the values were measured "
+  + "when the batch was submitted and do not change.";
+
 /** A live question and its answer, as the composer's free text produces them. */
 function AskTurn({ turn, log, live, ctx }) {
   return (
@@ -64,10 +73,10 @@ function AskTurn({ turn, log, live, ctx }) {
   );
 }
 
-export default function Session({ ctx, stored, suggestions }) {
+export default function Session({ ctx, stored, history, suggestions }) {
   const {
     view, round, roundView, decision, log, busy, error, sessionId,
-    onApprove, onDiagnostic, onRule, onAdvance, onContinue,
+    onApprove, onDiagnostic, onRule, onAdvance, onContinue, onRelease,
     onAsk, onDownload, drops,
     live, model, setModel, agentTurn, agentBusy, hasReplay, proposal,
     onDiagnoseLive, onReplay, onPushbackLive, onAskLive,
@@ -80,6 +89,10 @@ export default function Session({ ctx, stored, suggestions }) {
   const stage = roundView.status;
   const lab = roundView.lab;
   const canLive = !!(live && live.live);
+  // A round this browser ran has a log, and the log is the story. A round
+  // that ran before the tab was opened has none, and its artifacts are.
+  const ranHere = log.some((e) => e.round === round);
+  const record = ranHere ? null : history;
 
   // The agent turns stored in this session, with the one in flight taking the
   // place of its stored copy. Diagnoses are placed by pass; asks in order.
@@ -108,8 +121,15 @@ export default function Session({ ctx, stored, suggestions }) {
     && !e.command.includes("--approved-by"));
   const sendSteps = mine.filter((e) => e.n >= submittedAt - 1 && e.n <= submittedAt + 1
     && ["select_batch", "submit", "export"].includes(e.tool));
+  // The arrival's commands, unless an agent turn is already showing them:
+  // `check_lab_results` runs the same four and renders them in its own turn.
   const arriveSteps = mine.filter((e) => e.n >= importedAt - 2 && e.n <= importedAt + 1
-    && ["status", "pull", "import_round", "evaluate_prior"].includes(e.tool) && !e.refused);
+    && ["status", "pull", "import_round", "evaluate_prior"].includes(e.tool) && !e.refused
+    && !agentNs.has(e.n));
+  const importedHere = mine.some((e) => e.tool === "import_round");
+  // The clock, moved by hand. It is a command like any other and it shows as
+  // one, under the turn that says the registry has the round.
+  const releaseSteps = mine.filter((e) => e.tool === "release");
   // Tests run by hand, from the buttons, rather than by an agent turn.
   const manualSteps = mine.filter((e) =>
     (e.tool === "run_diagnostic" || e.kind === "adhoc") && !agentNs.has(e.n));
@@ -126,7 +146,7 @@ export default function Session({ ctx, stored, suggestions }) {
   const arrival = [...turns].reverse().find((t) => t.answer.kind === "arrival"
     && t.answer.ready);
   const refusedAsks = turns.filter((t) => t.answer.kind === "arrival" && !t.answer.ready);
-  const refusedPulls = mine.filter((e) => e.tool === "pull" && e.refused);
+  const refusedPulls = mine.filter((e) => e.tool === "pull" && e.refused && !agentNs.has(e.n));
   const refusedSteps = refusedAsks.map((t, i) => {
     const pull = refusedPulls[i];
     return pull ? mine.filter((e) => (e.n === pull.n - 1 && e.tool === "status")
@@ -136,7 +156,7 @@ export default function Session({ ctx, stored, suggestions }) {
   // another session, or from the harness.
   const placed = new Set([...refusedSteps.flat(), ...arriveSteps].map((e) => e.n));
   const waitSteps = mine.filter((e) => (e.tool === "status"
-    || (e.tool === "pull" && e.refused)) && !placed.has(e.n));
+    || (e.tool === "pull" && e.refused)) && !placed.has(e.n) && !agentNs.has(e.n));
   const tail = storedTurns
     .filter((t) => t !== arrival && !refusedAsks.includes(t)
       && !(t.kind === "agent" && t.task === "diagnose"))
@@ -194,12 +214,16 @@ export default function Session({ ctx, stored, suggestions }) {
       <CentreHead title={`Round ${round} · ${stage}`}
                   sub={`${view.project.lead.name} ${view.project.lead.chain} → ${
                     view.project.target} · ${view.n_designs} designs · assay ${
-                    roundView.assay_version || "not yet run"}`}>
+                    roundView.assay_version || "not yet run"}`}
+                  aside={<PanelToggle panel={ctx.panel} />}>
         {roundView.flagged && <Badge kind="flag">flagged</Badge>}
         {roundView.at_lab && <Badge kind="attn">at the lab</Badge>}
       </CentreHead>
       <div className="centre-inner thread">
         {error && <div className="err" style={{ marginBottom: 14 }}>{error}</div>}
+
+        <History history={record} phase="before" ctx={ctx}
+                 reads={!record?.steps.some((x) => x.phase === "after")} />
 
         {stage === "awaiting approval" && (
           <Turn who="workbench">
@@ -272,12 +296,31 @@ export default function Session({ ctx, stored, suggestions }) {
           </Turn>
         )}
 
-        {roundView.at_lab && refusedAsks.length === 0 && (
+        {roundView.at_lab && (
           <Turn who="workbench">
+            {!(refusedAsks.length || waitSteps.length) && (
+              <p>Nothing here moves until the assay reports.</p>
+            )}
+            <div className="row wrap" style={{ marginTop: 10 }}>
+              <button className="btn small" disabled={busy} onClick={onRelease}>
+                {busy ? <span className="busy" /> : null} Have the lab report now
+              </button>
+              <span className="tag-syn" title={LAB_TIP}>simulated</span>
+            </div>
+          </Turn>
+        )}
+
+        {/* The lab has reported and nobody has pulled it. Before the control
+            above existed this state lasted as long as one call, because the
+            ask that released the round also imported it. */}
+        {roundView.reported && (
+          <Turn who="workbench">
+            <Chips entries={releaseSteps} />
             <p>
-              {waitSteps.length
-                ? "Ask again when you think it has had time."
-                : "Nothing to do until it reports."}
+              The registry has round {round}: {lab?.n_rows || 0} rows across{" "}
+              {lab?.n_samples || 0} samples on assay {lab?.assay_version}
+              {lab?.released_by && <> — reported early, by {lab.released_by}</>}. Nothing is
+              imported until it is asked for.
             </p>
           </Turn>
         )}
@@ -300,7 +343,7 @@ export default function Session({ ctx, stored, suggestions }) {
 
         {arrival && <Turn who="workbench"><Briefing data={arrival.answer} ctx={ctx} /></Turn>}
 
-        {arriveSteps.length > 0 && !arrival && (
+        {importedHere && !arrival && (
           <Turn who="workbench">
             {roundView.reconciliation && (
               <p>
@@ -529,6 +572,8 @@ export default function Session({ ctx, stored, suggestions }) {
             </button>
           </Turn>
         )}
+
+        <History history={record} phase="after" ctx={ctx} reads />
 
         {afterSteps.length > 0 && (
           <Turn who="workbench">

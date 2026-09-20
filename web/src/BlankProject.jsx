@@ -1,8 +1,8 @@
 // A project with no template. The control arm.
 //
-// Same chrome as a templated project — rail header, New / Search / Customize
-// / Files / Compute, settings at the bottom, composer pinned with a working
-// model picker — and nothing in it, because nothing has declared what it
+// Same chrome as a templated project — rail header, New, settings at the
+// bottom, composer pinned with a working model picker — and nothing in it,
+// because nothing has declared what it
 // means. There is no Rounds item because there is no round graph. There is no
 // artifact panel because there are no artifacts. There is no approval,
 // because there is nothing to approve.
@@ -22,16 +22,9 @@ import Prose from "./Prose.jsx";
 import Turn from "./Turn.jsx";
 import * as agent from "./agent.js";
 import * as blank from "./blank.js";
+import * as meta from "./meta.js";
 import * as router from "./router.js";
 import { CentreHead, MODEL_LABEL, elapsed } from "./lib.jsx";
-
-const RAIL = [
-  { id: "new", icon: "✦", label: "New" },
-  { id: "search", icon: "⌕", label: "Search" },
-  { id: "customize", icon: "◉", label: "Customize" },
-  { id: "files", icon: "▤", label: "Files" },
-  { id: "compute", icon: "⚙", label: "Compute" },
-];
 
 export default function BlankProject({ route, project, bump, live, reprobe, model, setModel }) {
   const [rec, setRec] = useState(project);
@@ -100,6 +93,7 @@ export default function BlankProject({ route, project, bump, live, reprobe, mode
     try {
       await agent.runLive({
         kind: "chat", question: text, model: chosenModel || model, call: () => null,
+        instructions: meta.instructionsFor(target) || null,
         transcript: transcripts.current.get(thread) || null,
         emit: () => { if (inFlight.current) setStreaming({ ...inFlight.current }); },
         save: keep,
@@ -133,14 +127,17 @@ export default function BlankProject({ route, project, bump, live, reprobe, mode
             <button className="rail-collapse" title="Collapse">▤</button>
           </div>
           <div className="rail-sub tiny faint">No template</div>
-          {RAIL.map((item) => (
-            <a key={item.id} className="rail-item"
-               href={item.id === "new"
-                 ? router.href({ kind: "session", project: pid, id: "new" }) : "#"}
-               onClick={(e) => { if (item.id !== "new") e.preventDefault(); }}>
-              <span className="ic">{item.icon}</span>{item.label}
-            </a>
-          ))}
+          <a className="rail-item" href={router.href({ kind: "session", project: pid,
+                                                       id: "new" })}>
+            <span className="ic">✦</span><span>New</span>
+          </a>
+
+          {meta.instructionsFor(pid) && (
+            <div className="rail-group hide-narrow">
+              <div className="rail-label">Instructions for Claude</div>
+              <p className="tiny faint rail-note">{meta.instructionsFor(pid)}</p>
+            </div>
+          )}
 
           <div className="rail-group hide-narrow">
             <div className="rail-label">Sessions</div>
@@ -162,7 +159,7 @@ export default function BlankProject({ route, project, bump, live, reprobe, mode
           </div>
 
           <div className="rail-foot hide-narrow">
-            <button className="rail-item"><span className="ic">⚙</span>Settings</button>
+            <button className="rail-item"><span className="ic">⚙</span><span>Settings</span></button>
           </div>
         </nav>
 

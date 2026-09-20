@@ -2,17 +2,17 @@
 //
 // Everything in here is scoped to a single project id out of the route. The
 // rail header is the *project* -- back arrow, name, chevron, collapse -- and
-// New / Search / Customize / Files / Compute are project-scoped items beneath
-// it, which is what the host does. The product name is not in this rail,
-// because the product and the project are not one object.
+// New is the project-scoped item beneath it, which is what the host does.
+// The product name is not in this rail, because the product and the project
+// are not one object.
 //
 // Below those sits Rounds, the one item that is new, and then the session
 // list. A session is a unit of work: a round starts one, and a person can
 // start an ad-hoc one at any time. Both kinds are in the same list.
 //
-// The four host items are drawn and not wired: nothing in this build is
-// behind Search, Customize, Files or Compute, and a rail item that opens an
-// essay about what the host does there is an essay in the way of the round.
+// The host's Search, Customize, Files and Compute were drawn here once, and
+// are gone: nothing in this build is behind them, and a button that does
+// nothing is a claim the page cannot keep.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AdHoc from "./AdHoc.jsx";
@@ -24,12 +24,58 @@ import * as router from "./router.js";
 import * as rt from "./runtime.js";
 import { Badge, Hash, elapsed, projectTitle, templateTitle } from "./lib.jsx";
 
-const RAIL = [
-  { id: "search", icon: "⌕", label: "Search" },
-  { id: "customize", icon: "◉", label: "Customize" },
-  { id: "files", icon: "▤", label: "Files" },
-  { id: "compute", icon: "⚙", label: "Compute" },
-];
+// Under this width the artifact panel is a sheet over the conversation rather
+// than a column beside it. The same number is in styles.css; the stylesheet
+// decides how the sheet is drawn and this decides whether it starts open.
+const NARROW = "(max-width: 980px)";
+
+function useMedia(query) {
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const on = () => setMatches(mq.matches);
+    mq.addEventListener("change", on);
+    on();
+    return () => mq.removeEventListener("change", on);
+  }, [query]);
+  return matches;
+}
+
+// One draggable edge: the rail's right, the panel's left. `measure` turns
+// the pointer's x into the width that edge implies; the result is clamped,
+// kept per browser under `key`, and null means the stylesheet's default.
+// Storage that is missing or refused just means the default. The grip
+// captures the pointer, so the drag keeps going when it leaves the strip;
+// double-click puts the width back.
+function useDragWidth({ key, min, max, measure }) {
+  const [width, setWidth] = useState(() => {
+    try {
+      const w = Number(localStorage.getItem(key));
+      return w >= min ? w : null;
+    } catch {
+      return null;
+    }
+  });
+  const [dragging, setDragging] = useState(false);
+  useEffect(() => {
+    if (dragging) return;
+    try {
+      if (width) localStorage.setItem(key, String(width));
+      else localStorage.removeItem(key);
+    } catch { /* the width lasts until the reload, then */ }
+  }, [dragging, key, width]);
+  const grip = {
+    onPointerDown: (e) => { e.currentTarget.setPointerCapture(e.pointerId); setDragging(true); },
+    onPointerMove: (e) => {
+      if (!dragging) return;
+      setWidth(Math.round(Math.min(Math.max(measure(e.clientX), min), max())));
+    },
+    onPointerUp: () => setDragging(false),
+    onPointerCancel: () => setDragging(false),
+    onDoubleClick: () => setWidth(null),
+  };
+  return { width, dragging, grip };
+}
 
 export default function Project({ route, runtime, campaign, proposal, live, reprobe,
                                   model, setModel }) {
@@ -60,6 +106,29 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
   const [artifacts, setArtifacts] = useState({});
   const [saved, setSaved] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
+  // The artifact panel: a column beside the conversation that can be hidden
+  // and dragged, or under the narrow breakpoint a sheet that starts closed
+  // and is opened from the title bar. Crossing the breakpoint resets it.
+  const narrow = useMedia(NARROW);
+  const [panelOpen, setPanelOpen] = useState(!narrow);
+  useEffect(() => { setPanelOpen(!narrow); }, [narrow]);
+  // Both edges drag. The rail's left is the viewport's, so its width is the
+  // pointer's x; the panel is flush with the right edge, so its width is the
+  // distance from the pointer to that edge.
+  const rail = useDragWidth({ key: "wb.rail-w", min: 180,
+                              max: () => Math.min(420, window.innerWidth * 0.3),
+                              measure: (x) => x });
+  const panel = useDragWidth({ key: "wb.panel-w", min: 340,
+                               max: () => window.innerWidth * 0.6,
+                               measure: (x) => window.innerWidth - x });
+  const resizing = rail.dragging || panel.dragging;
+  useEffect(() => {
+    if (!(narrow && panelOpen)) return undefined;
+    const onKey = (e) => { if (e.key === "Escape") setPanelOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [narrow, panelOpen]);
+  const togglePanel = useCallback(() => setPanelOpen((o) => !o), []);
 
   const refresh = useCallback(() => {
     try {
@@ -101,6 +170,14 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     }
   }, [view, sessionId, pid]);
 
+  // What the round did, for a round that did it somewhere else. The command
+  // log is this tab's; a round that ran before the tab was opened has none,
+  // and its story is in its artifacts.
+  const history = useMemo(() => {
+    if (!view || !round) return null;
+    return rt.safeCall("round_history", { round_id: round, project: pid }) || null;
+  }, [view, round, pid]);
+
   /* artifacts for whichever round is open ---------------------------------- */
   useEffect(() => {
     if (!view || !round) { setArtifacts({}); return; }
@@ -128,6 +205,7 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     setLineage(null);
     if (!item) return;
     setTab("Notebook");
+    setPanelOpen(true);
     try {
       setLineage(rt.call("lineage", { dotted: item.source }));
     } catch (err) {
@@ -231,6 +309,7 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     busy: busy || agentBusy, error, onTrace, traced, lineage,
     drops, setDrops, dropNotes, setDropNotes,
     proposal, live, model, setModel, agentTurn, agentBusy,
+    panel: { open: panelOpen, narrow, toggle: togglePanel },
     onDiagnoseLive: () => diagnose("live"),
     onReplay: (pass = 1) => diagnose("replay", { pass }),
     onPushbackLive: (ruling) => diagnose("live", { ruling }),
@@ -242,6 +321,8 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
       setTab("Progress");
       return r;
     }),
+    onRelease: () => act(() =>
+      rt.call("release_run", { round_id: round, project: pid, session: sessionId })),
     onDiagnostic: (test, args) => act(() =>
       rt.call("diagnostic", { round_id: round, test, project: pid, session: sessionId,
                               ...args })),
@@ -278,7 +359,7 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     refresh,
   }), [pid, view, campaign, round, roundView, sessionId, artifacts, busy, agentBusy, error,
        onTrace, traced, lineage, drops, dropNotes, proposal, live, model, setModel, agentTurn,
-       diagnose, askLive, act, refresh]);
+       panelOpen, narrow, togglePanel, diagnose, askLive, act, refresh]);
 
   const suggestionsFor = useMemo(
     () => (view ? rt.safeCall("suggested_asks", { project: pid, round_id: round }) : []),
@@ -315,9 +396,14 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     </a>
   );
 
+  const showPanel = route.kind === "session" && panelOpen;
+  const widths = {};
+  if (rail.width) widths["--rail-w"] = `${rail.width}px`;
+  if (panel.width) widths["--panel-w"] = `${panel.width}px`;
+
   return (
     <div className="shell">
-      <div className="body">
+      <div className={`body${resizing ? " is-resizing" : ""}`} style={widths}>
         <nav className={`rail${collapsed ? " is-collapsed" : ""}`}>
           <div className="rail-head">
             <a className="rail-back" href="#/" title="All projects">←</a>
@@ -333,16 +419,11 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
 
           <a className="rail-item" href={router.href({ kind: "session", project: pid,
                                                        id: "new" })}>
-            <span className="ic">✦</span>New
+            <span className="ic">✦</span><span>New</span>
           </a>
-          {RAIL.map((item) => (
-            <button key={item.id} className="rail-item" title="Not wired in this prototype">
-              <span className="ic">{item.icon}</span>{item.label}
-            </button>
-          ))}
           <a className="rail-item is-new" aria-current={route.kind === "rounds"}
              href={router.href({ kind: "rounds", project: pid })}>
-            <span className="ic">⌸</span>Rounds
+            <span className="ic">⌸</span><span>Rounds</span>
           </a>
 
           <div className="rail-group hide-narrow">
@@ -367,6 +448,10 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
             </button>
           </div>
         </nav>
+        {!collapsed && !narrow && (
+          <div className="grip" role="separator" aria-orientation="vertical"
+               title="Drag to resize; double-click to reset" {...rail.grip} />
+        )}
 
         <main className={`centre${route.kind === "rounds" ? " wide" : ""}`}>
           {route.kind === "rounds" && (
@@ -375,15 +460,20 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
                                                         id: `r${r}` })} />
           )}
           {route.kind === "session" && round !== null && roundView && (
-            <Session ctx={ctx} stored={stored} suggestions={suggestions} />
+            <Session ctx={ctx} stored={stored} history={history} suggestions={suggestions} />
           )}
           {route.kind === "session" && round === null && route.id !== "new" && (
             <AdHoc ctx={ctx} stored={stored} suggestions={suggestions} />
           )}
         </main>
 
-        {route.kind === "session" && (
-          <Panel tab={tab} setTab={setTab} ctx={ctx} />
+        {showPanel && narrow && <div className="scrim" onClick={togglePanel} />}
+        {showPanel && !narrow && (
+          <div className="grip" role="separator" aria-orientation="vertical"
+               title="Drag to resize; double-click to reset" {...panel.grip} />
+        )}
+        {showPanel && (
+          <Panel tab={tab} setTab={setTab} ctx={ctx} onClose={narrow ? togglePanel : null} />
         )}
       </div>
     </div>

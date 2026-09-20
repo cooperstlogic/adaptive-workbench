@@ -15,7 +15,9 @@
 // shown and not captioned.
 
 import { useEffect, useMemo, useState } from "react";
+import NewProjectDialog from "./NewProjectDialog.jsx";
 import * as blank from "./blank.js";
+import * as meta from "./meta.js";
 import * as router from "./router.js";
 import * as rt from "./runtime.js";
 import {
@@ -29,7 +31,7 @@ function greeting() {
   return "Good evening";
 }
 
-export default function Home({ epoch }) {
+export default function Home({ epoch, bump, dialog }) {
   const [projects, setProjects] = useState([]);
   const [views, setViews] = useState({});
   const [error, setError] = useState(null);
@@ -75,6 +77,9 @@ export default function Home({ epoch }) {
 
   return (
     <div className="home">
+      {dialog && (
+        <NewProjectDialog bump={bump} onClose={() => router.go(router.HOME)} />
+      )}
       <header className="home-head">
         <div>
           <h1 className="brandmark">{APP}</h1>
@@ -88,9 +93,6 @@ export default function Home({ epoch }) {
           </div>
         </div>
         <div className="row">
-          <button className="btn small" disabled title="Not wired in this prototype">
-            ⌕ Search
-          </button>
           <a className="btn small" href={router.href({ kind: "templates" })}>Templates</a>
           <a className="btn small primary" href={router.href({ kind: "new" })}>
             + New project
@@ -136,6 +138,11 @@ export default function Home({ epoch }) {
                     <div>
                       <b>{projectTitle(p)}</b>
                       <p className="tiny faint mono" style={{ margin: "2px 0 0" }}>{p.id}</p>
+                      {meta.describe(p.id) && (
+                        <p className="small muted" style={{ margin: "6px 0 0", maxWidth: 420 }}>
+                          {meta.describe(p.id)}
+                        </p>
+                      )}
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <div className="num">
@@ -151,6 +158,9 @@ export default function Home({ epoch }) {
                     {p.n_flagged > 0 && (
                       <span className="chip">flagged <b className="num">{p.n_flagged}</b></span>
                     )}
+                    {v?.reported_round && (
+                      <span className="chip">round {v.reported_round} reported</span>
+                    )}
                     {v?.at_lab_round && (
                       <span className="chip">round {v.at_lab_round} at the lab</span>
                     )}
@@ -165,6 +175,11 @@ export default function Home({ epoch }) {
                   <b>{p.title}</b>
                   <span className="tiny faint">{elapsed(p.updated)}</span>
                 </div>
+                {meta.describe(p.id) && (
+                  <p className="small muted" style={{ margin: "5px 0 0" }}>
+                    {meta.describe(p.id)}
+                  </p>
+                )}
               </a>
             ))}
           </div>

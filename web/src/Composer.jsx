@@ -18,7 +18,8 @@
 //
 // The suggestions are presented as the host presents a choice -- `Choices`
 // -- until the session's first ask or a skip, and a toggle brings them back.
-// The model picker is wired: the function accepts exactly these two ids.
+// The model picker is wired: the function accepts exactly these two ids. It
+// is the only control under the box: nothing is drawn here that does not work.
 
 import { useRef, useState } from "react";
 import Choices from "./Choices.jsx";
@@ -33,7 +34,8 @@ export default function Composer({
   // project's state changes what there is to suggest -- a round comes back,
   // a round flags -- because that is a new reason rather than the old one
   // repeated. Closed by hand until then.
-  const signature = suggestions.map((s) => `${s.key}:${s.round ?? ""}`).join(",");
+  const signature = suggestions
+    .map((s) => `${s.key}:${s.round ?? ""}:${s.state ?? ""}`).join(",");
   const [shown, setShown] = useState(null);
   const at = useRef(signature);
   if (at.current !== signature) {
@@ -56,7 +58,7 @@ export default function Composer({
   };
 
   const hint = canSend
-    ? placeholder || "Ask anything — @ for artifacts, # for sessions, / for skills, ⌘K to search…"
+    ? placeholder || "Ask anything…"
     : `Live session unavailable — ${(live && live.reason) || "no function reachable"}`;
 
   return (
@@ -78,10 +80,6 @@ export default function Composer({
           placeholder={hint}
         />
         <div className="composer-bar">
-          <span className="composer-left">
-            <button className="glyph" disabled title="Attach">+</button>
-            <button className="glyph" disabled title="Tools">⚒</button>
-          </span>
           <span className="composer-right">
             <span className="picker">
               <button className="glyph wide" onClick={() => setPicking(!picking)}>
@@ -101,7 +99,6 @@ export default function Composer({
                 </div>
               )}
             </span>
-            <button className="glyph" disabled title="Dictate">🎙</button>
             <button className="glyph send" onClick={send} disabled={!text.trim() || busy || !canSend}>
               ↑
             </button>

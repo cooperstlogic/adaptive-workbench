@@ -4,7 +4,7 @@
 // signed and verified, tool results answer the calls the model made, the
 // proposal reaches record_decision.py -- without spending money or needing a
 // key on the machine that runs it. So the function can be told, by an
-// environment variable Netlify never sets, to take its model turns from a
+// environment variable the site never sets, to take its model turns from a
 // script instead of the API: the committed record's own sequence of tests,
 // as the same SDK-shaped stream of events the real client would produce.
 //

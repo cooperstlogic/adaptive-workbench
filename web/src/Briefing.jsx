@@ -19,7 +19,7 @@
 import { Badge, Empty, SYNTHETIC_TIP, Trace, n, signed } from "./lib.jsx";
 
 /** One number, with the function behind it attached. */
-function Fig({ fig, onTrace, digits = 3 }) {
+export function Fig({ fig, onTrace, digits = 3 }) {
   if (!fig || fig.value === null || fig.value === undefined) return <span>—</span>;
   const body = `${digits === 0 ? fig.value : Number(fig.value).toFixed(digits)}${
     fig.unit ? ` ${fig.unit}` : ""}`;

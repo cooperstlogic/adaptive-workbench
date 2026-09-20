@@ -12,7 +12,7 @@ import {
 
 export const TABS = ["Batch", "Decision", "Progress", "Objectives", "Notebook"];
 
-export default function Panel({ tab, setTab, ctx }) {
+export default function Panel({ tab, setTab, ctx, onClose }) {
   // One scroll container serves every tab; a new tab starts at its top.
   const body = useRef(null);
   useEffect(() => { if (body.current) body.current.scrollTop = 0; }, [tab]);
@@ -26,6 +26,12 @@ export default function Panel({ tab, setTab, ctx }) {
             {t === "Decision" && ctx.decision?.status === "open" && " ●"}
           </button>
         ))}
+        {/* Only when the panel is a sheet: a column beside the conversation
+            is closed from the title bar, not from inside itself. */}
+        {onClose && (
+          <button className="panel-close" title="Close" aria-label="Close the artifact panel"
+                  onClick={onClose}>✕</button>
+        )}
       </div>
       <div className="panel-body" role="tabpanel" ref={body}>
         {tab === "Batch" && <BatchTab ctx={ctx} />}
@@ -452,29 +458,53 @@ function ObjectivesTab({ ctx }) {
 }
 
 /** The template's validation: the evaluator's benchmark, drawn where the
- *  template is described and nowhere near a project's own line. */
+ *  template is described and nowhere near a project's own line.
+ *
+ *  It used to open on the word "Validation" and a chart running to round 6,
+ *  which leaves a reader to guess whose campaign they are looking at and what
+ *  would have counted as failing. Both answers were already in campaign.json
+ *  -- `gate.criterion` is the question the run was pre-registered to answer
+ *  and `threshold_provenance` says where the line came from -- so the card
+ *  now reads them out rather than leaving the chart to speak for itself. */
 export function Validation({ campaign }) {
   if (!campaign) return null;
   const g = campaign.summary.guided;
   const r = campaign.summary.random;
+  const gate = campaign.gate;
   return (
     <>
-      <h4>Validation</h4>
+      <div className="spread">
+        <h4>Validation</h4>
+        <span className="tag-syn" title={campaign.synthetic_note}>synthetic</span>
+      </div>
+      <p className="small muted" style={{ margin: "4px 0 0" }}>
+        This template's benchmark, not a project's data: {campaign.n_seeds} paired seeds
+        per arm of a {campaign.n_rounds}-round campaign, run by{" "}
+        <span className="mono">simulate_campaign.py</span> on a landscape whose true values
+        it is allowed to read.
+      </p>
       <ProofChart campaign={campaign} />
       <KV rows={[
-        ["benchmark", `${campaign.n_seeds} paired seeds per arm, ${campaign.n_rounds} rounds, `
-          + "synthetic landscape"],
-        ["threshold", <span className="num">{n(campaign.threshold_pkd, 3)} pKD</span>],
+        ["criterion", gate.criterion],
+        ["threshold", <span>
+          <span className="num">{n(campaign.threshold_pkd, 3)} pKD</span>
+          <span className="tiny faint" style={{ display: "block" }}>
+            {campaign.threshold_provenance}
+          </span>
+        </span>],
         ["rounds to threshold", <span>
           guided <span className="num">{n(g.mean_rounds_to_threshold, 2)}</span> mean,{" "}
           random <span className="num">{n(r.mean_rounds_to_threshold, 2)}</span> mean
         </span>],
         ["paired sign test", <span>
-          {campaign.gate.paired_sign_test.wins} wins, {campaign.gate.paired_sign_test.losses}{" "}
-          losses, {campaign.gate.paired_sign_test.ties} ties · p ={" "}
-          <span className="num">{n(campaign.gate.paired_sign_test.p_value, 4)}</span>
+          {gate.paired_sign_test.wins} wins, {gate.paired_sign_test.losses}{" "}
+          losses, {gate.paired_sign_test.ties} ties · p ={" "}
+          <span className="num">{n(gate.paired_sign_test.p_value, 4)}</span>
         </span>],
-        ["bands separate at rounds", campaign.gate.rounds_where_bands_separate.join(", ")],
+        ["bands separate at rounds", gate.rounds_where_bands_separate.join(", ")],
+        ["result", <Badge kind={gate.passed ? "attn" : "flag"}>
+          {gate.passed ? "passed" : "did not pass"}
+        </Badge>],
       ]} />
     </>
   );

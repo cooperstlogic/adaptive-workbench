@@ -20,9 +20,9 @@ const WEB = dirname(HERE);
 const json = process.argv.includes("--json");
 const say = (...a) => { if (!json) console.log(...a); };
 
-const fn = await import(pathToFileURL(join(WEB, "netlify", "functions", "ask.mjs")));
+const fn = await import(pathToFileURL(join(WEB, "function", "ask.mjs")));
 const { default: handler, validate, buildRequest, sign } = fn;
-const post = (body) => handler(new Request("http://harness/.netlify/functions/ask", {
+const post = (body) => handler(new Request("http://harness/api/ask", {
   method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
 }), { ip: "harness" });
 
@@ -34,7 +34,7 @@ const ctx = {
 };
 
 const report = {};
-const probe = await (await handler(new Request("http://harness/.netlify/functions/ask"),
+const probe = await (await handler(new Request("http://harness/api/ask"),
                                    { ip: "harness" })).json();
 report.probe = { live: probe.live, reason: probe.reason, upstream: probe.upstream,
                  skill_sha256: probe.skill.sha256, models: probe.models, effort: probe.effort };
@@ -109,6 +109,20 @@ const req = buildRequest(validate({ kind: "diagnose", context: ctx, turn: { type
 const ask = buildRequest(validate({ kind: "ask", context: ctx,
                                     turn: { type: "question", text: "where are we?" } }));
 const chat = buildRequest(validate({ kind: "chat", turn: { type: "question", text: "hi" } }));
+// A project with no template has whatever its maker typed into the New
+// project dialog standing where a declaration would be. It reaches the seat
+// as a second system block on a chat, quoted, and the function refuses it on
+// any kind that has a template: there the instructions are the template.
+const INSTRUCTIONS = "Use SI units and tell me when the evidence is weak.";
+const instructed = buildRequest(validate({
+  kind: "chat", instructions: INSTRUCTIONS, turn: { type: "question", text: "hi" } }));
+let instructionsOnTemplated = null;
+try {
+  validate({ kind: "ask", context: ctx, instructions: INSTRUCTIONS,
+             turn: { type: "question", text: "hi" } });
+} catch (err) {
+  instructionsOnTemplated = err.status;
+}
 report.request = {
   model: req.model, max_tokens: req.max_tokens, effort: req.output_config.effort,
   thinking: req.thinking.type, betas: req.betas, fallbacks: req.fallbacks,
@@ -122,6 +136,10 @@ report.request = {
   context_cached: !!(req.system.at(-1).cache_control),
   first_user_text: req.messages[0].content[0].text,
   chat_system_blocks: chat.system.length,
+  chat_instructed_blocks: instructed.system.length,
+  chat_instructions_quoted: instructed.system.at(-1).text.includes(JSON.stringify(INSTRUCTIONS)),
+  chat_instructed_tools: instructed.tools.map((t) => t.name),
+  instructions_on_templated: instructionsOnTemplated,
 };
 say(`request           ${req.model} effort ${req.output_config.effort}, thinking ${req.thinking.type}, `
   + `max_tokens ${req.max_tokens}, fallbacks ${req.fallbacks} under ${req.betas.join(",")}`);
@@ -138,7 +156,66 @@ report.haiku_request = {
 };
 say(`haiku             ${haiku.model}: no thinking, no effort, `
   + `fallbacks ${haiku.fallbacks}, same ${haiku.tools.length} tools and ${haiku.system.length} system blocks`);
+
+// The access code (decision 160). With one configured, the probe says the
+// seat is closed and why, a call without the code is refused before
+// validation could spend anything, and a call with it goes as far as the key.
+process.env.WORKBENCH_ACCESS_CODE = "harness-code";
+const withCode = (code, body) => handler(new Request("http://harness/api/ask", {
+  method: body ? "POST" : "GET",
+  headers: { "content-type": "application/json", ...(code ? { "x-workbench-code": code } : {}) },
+  body: body ? JSON.stringify(body) : undefined,
+}), { ip: "harness" });
+const chatBody = { kind: "chat", turn: { type: "question", text: "hello" } };
+const [pNone, pWrong, pRight] = await Promise.all(
+  [null, "wrong", "harness-code"].map((c) => withCode(c).then((r) => r.json())));
+const [cNone, cWrong, cRight] = await Promise.all(
+  [null, "wrong", "harness-code"].map((c) => withCode(c, chatBody).then((r) => r.status)));
+report.access_code = {
+  probe_without: { live: pNone.live, reason: pNone.reason, code_required: pNone.code_required },
+  probe_wrong: { live: pWrong.live, reason: pWrong.reason },
+  probe_right: { live: pRight.live, reason: pRight.reason },
+  call_without: cNone, call_wrong: cWrong, call_right: cRight,
+};
+delete process.env.WORKBENCH_ACCESS_CODE;
+say(`access code       probe ${pNone.reason} / ${pWrong.reason} / ${pRight.reason}; `
+  + `call ${cNone} without, ${cWrong} wrong, ${cRight} right`);
+
+// The reservation (decision 161). A call takes its maximum out of the day
+// before it is made, and an increment that overshoots is rolled back: of
+// eight calls arriving at once against a $1 cap, exactly three at $0.30 get
+// through, however they interleave. Settling replaces the reservation with
+// the cost; the in-flight count is a throttle with its own cap; a release
+// gives everything back. The memory store here is one process, so this is
+// the logic and not Redis's atomicity -- which is Redis's to keep.
+const budget = await import(pathToFileURL(join(WEB, "function", "lib", "budget.mjs")));
+Object.assign(process.env, { WORKBENCH_DAILY_CAP_USD: "1", WORKBENCH_IP_CAP: "100",
+                             WORKBENCH_IN_FLIGHT_CAP: "10" });
+const burst = await Promise.all(Array.from({ length: 8 }, () => budget.reserve("reserve-a", 0.3)));
+const admitted = burst.filter((r) => r.ok);
+const settled = [];
+for (const r of admitted) settled.push(await budget.settle(r.ticket, 0.05));
+const after = settled.at(-1);
+process.env.WORKBENCH_IN_FLIGHT_CAP = "2";
+const crowd = await Promise.all(Array.from({ length: 5 }, () => budget.reserve("reserve-b", 0.01)));
+const seated = crowd.filter((r) => r.ok);
+for (const r of seated) await budget.release(r.ticket);
+const released = await budget.check("reserve-b");
+for (const k of ["WORKBENCH_DAILY_CAP_USD", "WORKBENCH_IP_CAP", "WORKBENCH_IN_FLIGHT_CAP"]) delete process.env[k];
+report.reservation = {
+  burst_admitted: admitted.length, burst_refused: burst.length - admitted.length,
+  burst_reason: burst.find((r) => !r.ok)?.reason,
+  spent_after_settle: after.spent_usd, in_flight_after_settle: after.in_flight,
+  crowd_seated: seated.length, crowd_reason: crowd.find((r) => !r.ok)?.reason,
+  spent_after_release: released.budget.spent_usd, in_flight_after_release: released.budget.in_flight,
+  calls_after_release: released.budget.calls_today,
+};
+say(`reservation       ${admitted.length} of 8 admitted at $0.30 under a $1 cap; settled to `
+  + `$${after.spent_usd}; ${seated.length} of 5 seated under an in-flight cap of 2; released to `
+  + `$${released.budget.spent_usd}, ${released.budget.in_flight} in flight`);
 say(`tools             diagnose: ${report.request.tools.join(", ")}; ask: ${report.request.ask_tools.join(", ")}; chat: none`);
 say(`system            ${req.system.length} blocks, skill present, context block cached`);
+say(`instructions      a chat is ${chat.system.length} block, ${instructed.system.length} with a `
+  + `blank project's own; ${instructionsOnTemplated} on a templated one`);
 
 if (json) process.stdout.write(JSON.stringify(report));
