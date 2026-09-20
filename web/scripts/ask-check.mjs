@@ -109,6 +109,20 @@ const req = buildRequest(validate({ kind: "diagnose", context: ctx, turn: { type
 const ask = buildRequest(validate({ kind: "ask", context: ctx,
                                     turn: { type: "question", text: "where are we?" } }));
 const chat = buildRequest(validate({ kind: "chat", turn: { type: "question", text: "hi" } }));
+// A project with no template has whatever its maker typed into the New
+// project dialog standing where a declaration would be. It reaches the seat
+// as a second system block on a chat, quoted, and the function refuses it on
+// any kind that has a template: there the instructions are the template.
+const INSTRUCTIONS = "Use SI units and tell me when the evidence is weak.";
+const instructed = buildRequest(validate({
+  kind: "chat", instructions: INSTRUCTIONS, turn: { type: "question", text: "hi" } }));
+let instructionsOnTemplated = null;
+try {
+  validate({ kind: "ask", context: ctx, instructions: INSTRUCTIONS,
+             turn: { type: "question", text: "hi" } });
+} catch (err) {
+  instructionsOnTemplated = err.status;
+}
 report.request = {
   model: req.model, max_tokens: req.max_tokens, effort: req.output_config.effort,
   thinking: req.thinking.type, betas: req.betas, fallbacks: req.fallbacks,
@@ -122,6 +136,10 @@ report.request = {
   context_cached: !!(req.system.at(-1).cache_control),
   first_user_text: req.messages[0].content[0].text,
   chat_system_blocks: chat.system.length,
+  chat_instructed_blocks: instructed.system.length,
+  chat_instructions_quoted: instructed.system.at(-1).text.includes(JSON.stringify(INSTRUCTIONS)),
+  chat_instructed_tools: instructed.tools.map((t) => t.name),
+  instructions_on_templated: instructionsOnTemplated,
 };
 say(`request           ${req.model} effort ${req.output_config.effort}, thinking ${req.thinking.type}, `
   + `max_tokens ${req.max_tokens}, fallbacks ${req.fallbacks} under ${req.betas.join(",")}`);
@@ -197,5 +215,7 @@ say(`reservation       ${admitted.length} of 8 admitted at $0.30 under a $1 cap;
   + `$${released.budget.spent_usd}, ${released.budget.in_flight} in flight`);
 say(`tools             diagnose: ${report.request.tools.join(", ")}; ask: ${report.request.ask_tools.join(", ")}; chat: none`);
 say(`system            ${req.system.length} blocks, skill present, context block cached`);
+say(`instructions      a chat is ${chat.system.length} block, ${instructed.system.length} with a `
+  + `blank project's own; ${instructionsOnTemplated} on a templated one`);
 
 if (json) process.stdout.write(JSON.stringify(report));

@@ -22,6 +22,7 @@ import Prose from "./Prose.jsx";
 import Turn from "./Turn.jsx";
 import * as agent from "./agent.js";
 import * as blank from "./blank.js";
+import * as meta from "./meta.js";
 import * as router from "./router.js";
 import { CentreHead, MODEL_LABEL, elapsed } from "./lib.jsx";
 
@@ -92,6 +93,7 @@ export default function BlankProject({ route, project, bump, live, reprobe, mode
     try {
       await agent.runLive({
         kind: "chat", question: text, model: chosenModel || model, call: () => null,
+        instructions: meta.instructionsFor(target) || null,
         transcript: transcripts.current.get(thread) || null,
         emit: () => { if (inFlight.current) setStreaming({ ...inFlight.current }); },
         save: keep,
@@ -129,6 +131,13 @@ export default function BlankProject({ route, project, bump, live, reprobe, mode
                                                        id: "new" })}>
             <span className="ic">✦</span><span>New</span>
           </a>
+
+          {meta.instructionsFor(pid) && (
+            <div className="rail-group hide-narrow">
+              <div className="rail-label">Instructions for Claude</div>
+              <p className="tiny faint rail-note">{meta.instructionsFor(pid)}</p>
+            </div>
+          )}
 
           <div className="rail-group hide-narrow">
             <div className="rail-label">Sessions</div>

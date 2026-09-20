@@ -20,14 +20,21 @@ the link's access code (160). The host is Vercel, not Netlify: the proposal turn
 to 110 seconds and Netlify's streaming limit is a hard 60. **Decisions 162 to 164 filled
 three empty rooms**: a round that ran before this browser opened reads back out of its own
 artifacts instead of opening blank, the laboratory's clock is a control marked
-*simulated*, and the seat can ask the registry itself. **What phase 8 still owes is the
-public README**, and then phase 9's demo script. Full status, results and commands are
-in `README.md`; every settled choice and its reasoning is in `DECISIONS.md`. Read both
+*simulated*, and the seat can ask the registry itself. **Decisions 165 to 171 finished the
+shell**: a settled round has no open question over its composer, both the rail and the
+artifact panel drag and the controls that did nothing are gone, and `+ New project` is
+Claude Science's dialog with one control added above its three fields — *from a template*
+or *blank*. Blank means the instructions somebody typed reach the seat as a second system
+block; from a template hands off to the template library, whose configure screen is the
+whole locked declaration, the interpreter and the skill and both connectors and the two
+sandbox grants nothing declares included, each row naming the file it was read from.
+**What phase 8 still owes is the public README**, and then phase 9's demo script. Full
+status, results and commands are in `README.md`; every settled choice and its reasoning is in `DECISIONS.md`. Read both
 before writing code, and read `skills/adaptive-optimization/SKILL.md` before touching
 anything in the round loop.
 
 - Use `.venv/bin/python`, never `python3` — the system interpreter has no numpy.
-- Run `.venv/bin/python check.py` before and after any phase. It verifies 196 invariants
+- Run `.venv/bin/python check.py` before and after any phase. It verifies 198 invariants
   that correspond to rules here and numbers in `DECISIONS.md`; a failure means the state
   drifted from what is documented. It takes about forty seconds, because it runs two full
   six-round campaigns through the CLI, checks them against the evaluator, drives both

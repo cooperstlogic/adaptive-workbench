@@ -11,8 +11,8 @@
 // page.
 //
 //   #/                        home
-//   #/new                     the new-project sheet
-//   #/templates               the template gallery
+//   #/new                     home, with the New project dialog over it
+//   #/templates               the template library
 //   #/p/<id>                  a project, which redirects to where you left off
 //   #/p/<id>/s/new            a new, empty session
 //   #/p/<id>/s/<session-id>   a session -- a round, or an ad-hoc one

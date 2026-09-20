@@ -177,12 +177,16 @@ const MAX_TURNS = 24;
  * record with a more_evidence_requested ruling. `transcript` is the
  * session's signed conversation so far and `pending` the tool result
  * answering the proposal it ended on, if it did; both come off the previous
- * turn's `transcript` and `pending`. `emit` receives every step as it
- * happens; `save` receives the accumulated turn whenever it changes.
+ * turn's `transcript` and `pending`. `instructions` is a blank project's own
+ * prose brief, and only a chat carries one -- the function refuses it on any
+ * other kind, because a templated project's instructions are its template.
+ * `emit` receives every step as it happens; `save` receives the accumulated
+ * turn whenever it changes.
  */
 export async function runLive({
   kind, project, round, session, question, model, ruling, transcript = null, pending = null,
-  call, emit = () => {}, save = () => {}, fetchImpl = globalThis.fetch, base = "",
+  instructions = null, call, emit = () => {}, save = () => {},
+  fetchImpl = globalThis.fetch, base = "",
   id = `live-${Date.now()}`, at = new Date().toISOString(),
 }) {
   // `task` and not `kind`: the driver stamps `kind: "agent"` on every stored
@@ -216,7 +220,8 @@ export async function runLive({
     const res = await fetchImpl(`${base}${ENDPOINT}`, {
       method: "POST",
       headers: headers({ "content-type": "application/json" }),
-      body: JSON.stringify({ kind, model, context, transcript: signed, turn: nextTurn }),
+      body: JSON.stringify({ kind, model, context, transcript: signed, turn: nextTurn,
+                             ...(instructions ? { instructions } : {}) }),
     });
     if (!res.ok) {
       let why = `${res.status}`;

@@ -1186,6 +1186,16 @@ def main():
               ("core/diagnostics.py", "data/oracle.py", "lims.py",
                "skills/adaptive-optimization/scripts/import_round.py")),
           "core/, data/, lims.py and the scripts, where dirname(__file__) expects them")
+    reqs = schema.read_json(os.path.join(OUT, "reference", "requirements.json"))
+    server_names = ", ".join(sv["name"] for sv in reqs["servers"])
+    undeclared = [nd for nd in reqs["needs"] if nd["declared_in"] == "nothing declares this"]
+    check("the configure screen's connector row is the server list it draws underneath",
+          any(nd["value"] == server_names for nd in reqs["needs"])
+          and len(reqs["servers"]) == 2 and len(undeclared) == 2
+          and all(sv["tools"] for sv in reqs["servers"]),
+          "%s, and the %d rows nothing declares are %s -- gap 109, in the same locked "
+          "table as the objectives" % (server_names, len(undeclared),
+                                       " and ".join(nd["value"] for nd in undeclared)))
     check("nothing under web/src/ is Python, and no driver logic hides in the page",
           not [f for _d, _s, fs in os.walk(os.path.join(REPO, "web", "src"))
                for f in fs if f.endswith(".py")],
@@ -1700,6 +1710,15 @@ def main():
                   and rq["run_diagnostic_strict"],
                   "two reads, the registry, and one way to hand back; run_diagnostic's "
                   "enum is the context's permitted list, strict; a chat gets no tools")
+            check("a blank project's own instructions reach the seat, and a templated "
+                  "project cannot have any",
+                  rq["chat_system_blocks"] == 1 and rq["chat_instructed_blocks"] == 2
+                  and rq["chat_instructions_quoted"]
+                  and rq["chat_instructed_tools"] == []
+                  and rq["instructions_on_templated"] == 400,
+                  "what someone typed into the New project dialog is a second system "
+                  "block on a chat, quoted and toolless; on any kind with a template it "
+                  "is a 400, because there the instructions are the template")
             check("its system prompt is the skill itself",
                   rq["system_has_skill"] and rq["system_blocks"] == 3
                   and fnr["probe"]["skill_sha256"] == hashlib.sha256(

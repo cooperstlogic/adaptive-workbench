@@ -66,6 +66,7 @@ export const MAX_TOKENS = { diagnose: 16000, ask: 4096, chat: 2048 };
 const LIMITS = {
   context_bytes: 400_000, question_chars: 4_000, note_chars: 4_000,
   tool_results: 8, tool_result_chars: 40_000, transcript_messages: 80,
+  instructions_chars: 4_000,
 };
 
 const TESTS = ["offset_from_controls", "residual_by_plate", "residual_by_mutation_class",
@@ -93,12 +94,27 @@ How to work in this seat. Before each tool call, say in one or two plain sentenc
 
 export const skillFingerprint = () => SKILL_SHA256;
 
-export function systemFor(kind, context) {
+// A project with no template has one thing standing where a declaration
+// would be: whatever its maker typed into the New project dialog. It is
+// prose, it is not enforced anywhere, and it is the whole of what this seat
+// knows about the work -- which is the comparison the blank project exists to
+// draw. It is quoted rather than merged into the prompt, because it is the
+// person's text and not the function's.
+export function systemFor(kind, context, instructions) {
   if (kind === "chat") {
-    return [{
+    const blocks = [{
       type: "text",
       text: "You are Claude, in a project session of Shannon Science, a layer over Claude Science. This project has no template: nothing has declared its objectives, its constraints, its model recipes or its diagnostics, and there is no state on disk to read. Answer plainly and briefly, and if the person asks what the project can do, say what has not been declared.",
     }];
+    if (instructions) {
+      blocks.push({
+        type: "text",
+        text: "The person who made this project wrote these instructions for every session "
+          + "in it. They are their words, not a declaration this workbench enforces:\n\n"
+          + JSON.stringify(instructions),
+      });
+    }
+    return blocks;
   }
   return [
     { type: "text", text: PREAMBLE },
@@ -285,6 +301,16 @@ export function validate(body) {
   const model = body.model || DEFAULT_MODEL;
   if (!MODELS.includes(model)) throw new Refused(400, `model is one of ${MODELS.join(", ")}`);
 
+  let instructions = null;
+  if (kind === "chat" && body.instructions !== undefined && body.instructions !== null) {
+    if (!isStr(body.instructions, LIMITS.instructions_chars)) {
+      throw new Refused(400, `instructions is a string of at most ${LIMITS.instructions_chars} characters`);
+    }
+    instructions = body.instructions.trim() || null;
+  } else if (body.instructions) {
+    throw new Refused(400, "instructions belong to a project with no template");
+  }
+
   let context = null;
   if (kind !== "chat") {
     context = body.context;
@@ -380,12 +406,12 @@ export function validate(body) {
     userMessage = { role: "user", content: [...answers, { type: "text", text }] };
   }
 
-  return { kind, model, context, messages: [...messages, userMessage] };
+  return { kind, model, context, instructions, messages: [...messages, userMessage] };
 }
 
 // --- the request ----------------------------------------------------------
 
-export function buildRequest({ kind, model, context, messages }) {
+export function buildRequest({ kind, model, context, instructions, messages }) {
   const permitted = context ? context.tests.permitted : [];
   return {
     model,
@@ -395,7 +421,7 @@ export function buildRequest({ kind, model, context, messages }) {
       : { thinking: { type: "adaptive" }, output_config: { effort: EFFORT } }),
     betas: [FALLBACK_BETA],
     fallbacks: "default",
-    system: systemFor(kind, context),
+    system: systemFor(kind, context, instructions),
     tools: toolsFor(kind, permitted),
     messages,
   };

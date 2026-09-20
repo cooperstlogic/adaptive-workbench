@@ -1,4 +1,4 @@
-// Starting a project: blank, or from a template.
+// The template library, and the configure screen a chosen template opens.
 //
 // **The configuration screen is mostly locked, and that is the argument
 // rather than a shortcut.** Every locked row is read out of `template.json`,
@@ -8,21 +8,28 @@
 // batch policy — so what a project means does not depend on how well somebody
 // phrased a request, and two people who instantiate it get the same project.
 //
+// **The declaration runs past the template file.** Three rows below it are
+// the plugin's — the interpreter, the skill and the two stdio connectors with
+// every tool each one exposes and the ones it withholds — and two more are
+// the sandbox grants that no manifest anywhere can express. They used to be a
+// separate table in the margin, which read as an audit finding parked beside
+// a product screen. In the same locked list as the objectives they are the
+// same sentence continued: this is what the project is, this is what it needs
+// to run, and this is the file each line came out of. The two rows with
+// nothing in that column are gap 109.
+//
 // **Creating it runs three real commands in Pyodide.** `init_project.py` is
 // the CLI's own entry point, mirrored into the bundle, and round 1 then goes
 // through `generate_candidates.py` and `select_batch.py` like every other
 // round. A project instantiated here is byte-identical to one instantiated in
 // a terminal — check.py compares them file by file, which is decision 108 in
-// the form a machine can check.
-//
-// **A blank project is the control arm.** It never touches Python, because
-// there is nothing for `project.load()` to read: no objectives, no
-// constraints, no batch policy. It opens on an empty chat. Putting the two
-// side by side, both created live in the same interface, is the difference
-// between asserting the gap and showing it.
+// the form a machine can check. The name and the description come from the
+// New project dialog when it sent someone here; the description stays in this
+// browser, because nothing in the round loop reads it and project.json has to
+// stay byte-for-byte what the CLI writes.
 
 import { useEffect, useMemo, useState } from "react";
-import * as blank from "./blank.js";
+import * as meta from "./meta.js";
 import * as router from "./router.js";
 import * as rt from "./runtime.js";
 import { Validation } from "./Panel.jsx";
@@ -54,8 +61,6 @@ function declaration(tpl) {
     ["Objectives", tpl.objectives.map((o) => `${o.name} ${
       o.direction === "maximize" ? "↑" : "↓"}${
       o.threshold !== undefined ? ` ≤ ${o.threshold}` : ""}`).join(" · "), "template.json"],
-    ["Source data", "Registry (LIMS) · Bioprovider — both connected",
-      ".claude-plugin/plugin.json"],
     ["Assay", "SPR · 24-well plates, 2 per round", "mock"],
     ["Model selection", `${tpl.model_recipes.join(" + ")} — competed, lowest held-out `
       + "NLPD wins", "template.json"],
@@ -67,13 +72,43 @@ function declaration(tpl) {
   ];
 }
 
+/** Where a row came from, in the third column: a path, or the finding. */
+function Source({ from }) {
+  if (from === "nothing declares this") return <Badge kind="flag">nothing declares this</Badge>;
+  if (from === "mock") return <span className="tiny faint">—</span>;
+  return <span className="mono tiny faint" title={`read from ${from}`}>{from}</span>;
+}
+
+/** One connector: its transport, every tool it exposes, and the ones it does
+ *  not. The withheld list is read out of registry_server.py by bundle.py. */
+function Server({ server }) {
+  return (
+    <div className="server">
+      <div className="row" style={{ gap: 7 }}>
+        <b className="mono">{server.name}</b>
+        <Badge>{server.transport}</Badge>
+        <span className="tiny faint">{server.tools.length} tools</span>
+      </div>
+      <div className="chain">
+        {server.tools.map((t) => <span key={t} className="chip mono">{t}</span>)}
+      </div>
+      {server.withheld.length > 0 && (
+        <p className="tiny faint" style={{ margin: "6px 0 0" }}>
+          Not exposed: <span className="mono">{server.withheld.join(", ")}</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function NewProject({ bump, campaign }) {
+  const draft = useMemo(() => meta.take() || {}, []);
   const [templates, setTemplates] = useState(null);
   const [reqs, setReqs] = useState(null);
   const [picked, setPicked] = useState(null);
-  const [name, setName] = useState("trastuzumab-affinity-2");
+  const [name, setName] = useState(draft.name || "trastuzumab-affinity-2");
+  const [description, setDescription] = useState(draft.description || "");
   const [team, setTeam] = useState("d.webster");
-  const [blankTitle, setBlankTitle] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [steps, setSteps] = useState([]);
@@ -88,9 +123,10 @@ export default function NewProject({ bump, campaign }) {
       .then((r) => r.json()).then(setReqs).catch(() => {});
   }, []);
 
-  const live = useMemo(
-    () => (templates || []).filter((t) => t.status !== "stub"), [templates]);
   const chosen = (templates || []).find((t) => t.id === picked) || null;
+  // Which need is the connectors, without naming them here: the row whose
+  // value is the server list itself. check.py holds the two together.
+  const connectors = (reqs ? reqs.servers : []).map((s) => s.name).join(", ");
 
   const createTemplated = async () => {
     setBusy(true);
@@ -103,6 +139,7 @@ export default function NewProject({ bump, campaign }) {
         created: new Date().toISOString(),
       });
       setSteps((made.view.log || []).filter((e) => e.round === null || e.round === 1));
+      meta.put(made.id, { description });
       rt.saveOverlay();
       bump();
       router.go({ kind: "project", project: made.id });
@@ -119,6 +156,7 @@ export default function NewProject({ bump, campaign }) {
   const removeProject = (id) => {
     try {
       rt.call("delete_project", { project: id });
+      meta.remove(id);
       rt.saveOverlay();
       bump();
       setError(null);
@@ -127,56 +165,50 @@ export default function NewProject({ bump, campaign }) {
     }
   };
 
-  const createBlank = () => {
-    const p = blank.create(blankTitle.trim() || "Untitled project");
-    bump();
-    router.go({ kind: "project", project: p.id });
-  };
-
   return (
     <div className="home">
       <header className="home-head">
         <div>
           <a className="tiny faint" href="#/">← {APP}</a>
-          <h1 style={{ fontSize: 24, marginTop: 4 }}>New project</h1>
+          <h1 style={{ fontSize: 24, marginTop: 4 }}>Template library</h1>
         </div>
+        <a className="btn small" href={router.href({ kind: "new" })}>+ New project</a>
       </header>
 
       {error && <div className="err" style={{ marginBottom: 16 }}>{error}</div>}
 
-      <div className="new-grid">
-        <section>
-          <h3 className="home-h">Start from a template</h3>
-          {!templates ? <Empty>loading…</Empty> : (
-            <div className="tiles" style={{ marginTop: 4 }}>
-              {templates.map((t) => {
-                const stub = t.status === "stub";
-                return (
-                  <button key={t.id} className="tile" aria-disabled={stub}
-                          aria-pressed={picked === t.id}
-                          onClick={() => !stub && setPicked(picked === t.id ? null : t.id)}>
-                    <div className="spread">
-                      <b>{templateTitle(t)}</b>
-                      {stub ? <Badge kind="flag">stub</Badge> : <Badge>v{t.version}</Badge>}
+      <div className="new-single">
+        {!templates ? <Empty>loading…</Empty> : (
+          <div className="tiles">
+            {templates.map((t) => {
+              const stub = t.status === "stub";
+              return (
+                <button key={t.id} className="tile" aria-disabled={stub}
+                        aria-pressed={picked === t.id}
+                        onClick={() => !stub && setPicked(picked === t.id ? null : t.id)}>
+                  <div className="spread">
+                    <b>{templateTitle(t)}</b>
+                    {stub ? <Badge kind="flag">stub</Badge> : <Badge>v{t.version}</Badge>}
+                  </div>
+                  <p className="small muted" style={{ margin: "6px 0 0" }}>{t.description}</p>
+                  {!stub && (
+                    <div className="chain">
+                      <span className="chip">{t.objectives.length} objectives</span>
+                      <span className="chip">≤{t.constraints.max_mutations} mutations</span>
+                      <span className="chip">{t.batch.size} wells</span>
+                      <span className="chip">{t.diagnostics.length} diagnostics</span>
                     </div>
-                    <p className="small muted" style={{ margin: "6px 0 0" }}>{t.description}</p>
-                    {!stub && (
-                      <div className="chain">
-                        <span className="chip">{t.objectives.length} objectives</span>
-                        <span className="chip">≤{t.constraints.max_mutations} mutations</span>
-                        <span className="chip">{t.batch.size} wells</span>
-                        <span className="chip">{t.diagnostics.length} diagnostics</span>
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
-          {chosen && (
-            <div className="card" style={{ marginTop: 14 }}>
-              <h4>Configure</h4>
+        {chosen && (
+          <div className="card" style={{ marginTop: 14 }}>
+            <h4>Configure</h4>
+            <div className="table-scroll">
               <table className="grid config" style={{ marginTop: 8 }}>
                 <tbody>
                   <tr>
@@ -187,6 +219,32 @@ export default function NewProject({ bump, campaign }) {
                     </td>
                     <td className="r"><Badge>editable</Badge></td>
                   </tr>
+                  <tr>
+                    <td className="k">Description</td>
+                    <td>
+                      <textarea className="field area" rows={2} value={description}
+                                disabled={busy} placeholder="Only to tell projects apart"
+                                onChange={(e) => setDescription(e.target.value)} />
+                    </td>
+                    <td className="r"><Badge>editable</Badge></td>
+                  </tr>
+                  <tr>
+                    <td className="k">Team</td>
+                    <td>
+                      <input className="field" value={team} disabled={busy}
+                             onChange={(e) => setTeam(e.target.value)} />
+                    </td>
+                    <td className="r"><Badge>editable</Badge></td>
+                  </tr>
+
+                  <tr className="sub">
+                    <td colSpan={3}>
+                      <div className="sub-line">
+                        <span>Declared by the template</span>
+                        <span className="mono tiny faint">{chosen.id}</span>
+                      </div>
+                    </td>
+                  </tr>
                   {declaration(chosen).map(([k, v, from]) => (
                     <tr key={k} className="locked">
                       <td className="k">{k}</td>
@@ -196,131 +254,91 @@ export default function NewProject({ bump, campaign }) {
                           <span className="tag-syn" title={MOCK_TIP}>mock</span>
                         )}
                       </td>
-                      <td className="r"><span className="lock" title={`read from ${from}`}>
-                        🔒</span></td>
+                      <td className="r"><Source from={from} /></td>
                     </tr>
                   ))}
-                  <tr>
-                    <td className="k">Team</td>
-                    <td>
-                      <input className="field" value={team} disabled={busy}
-                             onChange={(e) => setTeam(e.target.value)} />
-                    </td>
-                    <td className="r"><Badge>editable</Badge></td>
-                  </tr>
+
+                  {reqs && (
+                    <>
+                      <tr className="sub">
+                        <td colSpan={3}>
+                          <div className="sub-line">
+                            <span>Needed before a round can run</span>
+                            <span className="mono tiny faint">
+                              {reqs.plugin.name} v{reqs.plugin.version}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                      {reqs.needs.map((r) => (
+                        <tr key={r.what} className="locked">
+                          <td className="k">{r.what}</td>
+                          <td>
+                            <span className="mono">{r.value}</span>
+                            {r.value === connectors && (
+                              <div className="servers">
+                                {reqs.servers.map((s) => <Server key={s.name} server={s} />)}
+                              </div>
+                            )}
+                          </td>
+                          <td className="r"><Source from={r.declared_in} /></td>
+                        </tr>
+                      ))}
+                    </>
+                  )}
                 </tbody>
               </table>
-              {campaign && (
-                <div className="card stack" style={{ marginTop: 12, padding: 12 }}>
-                  <Validation campaign={campaign} />
-                </div>
-              )}
-              <div className="card" style={{ marginTop: 12, padding: 12 }}>
-                <p className="tiny faint" style={{ margin: 0 }}>Create runs:</p>
-                <pre className="code" style={{ marginTop: 6 }}>{
+            </div>
+            {campaign && (
+              <div className="card stack" style={{ marginTop: 12, padding: 12 }}>
+                <Validation campaign={campaign} />
+              </div>
+            )}
+            <div className="card" style={{ marginTop: 12, padding: 12 }}>
+              <p className="tiny faint" style={{ margin: 0 }}>Create runs:</p>
+              <pre className="code" style={{ marginTop: 6 }}>{
 `python init_project.py --template ${chosen.id} --name ${name || "<name>"} …
 python skills/adaptive-optimization/scripts/generate_candidates.py --round 1
 python skills/adaptive-optimization/scripts/select_batch.py --round 1`}</pre>
-              </div>
-              <div className="row" style={{ marginTop: 12 }}>
-                <button className="btn primary" disabled={busy || !name.trim()}
-                        onClick={createTemplated}>
-                  {busy ? <span className="busy" /> : null} Create and select round 1
-                </button>
-              </div>
-              {steps.length > 0 && (
-                <div style={{ marginTop: 10 }}>
-                  {steps.map((e) => (
-                    <div key={e.n} className="tool-cmd">{e.command}</div>
-                  ))}
-                </div>
-              )}
             </div>
-          )}
-        </section>
-
-        <section>
-          {mine.length > 0 && (
-            <>
-              <h3 className="home-h">Projects you made here</h3>
-              <div className="card" style={{ padding: 12 }}>
-                {mine.map((p) => (
-                  <div key={p.id} className="spread" style={{ padding: "4px 0" }}>
-                    <span className="small">
-                      <b>{p.id}</b>
-                      <span className="tiny faint"> · {p.n_rounds} round
-                        {p.n_rounds === 1 ? "" : "s"}, {p.n_designs} designs</span>
-                    </span>
-                    <button className="btn small" onClick={() => removeProject(p.id)}>
-                      remove
-                    </button>
-                  </div>
+            <div className="row" style={{ marginTop: 12 }}>
+              <button className="btn primary" disabled={busy || !name.trim()}
+                      onClick={createTemplated}>
+                {busy ? <span className="busy" /> : null} Create and select round 1
+              </button>
+            </div>
+            {steps.length > 0 && (
+              <div style={{ marginTop: 10 }}>
+                {steps.map((e) => (
+                  <div key={e.n} className="tool-cmd">{e.command}</div>
                 ))}
-                <p className="tiny faint" style={{ marginTop: 8, marginBottom: 0 }}>
-                  This browser holds three created projects at a time.
-                </p>
               </div>
-            </>
-          )}
-
-          <h3 className="home-h" style={{ marginTop: mine.length > 0 ? 24 : 0 }}>
-            Or start blank
-          </h3>
-          <div className="card">
-            <p className="small muted" style={{ marginTop: 0 }}>
-              An empty project with no template.
-            </p>
-            <input className="field" placeholder="What is it about?" value={blankTitle}
-                   onChange={(e) => setBlankTitle(e.target.value)} />
-            <button className="btn" style={{ marginTop: 10 }} onClick={createBlank}>
-              Create blank project
-            </button>
+            )}
           </div>
+        )}
 
-          {reqs && live.length > 0 && (
-            <>
-              <h3 className="home-h" style={{ marginTop: 24 }}>
-                What a templated project needs before a round can run
-              </h3>
-              <table className="grid" style={{ marginTop: 4 }}>
-                <thead>
-                  <tr><th>needs</th><th>declared in</th></tr>
-                </thead>
-                <tbody>
-                  {reqs.needs.map((r) => (
-                    <tr key={r.what}>
-                      <td>
-                        {r.what}
-                        <div className="mono tiny faint">{r.value}</div>
-                      </td>
-                      <td className="tiny">
-                        {r.declared_in === "nothing declares this"
-                          ? <Badge kind="flag">nothing declares this</Badge>
-                          : <span className="mono">{r.declared_in}</span>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {reqs.servers.map((s) => (
-                <div key={s.name} className="card" style={{ padding: 12, marginTop: 8 }}>
-                  <div className="spread">
-                    <b className="mono">{s.name}</b>
-                    <Badge>{s.transport}</Badge>
-                  </div>
-                  <div className="chain">
-                    {s.tools.map((t) => <span key={t} className="chip mono">{t}</span>)}
-                  </div>
-                  {s.withheld.length > 0 && (
-                    <p className="tiny faint" style={{ marginTop: 8 }}>
-                      Not exposed: <span className="mono">{s.withheld.join(", ")}</span>
-                    </p>
-                  )}
+        {mine.length > 0 && (
+          <>
+            <h3 className="home-h" style={{ marginTop: 26 }}>Projects you made here</h3>
+            <div className="card" style={{ padding: 12 }}>
+              {mine.map((p) => (
+                <div key={p.id} className="spread" style={{ padding: "4px 0" }}>
+                  <span className="small">
+                    <b>{p.id}</b>
+                    <span className="tiny faint"> · {p.n_rounds} round
+                      {p.n_rounds === 1 ? "" : "s"}, {p.n_designs} designs</span>
+                  </span>
+                  <button className="btn small" onClick={() => removeProject(p.id)}>
+                    remove
+                  </button>
                 </div>
               ))}
-            </>
-          )}
-        </section>
+              <p className="tiny faint" style={{ marginTop: 8, marginBottom: 0 }}>
+                This browser holds three created projects at a time.
+              </p>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
