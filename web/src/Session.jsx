@@ -1,25 +1,34 @@
-// The centre column: a round's session.
+// The centre column for a round session.
 //
-// In Claude Science the centre is a conversation and the rail lists chat
-// threads named after what was asked. Here the centre is still a conversation
-// and the rail still lists sessions -- but a session is a round, and what the
-// conversation produces is a typed decision rather than prose.
+// A session is a unit of work; this is the kind a round starts. What the
+// conversation produces is a typed decision rather than prose, and two things
+// are deliberately visible. The **tool calls are real**: every chip below is
+// a command that ran against your copy of the project in this browser, with
+// the output it printed. And the **ruling is not in the composer**: decisions
+// are buttons, questions are asks.
 //
-// Two things are deliberately visible. The **tool calls are real**: every
-// chip below is a command that ran against your copy of the project in this
-// browser, with the output it printed. And the **ruling is not in the
-// composer**: the composer is here because the host has one, and it is
-// explicitly not where the decision goes.
+// **The round goes to a laboratory on the way through.** Approving signs the
+// batch, submits it and writes the order file the lab would receive — and
+// then stops. Whether the results are back is a separate question, asked
+// under the composer, answered by the registry, and refused the first time
+// with the date it is expected. That is the least believable moment in the
+// old build repaired: approving designs used to produce measured data in one
+// click and about a second, and to an audience who have run assays that
+// undercut everything around it.
 
 import { useState } from "react";
-import { ACTION_LABEL, Badge, Hash, VERBS, n, pct, signed } from "./lib.jsx";
+import Briefing from "./Briefing.jsx";
+import Composer from "./Composer.jsx";
+import Turn from "./Turn.jsx";
+import { ACTION_LABEL, Badge, Hash, VERBS, dayMonth, n, pct, signed } from "./lib.jsx";
 
 function Tool({ entry, defaultOpen }) {
   const [open, setOpen] = useState(!!defaultOpen);
+  const refused = entry.refused;
   return (
-    <div className="tool">
+    <div className={`tool${refused ? " refused" : ""}`}>
       <button className="tool-head" onClick={() => setOpen(!open)}>
-        <span className="tick">{entry.code === 0 ? "●" : "✕"}</span>
+        <span className="tick">{entry.code === 0 ? "●" : refused ? "⊘" : "✕"}</span>
         <span className="grow">
           <span className="small">{entry.label}</span>
           <div className="tool-cmd">{entry.command}</div>
@@ -57,24 +66,11 @@ const DIAGNOSTICS = [
   { test: "calibration_by_region", label: "… --offset bridge", args: { offset: "bridge" } },
 ];
 
-function Turn({ who, children }) {
-  const label = { you: ["Y", "You"], workbench: ["W", "Workbench"],
-                  claude: ["C", "Claude"] }[who];
-  return (
-    <div className="msg">
-      <div className="msg-who">
-        <span className="dot">{label[0]}</span>
-        <span>{label[1]}</span>
-      </div>
-      <div className="msg-body">{children}</div>
-    </div>
-  );
-}
-
-export default function Session({ ctx }) {
+export default function Session({ ctx, stored, suggestions }) {
   const {
-    view, round, roundView, decision, log, busy, error,
-    onApprove, onDiagnose, onDiagnostic, onRule, onAdvance, onContinue, drops,
+    view, round, roundView, decision, log, busy, error, sessionId,
+    onApprove, onDiagnose, onDiagnostic, onRule, onAdvance, onContinue,
+    onAsk, onDownload, drops,
   } = ctx;
   const [verdict, setVerdict] = useState(null);
   const [note, setNote] = useState("");
@@ -82,20 +78,37 @@ export default function Session({ ctx }) {
   const [by, setBy] = useState("d.webster");
 
   const stage = roundView.status;
+  const lab = roundView.lab;
 
-  // Every command this round ran, in the order it ran, split at the two moments
-  // that matter: the proposal and the ruling.
+  // Every command this round ran, in the order it ran, split at the moments
+  // that matter: the submission, the arrival, the proposal, the ruling.
   const mine = log.filter((e) => e.round === round);
+  const submittedAt = mine.find((e) => e.tool === "submit")?.n ?? Infinity;
+  const importedAt = mine.find((e) => e.tool === "import_round")?.n ?? Infinity;
   const proposedAt = mine.find((e) => e.tool === "record_decision")?.n ?? Infinity;
   const ruledAt = mine.find((e) => e.command.includes("--rule"))?.n ?? Infinity;
+
   const selectionSteps = mine.filter((e) =>
-    ["generate_candidates", "select_batch"].includes(e.tool) && e.n < proposedAt
+    ["generate_candidates", "select_batch"].includes(e.tool) && e.n < submittedAt
     && !e.command.includes("--approved-by"));
-  const approvalSteps = mine.filter((e) => e.n < proposedAt
-    && e.tool !== "run_diagnostic" && !selectionSteps.includes(e));
+  const sendSteps = mine.filter((e) => e.n >= submittedAt - 1 && e.n <= submittedAt + 1
+    && ["select_batch", "submit", "export"].includes(e.tool));
+  const waitSteps = mine.filter((e) => e.tool === "status"
+    || (e.tool === "pull" && e.refused));
+  const arriveSteps = mine.filter((e) => e.n >= importedAt - 1 && e.n <= importedAt + 1
+    && ["pull", "import_round", "evaluate_prior"].includes(e.tool) && !e.refused);
   const decisionSteps = mine.filter((e) => e.tool === "run_diagnostic"
     || (e.n >= proposedAt && e.n <= ruledAt));
-  const afterSteps = mine.filter((e) => e.n > ruledAt);
+  const afterSteps = mine.filter((e) => e.n > ruledAt && e.n !== Infinity);
+
+  // Every ask made in this session, read back from it. The one that asked
+  // the laboratory is rendered where the results landed rather than at the
+  // bottom, because that ask *is* the arrival -- it is the call that caused
+  // it. The rest sit at the end of the stream, in the order they were asked.
+  const turns = stored?.turns || [];
+  const arrival = [...turns].reverse().find((t) => t.answer.kind === "arrival"
+    && t.answer.ready);
+  const pending = turns.filter((t) => t !== arrival);
 
   return (
     <div className="centre-inner">
@@ -108,6 +121,7 @@ export default function Session({ ctx }) {
           </p>
         </div>
         {roundView.flagged && <Badge kind="flag">flagged</Badge>}
+        {roundView.at_lab && <Badge kind="attn">at the lab</Badge>}
       </div>
 
       {error && <div className="err" style={{ marginBottom: 14 }}>{error}</div>}
@@ -127,7 +141,9 @@ export default function Session({ ctx }) {
           {selectionSteps.map((e) => <Tool key={e.n} entry={e} />)}
           <p className="small muted">
             Review it in the Batch tab. Strike anything you do not want; the override is
-            recorded with your note by the same script that chose it.
+            recorded with your note by the same script that chose it. Approving submits
+            the batch to the registry and writes the order the lab receives — it does not
+            produce data.
           </p>
           <div className="row" style={{ marginTop: 12 }}>
             <button className="btn primary" disabled={busy} onClick={() => onApprove(by)}>
@@ -142,16 +158,96 @@ export default function Session({ ctx }) {
         </Turn>
       )}
 
-      {approvalSteps.length > 0 && (
+      {sendSteps.length > 0 && (
         <Turn who="workbench">
           <p className="small">
-            Sent to the registry, pulled back, reconciled against the designs we submitted.
+            Signed, submitted, and the order written. The registry minted the construct and
+            sample identifiers and laid the wells out across its plates; the workbench keeps
+            the links and owns nothing about the samples.
           </p>
-          {approvalSteps.map((e) => <Tool key={e.n} entry={e} />)}
+          {sendSteps.map((e) => <Tool key={e.n} entry={e} />)}
+          {roundView.order && (
+            <button className="chip download" onClick={() => onDownload(roundView.order)}>
+              ↓ round_{String(round).padStart(3, "0")}_order.csv
+              <span className="tiny faint">
+                {roundView.submission?.n_samples || 48} rows · no value column
+              </span>
+            </button>
+          )}
+          {roundView.at_lab && (
+            <p style={{ marginTop: 10 }}>
+              Round {round} is <b>at the lab</b>
+              {lab?.expected && <> — submitted {dayMonth(lab.submitted)}, expected{" "}
+                {dayMonth(lab.expected)}</>}. Nothing else happens until the assay reports,
+              and nothing in this project can say what the answer is before it does.
+            </p>
+          )}
+        </Turn>
+      )}
+
+      {waitSteps.length > 0 && (
+        <Turn who="workbench">
+          <p className="small">
+            Asked the registry. It answered, and it refused the pull — which is the
+            boundary doing its job rather than an error.
+          </p>
+          {waitSteps.map((e) => <Tool key={e.n} entry={e} />)}
+        </Turn>
+      )}
+
+      {roundView.at_lab && (
+        <Turn who="workbench">
+          <p>
+            {waitSteps.length
+              ? "Ask again when you think it has had time."
+              : "There is nothing to do until it reports."}{" "}
+            Whether the results are back is a question about state, not a decision — so it
+            is an <b>ask</b>, under the composer, and not a button up here. Asking it is a
+            call to the registry, and the registry owns the answer.
+          </p>
+        </Turn>
+      )}
+
+      {arriveSteps.length > 0 && (
+        <Turn who="workbench">
+          <p className="small">
+            Pulled, reconciled against the designs we submitted, and scored against what
+            the model predicted for them.
+          </p>
+          {arriveSteps.map((e) => <Tool key={e.n} entry={e} />)}
+        </Turn>
+      )}
+
+      {/* The answer to the ask, where the ask landed. If nobody asked -- a
+          round imported before this session was opened -- the round's own
+          record says the same thing, from the snapshot rather than from a
+          turn. Never both. */}
+      {arrival && (
+        <>
+          <Turn who="you"><p>{arrival.question}</p></Turn>
+          <Turn who="claude"><Briefing data={arrival.answer} ctx={ctx} /></Turn>
+        </>
+      )}
+
+      {arriveSteps.length > 0 && !arrival && (
+        <Turn who="claude">
+          {roundView.reconciliation && (
+            <p>
+              They are back. {roundView.reconciliation.rows} rows,{" "}
+              {roundView.reconciliation.n_failed} well
+              {roundView.reconciliation.n_failed === 1 ? "" : "s"} failed,{" "}
+              {roundView.reconciliation.n_censored} value
+              {roundView.reconciliation.n_censored === 1 ? "" : "s"} censored below the
+              detection limit, {roundView.reconciliation.n_ok} of{" "}
+              {roundView.reconciliation.designs} designs reconciled. Replicates came back as
+              separate rows and were averaged over usable reads only — averaging a
+              censored read into a real number would invent a measurement.
+            </p>
+          )}
           {roundView.anomaly && (
             roundView.flagged ? (
               <p>
-                Round {round} is <b>flagged</b>. Its {roundView.anomaly.n_compared} fresh
+                And round {round} is <b>flagged</b>. Its {roundView.anomaly.n_compared} fresh
                 designs came back a mean{" "}
                 <span className="num">{signed(roundView.anomaly.mean_signed_residual)}</span>{" "}
                 pKD from where the model put them, against a trigger of{" "}
@@ -344,16 +440,18 @@ export default function Session({ ctx }) {
         </Turn>
       )}
 
-      <div className="composer" style={{ marginTop: 20 }}>
-        <textarea className="field" rows={2} disabled
-                  placeholder="Ask about this round…" />
-        <p className="tiny faint" style={{ margin: "6px 0 0" }}>
-          The composer is here because the host has one, and the decision deliberately does
-          not go through it. Claude Science's approval primitive is an untyped chat
-          interrupt; the panel above is four verbs bound to code paths, with hashed evidence
-          and an <i>if_wrong</i> line. The composer itself is wired up in phase 7.
-        </p>
-      </div>
+      {pending.map((t, i) => (
+        <div key={i}>
+          <Turn who="you"><p>{t.question}</p></Turn>
+          <Turn who={t.answer.kind === "arrival" ? "claude" : "workbench"}>
+            <Briefing data={t.answer} ctx={ctx} />
+          </Turn>
+        </div>
+      ))}
+
+      <Composer suggestions={suggestions} busy={busy}
+                placeholder={`Ask about round ${round}…`}
+                onAsk={(key, forRound) => onAsk(key, forRound, sessionId)} />
     </div>
   );
 }

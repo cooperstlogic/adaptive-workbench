@@ -1,7 +1,24 @@
-# Redesign of the web app — working plan
+# Redesign of the web app — the plan, and what was built from it
 
-**Status: draft 4, iterating with the user. Nothing is built yet. Settled items move into
-`DECISIONS.md` when the block that implements them lands.**
+**Status: built. All eight blocks landed; `check.py` went from 147 invariants to 160 with
+no existing one relaxed. The settled items are now `DECISIONS.md` decisions 122 to 133,
+which is the record — this file is kept as the reasoning behind them.**
+
+Three things resolved differently from the draft, and none of them changed a claim:
+
+- **Section 13's open questions.** The four blank-project titles drafted in section 5 were
+  taken as written. The round graph **kept its own route**, `#/p/<id>/rounds`, as sections
+  3 and 6 assumed: a route can be linked, and the rail item holding it is the single new
+  item in a rail of host items, which is the argument.
+- **`#/new` and `#/templates` render the same screen**, because picking a template is the
+  first thing you do on it. Both routes are live.
+- **The configuration screen shows the antibody at 120 aa, not 119.** It reads
+  `template.json` rather than a number in this document, and 120 is what the file says.
+
+One thing the draft did not anticipate: the project-creation cap needed a way out, so the
+new-project screen lists projects made in this browser with a **remove** control. The
+remedy lives where the refusal happens rather than as a destructive button on the main
+path.
 
 This plan sits between phase 6 (done) and phase 7 (the live agent in the centre column).
 It changes *where things live, what they are called, what a session is, and how a round

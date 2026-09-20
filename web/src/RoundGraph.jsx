@@ -8,7 +8,7 @@
 // updated model → next batch, with a content hash at every edge. This view is
 // that graph, read straight out of rounds.json.
 
-import { Badge, Empty, Hash, elapsed, n, pct, signed, when } from "./lib.jsx";
+import { Badge, Empty, elapsed, n, pct, signed, when } from "./lib.jsx";
 
 const LINKS = [
   ["pool", "candidates enumerated and filtered"],

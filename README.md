@@ -38,7 +38,7 @@ in `core/` has heard of it.
 ```bash
 python3.12 -m venv .venv
 .venv/bin/pip install numpy matplotlib mcp
-.venv/bin/python check.py      # 147 invariant checks, all should pass
+.venv/bin/python check.py      # 160 invariant checks, all should pass
 ```
 
 `.venv/` is gitignored. Everything else needed — including the generated landscape — is
@@ -61,6 +61,15 @@ And the product path, which is the same science through the CLI:
 .venv/bin/python init_project.py --name demo-trastuzumab --team d.webster --force
 .venv/bin/python run_rounds.py --rounds 4 --approved-by d.webster
 .venv/bin/python lims.py tools               # the LIMS write path, which is the boundary claim
+```
+
+The registry also owns two reads that a real LIMS unambiguously owns, and that the web
+app's lab round trip is built on. A scripted campaign never waits, because `--stagger` is
+off by default and `run_rounds.py` does not pass it:
+
+```bash
+.venv/bin/python lims.py export --project projects/demo-trastuzumab --round R4     --out /tmp/order.csv        # the order the lab receives: no value column
+.venv/bin/python lims.py status --project projects/demo-trastuzumab --round R4
 ```
 
 `run_rounds.py` is a deliberately dumb scheduler over the five pipeline scripts. It prints
@@ -204,7 +213,7 @@ live git tree, and it splits the project directory in two, which is the one thin
 beat 5 cannot survive — the batch hashes only mean something if both surfaces read the
 same state.
 
-`check.py` runs 147 checks in about half a minute and is the handoff contract. Every
+`check.py` runs 160 checks in about half a minute and is the handoff contract. Every
 check in it corresponds to a rule in `CLAUDE.md` or a number recorded in `DECISIONS.md`,
 so a failure means the state has drifted from what is documented.
 
@@ -382,6 +391,7 @@ diagnostics itself and refuses any payload that arrives carrying its own numbers
 | 5 | Both connectors, `.mcp.json`, the installable plugin, end-to-end run driven by an agent | **Done — gate passed** |
 | 5b | The plugin installed into Claude Science, the gate re-run there, and the gap audit written | **Done** — skill and both connectors installed, all eight tools exercised, the round-4 diagnosis reproduced in the host, and the audit written. Three of four claimed gaps survive narrowed, three unclaimed ones were found |
 | 6 | Web app: Pyodide boot, the Claude Science-shaped shell, artifact tabs, approve loop | **Done** — the round loop runs in the browser on the repository's own modules, approve in 1.5 s and advance in 2.7 s, and the browser and the CLI write byte-identical artifacts |
+| 6b | Redesign: two shells, the project boundary, the session model, project creation in the browser, the lab round trip | **Done — decisions 122 to 133.** Home is its own shell; the rail belongs to the project; a session is a unit of work and an ad-hoc one answers *where are we?* from artifacts on disk; projects are created here from a locked configuration screen or blank; and approving a batch sends it to a laboratory that has to be waited on |
 | 7 | The agent in the session: tool-call stream, two tools, push-back round trip, budget cap, verified replay | Not started |
 | 8 | Committed demo project at round 3, Netlify deploy, public README | Not started |
 | 9 | Demo script and rehearsal | Not started |
@@ -825,8 +835,50 @@ and the page says that composing them into a recommendation is the agent's job a
 phase 7. **It also means phase 7 has a round to diagnose that nothing in this repository
 has diagnosed before**, which is a better test of the agentic claim than replaying round 4.
 
-**The chrome is a wireframe and the page says so**, in a strip across the top of every
-screen. The panels, the Python, the state and the hashes inside it are real.
+**The chrome is a wireframe.** The panels, the Python, the state and the hashes inside it
+are real and are running in your tab. Phase 6 said so in a strip across the top of every
+screen; the redesign took the strip off and moved the claim into the staged table below —
+decision 125, and the reasoning is there.
+
+### Phase 6b results — the redesign
+
+Between phase 6 and phase 7. It changed where things live, what they are called, what a
+session is, and how a round gets from approval to data. It changed nothing in `core/`,
+nothing about the landscape or the threshold, and no published number. `check.py` went
+from 147 invariants to 160 with no existing one relaxed.
+
+**What it fixed, in the order a visitor met it.** The first load used to give you a
+wireframe banner, a rail branded with the product name over the project name, a centre
+column trying to be a home page inside a project's chrome, and an artifact panel already
+showing round 4's batch table for a round nobody had opened. Underneath all four:
+approving a batch produced measured data in one click and about a second, which to anyone
+who has run an assay undercut everything around it.
+
+| | |
+| --- | --- |
+| Shells | **Two.** Home is full-bleed with no rail and no panel; a project gets the three regions and the rail header is the project |
+| Routes | **Seven**, over a 60-line hash router. A project opens on what it needs from you, not on a lobby |
+| A session | **A unit of work.** A round starts one; you can start an ad-hoc one any time; both are in one list |
+| Asking *where are we?* | Answered from `rounds.json`, `designs.json` and the snapshots — 4 rounds, best observed **11.837 pKD** (synthetic) via `core.reconcile.pool`, round 2 flagged and ruled, the frame moved **−0.104 pKD** at round 3 under `bridge_policy:run_rounds`, winning recipe `ridge_onehot`. No model, every figure traced |
+| Creating a project | Three real commands in Pyodide. Five of its six files are **byte-identical** to a CLI instantiation of the same template |
+| The lab | **Two moments.** Approve → submit → order file. Then ask; the first ask is refused with the expected date, and the refusal is run and shown, not described |
+| The shipped campaign | Re-dated to span **six weeks**. `updated` stamps only — the field `check.py` already excludes from byte-identity |
+
+**The rule the build hangs on: decisions are buttons, questions are asks.** Approval and
+the four ruling verbs stay typed controls outside the composer, which is decision 65 and
+is why the approval primitive is not a chat interrupt. Everything that only *reads* state
+goes in the composer as a contextual suggested ask. That makes the composer stop being
+decorative without putting a decision through a text box, and it is what gives phase 7 a
+seat to sit in rather than a feature to design.
+
+**The staggered lab costs no invariant, which is the part worth checking.** `lims.py`'s
+round record already carried `status`, `submitted`, `samples` and `rows`; `status` was
+simply hardcoded `"complete"`. `submit_batch` gained a `stagger` argument, off by default.
+Off, the record written is byte for byte what it always was, so every store on disk, every
+round in one, and `check.py`'s six-round CLI campaign are untouched — and the
+cross-surface byte-identity claim, which is load-bearing, survives intact. A record with
+no `release_on_check` key is complete. The release schedule is a demo device and reads as
+one in the source, which is where it should be obvious.
 
 ## Repo map
 
@@ -852,7 +904,7 @@ screen. The panels, the Python, the state and the hashes inside it are real.
 | `skills/adaptive-optimization/SKILL.md` | The skill: state contract, the round loop, the diagnosis procedure, four rules |
 | `skills/adaptive-optimization/scripts/` | The five pipeline scripts plus `run_diagnostic.py` and `record_decision.py`. Thin wrappers over `core/`, no network, no lab |
 | `lims.py` | The mock LIMS. Mints identifiers, owns the plate layout, holds the oracle |
-| `connectors/registry_server.py` | The LIMS over MCP stdio. Five tools, each one call into `lims.py` |
+| `connectors/registry_server.py` | The LIMS over MCP stdio. Seven tools, each one call into `lims.py` |
 | `connectors/bioprovider_server.py` | The provider over MCP stdio. Features, exact scores, and a structure stub that says so |
 | `.mcp.json`, `.claude-plugin/` | The two connectors registered, and the plugin that bundles them with the skill |
 | `run_rounds.py` | A dumb scheduler over the five scripts. Stops on a flagged round |
@@ -861,12 +913,15 @@ screen. The panels, the Python, the state and the hashes inside it are real.
 | `web/public/assets/campaign.json` | The proof chart's data, written by the evaluator |
 | `web/bundle.py` | Copies the repository into the browser's bundle, derives the demo state, and proves the derivation by replaying round 4 |
 | `web/py/wb_driver.py` | The browser's hands: calls each script's `main(argv)` and computes nothing |
-| `web/src/` | The shell. React, no router, no state library, no charting library |
+| `web/src/` | The shell. React, a 60-line hash router, no state library, no charting library |
+| `web/src/router.js` | Seven routes, parsed into plain objects. Also where a project opens, given what is pending in it |
+| `web/src/blank.js` | Blank projects: `localStorage` only, never Python. The control arm for decision 108 |
+| `web/src/Briefing.jsx` | Renders a briefing's typed figures. Computes nothing; every number arrives with its `core/` function attached |
 | `web/public/workbench/` | The bundle: the repository's modules, the rewound project, and the reference records |
 | `web/scripts/pyodide-check.mjs` | Runs the browser's Python path outside a browser, for `check.py` to compare against the CLI |
 | `plot_campaign.py` | Renders the proof chart from `campaign.json`. matplotlib lives here, never in `core/` |
 | `gates/` | The two agent gates: the transcripts, and the script that re-runs them |
-| `check.py` | Invariant verification, 147 checks. Run it after any phase |
+| `check.py` | Invariant verification, 160 checks. Run it after any phase |
 
 ## What is real and what is staged
 
@@ -882,11 +937,19 @@ screen. The panels, the Python, the state and the hashes inside it are real.
 | Developability and liability scores | **Real** deterministic calculations, labelled computed throughout |
 | Affinity values | **Simulated.** Synthetic landscape with pre-registered parameters |
 | The wet lab | **Simulated.** Noise, ~3% failure, censoring, per-round offsets |
-| The LIMS | **Staged, and now reachable over MCP.** `lims.py` mints identifiers and exports rows; the write path attaches a link and nothing more. `connectors/registry_server.py` serves those same five functions over stdio and `check.py` compares the two exports byte for byte |
+| The LIMS | **Staged, and reachable over MCP.** `lims.py` mints identifiers, lays out plates, exports orders and rows, and answers whether a run has reported; the write path attaches a link and nothing more. `connectors/registry_server.py` serves those same seven functions over stdio and `check.py` compares the two exports byte for byte. The two added tools — `export_submission` and `check_run_status` — are reads a real LIMS unambiguously owns, so they widen the tool list without widening the write path |
 | Sequence embeddings | **Not built.** One-hot only. The provider interface is real and served over MCP; `esm_live` is declared and unwired, and asking for it returns an error naming what is missing rather than one-hot in disguise |
 | Structure prediction | **Stubbed.** `predict_structures` returns nulls and a note saying it predicted nothing. It invents no confidence score, and nothing downstream reads it |
-| The agent's reasoning in the browser | **Real Claude** while the daily budget holds — it chooses and sequences the diagnostics live, and a named human rules. Verified replay of the committed record otherwise, animated through the same component |
-| The web app's chrome | **A wireframe, and labelled one on every screen.** It renders the layer the phase-5b audit found missing, in the host's own grammar. The rail's host-only items are drawn and inert rather than faked, and each says what the host does with it |
+| The agent's reasoning in the browser | **Phase 7.** The browser replays the committed round-4 sequence with every number recomputed in Pyodide, and offers the five library tests read-only on a round it has no record for. Live Claude choosing the sequence is what phase 7 adds |
+| The composer's free text | **Phase 7.** The suggested asks beneath it work today and work deterministically: each is answered by a briefing assembled from artifacts on disk, no model involved, every figure naming the `core/` function behind it. Typing into the box is what phase 7 turns on |
+| The web app's chrome | **A wireframe.** It renders the layer the phase-5b audit found missing, in the host's own grammar; the panels, the Python, the state and the hashes inside it are real and are running in your tab. The rail's host-only items are drawn and inert rather than faked, and each says what the host does with it. **Decision 125 removed the on-page banner, so this row is where the claim lives** |
+| The working model picker | **Drawn.** Opus 5 is selectable; Sonnet 5 and Haiku 4.5 are shown and are not. Nothing is wired to the choice |
+| The lab round trip | **Staged, deliberately, and the staging is in the source.** Approving submits the batch and writes the order file; `check_run_status` is what releases the run, and it releases on the second ask rather than on a clock. `lims.py`'s `submit_batch` takes `--stagger`, off by default, so every CLI path writes byte-for-byte what it always did. The refusal a pull gets while a run is going is real, and it is run and shown rather than described |
+| Blank projects | **Real, and deliberately empty.** They live in `localStorage`, never touch Python, and open on a chat — because nothing has declared what they mean. That is the control arm for decision 108, not a gap |
+| Projects created in the browser | **Real, and checked against the CLI.** `init_project.py` and round 1's two scripts run in Pyodide; `check.py` requires five of six files to match a project the CLI instantiates from the same template with the same pinned timestamp |
+| The assay platform and plate format on the configuration screen | **Mock, and labelled so on the row.** Every other locked row on that screen is read out of `template.json` |
+| Round dates in the shipped campaign | **Display-level.** `web/bundle.py` re-dates the shipped round graph's `updated` stamps to span about six weeks — the field `check.py` already excludes from byte-identity as "the times the graph was rewritten". No simulated date is written into a project artifact and no measurement moves |
+| The four other projects on the home screen | **Scenery, and empty.** Plausible research titles with no template and no content, so the list reads like a workspace. Opening one shows exactly what it is |
 | The two connectors | **Real.** MCP stdio, five tools and three, each one call into `lims.py` or `core/`. `check.py` drives both over the protocol and compares them against the CLI |
 | The skill and connectors inside Claude Science | **Real, and exercised end to end.** The skill imported from GitHub with its commit recorded; both connectors serve their tools under the host's interpreter, inside its sandbox. All eight tools run, the kernel executes the pipeline scripts from the repo, and the round-4 diagnosis reproduces every number and every input hash. `gates/5b-host-round4.md`, and the install is written up under *Installing into Claude Science* |
 | The agent's reasoning in the CLI | **Real, and the transcripts are committed.** Two headless Claude Code sessions on `claude-opus-5`: one diagnosed round 4 and wrote its record, one ran a full round unaided. `gates/` |

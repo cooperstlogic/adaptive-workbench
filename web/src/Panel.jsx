@@ -45,7 +45,8 @@ const SLOT_BADGE = {
 };
 
 function BatchTab({ ctx }) {
-  const { batch, designs, round, onTrace, drops, setDrops, dropNotes, setDropNotes } = ctx;
+  const { batch, designs, round, roundView, onTrace, onDownload,
+          drops, setDrops, dropNotes, setDropNotes } = ctx;
   const [open, setOpen] = useState(null);
   if (!batch) return <Empty>No batch selected for this round yet.</Empty>;
 
@@ -72,7 +73,26 @@ function BatchTab({ ctx }) {
           pool <Hash value={batch.inputs.pool} />, model <Hash value={batch.inputs.model_run} />,
           {" "}objectives <Hash value={batch.inputs.objectives} />
         </span>],
+        roundView?.submission && ["at the lab", <span className="tiny">
+          {roundView.submission.round_id}, assay {roundView.submission.assay_version},{" "}
+          {roundView.submission.n_samples} samples
+          {roundView.lab?.status === "running"
+            ? <> — running, expected {String(roundView.lab.expected || "").slice(0, 10)}</>
+            : " — reported"}
+        </span>],
       ]} />
+      {/* The order file, because the thing that leaves the building is an
+          artifact too, and a panel that lists every record except the one the
+          laboratory actually receives is describing a different workflow. */}
+      {roundView?.order && (
+        <button className="chip download" onClick={() => onDownload(roundView.order)}>
+          ↓ {roundView.order.split("/").pop()}
+          <span className="tiny faint">
+            the order the lab receives · construct, sample, design, plate, sequence ·
+            no value column
+          </span>
+        </button>
+      )}
       {!approved && (
         <p className="note">
           Struck designs are recorded as overrides with your note, by the same script that

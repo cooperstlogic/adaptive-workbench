@@ -133,6 +133,47 @@ def cli_replay_of(files):
         return same, drifted
 
 
+def cli_instantiation_of(files, name="harness-instantiated",
+                         created="2026-01-01T00:00:00+00:00"):
+    """Instantiate the same project through the CLI and compare the bytes.
+
+    Decision 108 -- "no project instantiation from a declaration" -- graded
+    *survives, but under-tested* in the phase-5b audit. This is the form of it
+    a machine can check: the browser ran `init_project.py` and round 1's two
+    scripts through Pyodide, the CLI runs the identical three commands here,
+    and a template that instantiates the same project on two runtimes is a
+    declaration rather than a prompt. The timestamp is pinned with --created,
+    because that is the only thing in the four files that is not a pure
+    function of the template and the three facts a person supplies.
+    """
+    scripts = os.path.join(REPO, "skills", "adaptive-optimization", "scripts")
+    prefix = "projects/%s/" % name
+    mine = {k[len(prefix):]: v for k, v in files.items() if k.startswith(prefix)}
+    if not mine:
+        return [], ["the browser instantiated no project"]
+    with tempfile.TemporaryDirectory() as tmp:
+        def run(*argv):
+            r = subprocess.run([sys.executable] + list(argv), cwd=REPO,
+                               capture_output=True, text=True)
+            if r.returncode != 0:
+                raise RuntimeError("%s\n%s" % (argv[0], r.stderr or r.stdout))
+
+        run(os.path.join(REPO, "init_project.py"),
+            "--template", "antibody-affinity-maturation", "--name", name,
+            "--lead", "trastuzumab", "--target", "HER2", "--team", "check.py",
+            "--created", created, "--projects-dir", tmp)
+        root = os.path.join(tmp, name)
+        run(os.path.join(scripts, "generate_candidates.py"), "--project", root, "--round", "1")
+        run(os.path.join(scripts, "select_batch.py"), "--project", root, "--round", "1")
+
+        same, drifted = [], []
+        for rel, text in sorted(mine.items()):
+            path = os.path.join(root, rel)
+            got = open(path, encoding="utf-8").read() if os.path.isfile(path) else None
+            (same if got == text else drifted).append(rel)
+        return same, drifted
+
+
 def main():
     import numpy as np
 
@@ -1185,6 +1226,93 @@ def main():
           "derived from %s by web/bundle.py"
           % schema.short_hash(committed_record["hash"]))
 
+    print("\nRedesign: the lab round trip -- an order goes out, and a run is waited on")
+    with tempfile.TemporaryDirectory() as tmp:
+        import lims as lims_mod                                   # noqa: PLC0415
+
+        lab_root = os.path.join(tmp, "demo-trastuzumab")
+        shutil.copytree(os.path.join(REPO, "web", "public", "workbench", "projects",
+                                     "demo-trastuzumab"), lab_root)
+        plain = os.path.join(tmp, "plain.json")
+        held = os.path.join(tmp, "held.json")
+        for dst in (plain, held):
+            shutil.copyfile(os.path.join(REPO, "web", "public", "workbench", "lims_store",
+                                         "demo-trastuzumab.json"), dst)
+        open_root = os.path.join(tmp, "open-copy")
+        shutil.copytree(lab_root, open_root)
+
+        lims_mod.submit_project_batch(open_root, 4, plain)
+        lims_mod.submit_project_batch(lab_root, 4, held, stagger=True)
+        a = schema.read_json(plain)["rounds"]["R4"]
+        b = schema.read_json(held)["rounds"]["R4"]
+        volatile = ("submitted", "status", "release_on_check", "checks", "expected")
+        check("staggering a round changes the record only where it says it does",
+              a["status"] == "complete" and b["status"] == "running"
+              and set(b) - set(a) == {"release_on_check", "checks", "expected"}
+              and all(a[k] == b[k] for k in a if k not in volatile),
+              "off is byte for byte what this registry has always written, so every "
+              "store on disk and check.py's own six-round campaign are untouched")
+
+        refusal = None
+        try:
+            lims_mod.pull_to_csv("R4", lab_root, held)
+        except lims_mod.RunningError as exc:
+            refusal = str(exc)
+        check("the registry refuses a pull on a round still running, and says what it "
+              "refused",
+              refusal is not None and "R4" in refusal and "check_run_status" in refusal
+              and "0 of 96" in refusal,
+              (refusal or "the pull was allowed")[:96])
+
+        first = lims_mod.run_status("R4", lab_root, held)
+        second = lims_mod.run_status("R4", lab_root, held)
+        check("and asking is what releases it: not ready, then ready",
+              first["status"] == "running" and first["n_rows"] == 0
+              and second["status"] == "complete" and second["released_now"]
+              and second["n_rows"] == 96,
+              "expected %s on the first ask, %d rows on the second"
+              % ((first["expected"] or "?")[:10], second["n_rows"]))
+
+        order = lims_mod.export_order("R4", lab_root, held)
+        submitted = schema.read_json(held)["rounds"]["R4"]["samples"]
+        measured = {"value", "unit", "status", "well", "replicate"}
+        check("the export is an order and not a result: no measured value anywhere in it",
+              not (measured & set(lims_mod.ORDER_COLUMNS))
+              and not any(measured & set(row) for row in order["rows"])
+              and "value" not in order["csv"].splitlines()[0],
+              "columns are %s" % ", ".join(lims_mod.ORDER_COLUMNS))
+        check("and its rows are the submission's samples exactly, in order",
+              [r["sample_id"] for r in order["rows"]] == [s["sample_id"] for s in submitted]
+              and [r["design_id"] for r in order["rows"]]
+              == [s["design_id"] for s in submitted]
+              and order["n_rows"] == len(submitted),
+              "%d rows, %d samples -- an order the lab could act on, and nothing else"
+              % (order["n_rows"], len(submitted)))
+        pulled = lims_mod.pull_to_csv("R4", lab_root, held)
+        check("a released round pulls the rows it always did",
+              pulled["n_rows"] == 96 and pulled["assay_version"] == "v1.3",
+              "%d rows, assay %s -- the values were measured at submission either way"
+              % (pulled["n_rows"], pulled["assay_version"]))
+
+    registry = mcp_session("registry_server.py")
+    out = registry([("check_run_status", {"project": "projects/demo-trastuzumab",
+                                          "round_id": "R3"}),
+                    ("export_submission", {"project": "projects/demo-trastuzumab",
+                                           "round_id": "R3",
+                                           "out": os.path.join(tempfile.gettempdir(),
+                                                               "check_order_R3.csv")})])
+    check("both new tools are on the registry connector, over the transport a host uses",
+          {"check_run_status", "export_submission"} <= set(out["tools"])
+          and not any(r["error"] for r in out["results"])
+          and out["results"][0]["data"]["status"] == "complete"
+          and out["results"][1]["data"]["n_rows"] == 48,
+          "%d tools now; both are reads a LIMS unambiguously owns, and the write path "
+          "did not move" % len(out["tools"]))
+    check("and the withheld list is still the answer to 'does this replace the LIMS'",
+          not ({"create_sample", "edit_assay_result", "start_workflow", "delete_record"}
+               & set(out["tools"])),
+          "submit, export, check, list, pull, get, attach -- and nothing that authors data")
+
     print("\nPhase 6: the browser and the CLI (SPEC.md acceptance criterion 7)")
     node = shutil.which("node")
     harness = os.path.join(REPO, "web", "scripts", "pyodide-check.mjs")
@@ -1231,6 +1359,45 @@ def main():
                   "batches/batch_005.json" in same,
                   "batch_005 %s on both surfaces"
                   % schema.short_hash(browser["after"]["round5_batch_hash"]))
+
+            check("approving a round sends it to a lab rather than producing its data",
+                  browser["submitted"]["status"] == "running"
+                  and browser["first_check"]["ready"] is False
+                  and browser["first_check"]["status"] == "running"
+                  and bool(browser["first_check"]["expected"]),
+                  "the first ask came back not ready, expected %s -- two moments with a "
+                  "laboratory between them"
+                  % (browser["first_check"]["expected"] or "?")[:10])
+            check("and the round it eventually imports is the one it always was",
+                  browser["round4"]["rows"] == 96
+                  and browser["round4"]["n_censored"] == snap4["reconciliation"]["n_censored"]
+                  and browser["round4"]["n_failed"] == snap4["reconciliation"]["n_failed"],
+                  "%d rows, %d failed, %d censored -- staggering changes when the registry "
+                  "hands them over, never what they are"
+                  % (browser["round4"]["rows"], browser["round4"]["n_failed"],
+                     browser["round4"]["n_censored"]))
+
+            made_same, made_drift = cli_instantiation_of(browser["files"])
+            check("a project instantiated in the browser is one the CLI would have written",
+                  sorted(made_drift) == ["rounds.json"] and len(made_same) == 5
+                  and "project.json" in made_same and "objectives.json" in made_same
+                  and "batches/batch_001.json" in made_same,
+                  "%d of %d files identical, round 1 batch %s -- decision 108 in the form "
+                  "a machine can check"
+                  % (len(made_same), len(made_same) + len(made_drift),
+                     schema.short_hash(browser["created"]["batch_hash"])))
+            check("and round 1 went through the same two scripts every round goes through",
+                  browser["created"]["mode"] == "seed"
+                  and browser["created"]["n_designs"] == 48,
+                  "%s, %d designs -- no batch written by a second code path"
+                  % (browser["created"]["mode"], browser["created"]["n_designs"]))
+            check("the status briefing is assembled from artifacts, not narrated",
+                  browser["briefing"]["kind"] == "status"
+                  and browser["briefing"]["source"] == "core.reconcile.pool"
+                  and browser["briefing"]["model_winner"] == "ridge_onehot",
+                  "best observed %s pKD via %s -- every figure names the function behind "
+                  "it, which is what the Notebook tab resolves"
+                  % (browser["briefing"]["best_observed"], browser["briefing"]["source"]))
 
     if FAILS:
         print("\n%d of %d checks FAILED:" % (len(FAILS), TOTAL))

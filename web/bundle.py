@@ -41,6 +41,7 @@ non-negotiable 7 exists to prevent.
 """
 
 import argparse
+import datetime
 import hashlib
 import json
 import os
@@ -65,6 +66,7 @@ CODE = [
     "data/__init__.py", "data/synthetic.py", "data/oracle.py",
     "data/landscape_manifest.json",
     "lims.py",
+    "init_project.py",
     "skills/adaptive-optimization/scripts/generate_candidates.py",
     "skills/adaptive-optimization/scripts/select_batch.py",
     "skills/adaptive-optimization/scripts/import_round.py",
@@ -80,6 +82,19 @@ CODE = [
 # else's. It calls the scripts above through their main(argv); it computes
 # nothing.
 DRIVER = "web/py/wb_driver.py"
+
+# The shipped campaign spans weeks, because a campaign that does not is not a
+# campaign. The project was generated in one sitting, so every round carries
+# the afternoon it was written; left alone the rail dates rounds 1 to 4 "today"
+# and visibly contradicts the six-week story the pitch rests on.
+#
+# This touches `updated` and nothing else -- the times the round graph was
+# rewritten, which check.py already excludes from byte-identity for exactly
+# that reason. No measurement, no hash input and no artifact body moves. The
+# registry's turnaround (lims.TURNAROUND_DAYS) is set to agree with the
+# spacing, so a round submitted here and expected there tell one story.
+ROUND_SPACING_DAYS = 11
+CAMPAIGN_STARTED_DAYS_AGO = 44
 
 # Rewind point: everything round 4 gained at or after submission.
 ROUND4_ARTIFACTS = [
@@ -122,6 +137,7 @@ def rewind_project(dest_root):
         if int(entry["round"]) == 4:
             for key in [k for k in entry if k not in PRE_SUBMIT_KEYS]:
                 del entry[key]
+    redate_rounds(rounds)
     rounds = schema.stamp({k: v for k, v in rounds.items() if k != "hash"})
     schema.write_json(os.path.join(dst, "rounds.json"), rounds)
 
@@ -139,6 +155,23 @@ def rewind_project(dest_root):
     return dst, minted_later - minted_before
 
 
+def redate_rounds(rounds):
+    """Spread the round graph's `updated` stamps over a plausible campaign.
+
+    Round 1 lands about six weeks back and each round after it eleven days
+    later, which is roughly a build, an eight-day assay and a week of
+    deciding. The last round keeps a recent date because it is the one the
+    visitor is being asked about.
+    """
+    base = (datetime.datetime.now(datetime.timezone.utc)
+            - datetime.timedelta(days=CAMPAIGN_STARTED_DAYS_AGO)).replace(microsecond=0)
+    for i, entry in enumerate(rounds["rounds"]):
+        if "updated" in entry:
+            entry["updated"] = (base + datetime.timedelta(
+                days=i * ROUND_SPACING_DAYS)).isoformat()
+    return rounds
+
+
 def rewind_store(dest_root, minted_at_round4):
     """The registry's own records, minus the round it has not been sent yet."""
     src = os.path.join(REPO, "lims_store", "%s.json" % DEMO)
@@ -148,6 +181,14 @@ def rewind_store(dest_root, minted_at_round4):
     dropped = len(store["constructs"]) - len(kept)
     store["constructs"] = kept
     store["next_construct"] -= dropped
+    # The registry's own dates move with the graph's, so `check_run_status` on
+    # an old round does not report it submitted this afternoon.
+    rounds = schema.read_json(os.path.join(dest_root, "projects", DEMO, "rounds.json"))
+    when = {int(e["round"]): e.get("updated") for e in rounds["rounds"]}
+    for key, rec in store["rounds"].items():
+        stamp = when.get(int(rec["round"]))
+        if stamp:
+            rec["submitted"] = stamp
     dst = os.path.join(dest_root, "lims_store", "%s.json" % DEMO)
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     schema.write_json(dst, store)

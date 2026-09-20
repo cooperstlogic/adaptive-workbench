@@ -933,3 +933,62 @@ that instantiating a second project is not wired up in this build.
 What phase 7 inherits: the model in the centre seat choosing the sequence, the
 push-back round trip that makes `more_evidence_requested` fire, and round 5 as
 a round nobody has diagnosed yet.
+
+---
+
+## The web app redesign — decisions 122 to 133
+
+Between phase 6 and phase 7. It changed where things live, what they are
+called, what a session is, and how a round gets from approval to data. It
+changed nothing in `core/`, nothing about the landscape or the threshold, and
+no published number. Both gates still hold and `check.py` went from 147
+invariants to 160 without a single existing one being relaxed.
+
+**What was wrong.** The first load gave a visitor, at once: a wireframe
+banner; a left rail branded *Adaptive workbench* whose five host items opened
+essays in the centre column; a centre column headed *Good afternoon* trying to
+be a home page; and a right-hand artifact panel already showing round 4's
+48-well batch table, for a round nobody had opened. Four separate faults, and
+a fifth underneath them: approving a batch produced measured data in one click
+and about a second.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 122 | **Two shells, not one.** Home is full-bleed, centred, ~1200px, with no rail and no artifact panel. A project gets the three regions, scoped to that one project. A hash router over seven routes, no library | A home screen drawn inside a project's chrome is a home screen that belongs to that project, and the artifact panel was rendering a round nobody had opened. A hash router because the site is a static bundle served from a path not known at build time; the history API would need a server, and a server is the one thing this build may not acquire |
+| 123 | **The product and the project are different objects.** The rail header is the project — back arrow, name, chevron, collapse — with New / Search / Customize / Files / Compute beneath it. The product name appears on home and nowhere else | The rail read `Adaptive workbench / demo-trastuzumab`, which made the product name and the project name one thing. The host's own rail is project-scoped; ours claimed to be a layer inside it and then contradicted the claim in its first element |
+| 124 | **Naming.** The app is **Shannon Science** (`Beta` beneath). The template displays as **Adaptive antibody optimization**. The project displays as **Trastuzumab → HER2** with its id in mono beneath. The centre column's speakers are **You / Shannon / Claude** | Only the template's *display* title changes. `antibody-affinity-maturation` is the id written into `project.json`, named by decision records and read by `check.py`; `title` is carried nowhere, so renaming the display costs nothing and renaming the id would cost everything. Two projects from one template share a display title, so the session rows carry the id, which is what is actually unique |
+| 125 | **The wireframe banner is removed. This supersedes decision 60.** The prototype framing lives in the README and `SPEC.md`'s staged table | Decision 60 put the label on the page because failure mode 1 says label what is stubbed. It is still labelled — in the two places a sceptic actually looks, and on individual mock fields where they sit. A bar across every screen taxed every beat to make a claim once. `CLAUDE.md`'s failure mode 1 was narrowed to match. **Failure mode 3 is untouched**: the word *synthetic* still appears beside every affinity number, in every surface, because that is a four-word label and not a banner |
+| 126 | **A session is a unit of work inside a project, not a round. This amends decision 59.** A new round starts one; a person can start an ad-hoc one at any time; both kinds share the rail list and home's Recent sessions | This is where the thesis stops being asserted. Open a project you have never opened, click New, ask *where are we?* — back comes six rounds, the best observed value, which rounds flagged and which were ruled, how far the frame has moved and under whose authority, which recipe is winning. Every figure is read from an artifact on disk and resolves in the Notebook tab to the `core/` function that produced it. The same question in a chat product gets a summary of the transcript, because there is no state to read |
+| 127 | **Decisions are buttons; questions are asks.** Approval and the four ruling verbs stay typed controls outside the composer. Everything that only *reads* state — status, why a round flagged, whether the lab has reported — goes in the composer as a contextual suggested ask | Decision 65's whole point is that the approval primitive is not a chat interrupt, and that does not change. What changes is that the composer stops being decorative: the asks work today, deterministically. A row of suggestions under the composer is the host's own pattern, which is why they are there and not on a button elsewhere on the page |
+| 128 | **Until phase 7 an ask is answered by a briefing assembled in `wb_driver` from project artifacts.** No model, every number traced. Free text starts working in phase 7, in the same seat | Decision 62's one-surface, two-sources pattern applied to status rather than diagnosis. `wb_driver` returns typed figures, each carrying its `core/` function and the artifact it was read out of; the page lays them out. There is no sentence in the driver a number could hide inside — non-negotiable 7 applied to the surface most tempted to narrate |
+| 129 | **A project opens where you left off.** A flagged unruled round opens at its ruling; a pending batch at its approval; a round at the lab at its results check; otherwise the most recent session; a blank project on a new empty one. The round graph keeps its own route and is one click away in the rail | A project is not a lobby. The route form was already settled in the plan's route table, and a route is more visible than a tab — it can be linked, and the rail item that holds it is the one new item in a rail of host items, which is the argument |
+| 130 | **The lab round trip: one approval becomes two moments with a laboratory between them.** Approve signs the batch, submits it, and calls the new `export_submission` for the order file the lab receives. The round's status becomes *at the lab*. The new `check_run_status` is the only thing that releases it, and `pull_assay_results` **refuses** while a run is still going | Approving designs and reading their data in the same second was the least believable thing in the build, and to an audience who have run assays it undercut everything around it. The refusal is a feature: `registry_server.py`'s docstring already says every refusal in that file is deliberate and says what it refused and why, and "R4 is still running: 0 of 96 rows released across R4P1, R4P2 … expected 2026-09-28" belongs in that list. The browser runs the refused pull and shows it rather than describing it |
+| 131 | **`submit_batch` gains `stagger`, off by default, and the record it writes with it off is byte-for-byte what it has always written.** On, the record carries `status: "running"`, an explicit commented `release_on_check: 1`, and a check counter. A record with no `release_on_check` key is complete | This is what makes the round trip cost no invariant. Every existing store, every existing round and `check.py`'s six-round CLI campaign are untouched by the argument existing, and the cross-surface byte-identity claim — which is load-bearing — survives intact. The release schedule is a demo device and reads as one in the source, which is the right place for it to be obvious. If it feels bad in rehearsal, `stagger` is one flag away from off |
+| 132 | **Projects are created in the browser, from a locked configuration screen, through `init_project.py`.** Every locked row is read out of `template.json`, so the screen renders the declaration rather than disabling a form. Create runs three real commands in Pyodide: `init_project.py`, then round 1 through `generate_candidates.py` and `select_batch.py` | `init_project.py` was already the CLI's path — `main(argv)` from decision 71, paths resolved relative to its own file — so one line in `bundle.py`'s `CODE` list made the browser instantiate through the same code. `--created` pins the timestamp, which is the only thing in the four files that is not a pure function of the template and the three facts a person supplies. **`check.py` now compares a project the browser instantiated against one the CLI instantiates and requires five of six files byte-identical**, `rounds.json` being the known exception that carries the times the graph was rewritten. That is decision 108 — *survives, but under-tested* — in the form a machine can check |
+| 133 | **Blank projects are the control arm, and they never touch Python.** They live in `localStorage` and open on an empty chat with a working model picker | `project.load()` requires `project.json`, `objectives.json`, `designs.json` and `rounds.json`; a project with no template has none of them, which is the point rather than a limitation. A blank project beside a templated one, both created live in the same interface, converts decision 108 from an assertion into a demonstration: one opens on a blinking cursor, the other on 48 wells enumerated, filtered under constraints enforced in code, scored by a model that beat another model, waiting for a named person to sign. Templated projects are capped at three, in the driver, because `localStorage` is about 5MB and a refusal a visitor can read beats a save that silently fails |
+
+**Two smaller things, recorded because they will otherwise be re-litigated.**
+
+*Turnaround is display-level.* No simulated dates are written into project
+artifacts. `bundle.py` re-dates the **shipped** round graph's `updated` stamps
+to span about six weeks — the field `check.py` already excludes from
+byte-identity as "the times the graph was rewritten" — and moves the registry
+store's `submitted` stamps with them. The rail used to date rounds 1 through 4
+*today*, because that is when the demo project was generated, which visibly
+contradicted the six-week campaign the pitch rests on. `lims.TURNAROUND_DAYS`
+is set to agree with that spacing, so a round submitted here and expected
+there tell one story.
+
+*The read seed differs per created project*, derived from the name, so a
+second campaign is not a replay of the first. That is read noise — which
+constructs fail, where the run offset lands, which values censor — and not a
+landscape parameter. `demo-trastuzumab` is pinned to seed 0 and is untouched,
+so the shipped campaign is the committed one. Non-negotiable 8 is about
+landscape parameters and this is not one.
+
+**What the redesign did not do.** It did not put a model anywhere. The
+composer's free text is still phase 7, and it says so rather than pretending.
+The four verbs, the hashed evidence, the `if_wrong` line and the refusal to
+act on an unruled record are exactly where phase 6 left them. Round 5 still
+flags at −0.818 pKD on the product path — decision 121 — and still nobody has
+diagnosed it, which remains phase 7's best test.

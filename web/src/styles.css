@@ -331,3 +331,130 @@ pre.code {
   .rail-sessions, .rail-foot, .rail-group.hide-narrow { display: none; }
   .panel { width: 100%; border-left: 0; border-top: 1px solid var(--line); }
 }
+
+/* ===== the redesign =======================================================
+   Two shells. Home is full-bleed and centred with no rail and no artifact
+   panel; a project keeps the three regions. The wireframe banner is gone —
+   the prototype framing lives in the README and the staged table now, and the
+   inline `synthetic` tags beside affinity numbers stay, because that is a
+   different rule and a four-word label rather than a bar across the page. */
+
+.brandmark {
+  font-family: ui-serif, Georgia, "Times New Roman", serif;
+  font-size: 27px; font-weight: 500; letter-spacing: -0.015em; margin: 0;
+}
+.accent { color: var(--accent); }
+.ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.block { display: block; width: 100%; text-align: left; text-decoration: none;
+  color: inherit; }
+a.block:hover, a.card:hover { border-color: var(--muted); }
+.card.subtle { background: none; }
+
+/* --- home ---------------------------------------------------------------- */
+
+.home { max-width: 1180px; margin: 0 auto; padding: 26px 28px 90px; }
+.home-head { display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 20px; flex-wrap: wrap; }
+.home-greet { font-size: 21px; font-weight: 500; margin: 30px 0 0; color: var(--muted); }
+.home-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  gap: 34px; margin-top: 20px; align-items: start; }
+.home-h { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--faint); font-weight: 600; margin-bottom: 9px; }
+.row-card { padding: 11px 13px; }
+.new-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 34px; margin-top: 18px; align-items: start; }
+
+.sess-dot { width: 7px; height: 7px; border-radius: 2px; flex: none;
+  background: var(--faint); }
+.sess-dot.round { background: var(--accent); border-radius: 50%; }
+.sess-dot.adhoc { background: var(--line); box-shadow: inset 0 0 0 1px var(--faint); }
+
+/* --- the project rail ---------------------------------------------------- */
+
+.rail-head { display: flex; align-items: center; gap: 4px; padding: 2px 2px 0; }
+.rail-back, .rail-collapse {
+  border: 0; background: none; color: var(--muted); padding: 4px 6px; border-radius: 6px;
+  text-decoration: none; line-height: 1; font-size: 14px; flex: none;
+}
+.rail-back:hover, .rail-collapse:hover { background: var(--line-soft); color: var(--ink); }
+.rail-project {
+  display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0; border: 0;
+  background: none; padding: 4px 6px; border-radius: 6px; font-weight: 600;
+  letter-spacing: -0.01em; text-align: left;
+}
+.rail-project:hover { background: var(--line-soft); }
+.rail-project .chev, .picker .chev { color: var(--faint); font-size: 11px; flex: none; }
+.rail-sub { padding: 0 8px 10px; }
+.rail.is-collapsed { width: 58px; }
+.rail.is-collapsed .rail-item span:not(.ic), .rail.is-collapsed .rail-group,
+.rail.is-collapsed .rail-sub, .rail.is-collapsed .rail-project,
+.rail.is-collapsed .rail-foot > div, .rail.is-collapsed .rail-new-tag { display: none; }
+a.rail-item { text-decoration: none; }
+
+/* --- the composer, and the asks above it --------------------------------- */
+
+.composer-wrap { margin-top: 22px; }
+.asks { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 9px; }
+.ask {
+  border: 1px solid var(--line); background: var(--panel); border-radius: 999px;
+  padding: 5px 12px; font-size: 12.5px; color: var(--muted);
+}
+.ask:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.ask:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.composer-bar { display: flex; align-items: center; justify-content: space-between;
+  margin-top: 6px; }
+.composer-left, .composer-right { display: flex; align-items: center; gap: 4px; }
+.glyph {
+  border: 0; background: none; color: var(--faint); border-radius: 7px; padding: 4px 7px;
+  font-size: 13px; line-height: 1;
+}
+.glyph:hover:not(:disabled) { background: var(--line-soft); color: var(--ink); }
+.glyph:disabled { opacity: 0.4; cursor: default; }
+.glyph.wide { font-size: 12.5px; color: var(--muted); }
+.glyph.send { background: var(--accent); color: #fff; padding: 4px 9px; }
+.glyph.send:disabled { background: var(--line); color: var(--faint); }
+
+.picker { position: relative; }
+.picker-menu {
+  position: absolute; bottom: calc(100% + 6px); right: 0; z-index: 30; width: 250px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 5px; box-shadow: 0 8px 24px rgba(20, 18, 16, 0.14);
+}
+.picker-item {
+  display: flex; flex-direction: column; gap: 1px; width: 100%; text-align: left;
+  border: 0; background: none; border-radius: 7px; padding: 6px 9px;
+}
+.picker-item:hover:not(:disabled) { background: var(--line-soft); }
+.picker-item:disabled { opacity: 0.45; cursor: not-allowed; }
+.picker-item[aria-selected="true"] { background: var(--accent-soft); }
+
+/* --- turns, the download chip, a refused call ---------------------------- */
+
+.dot.who-claude { background: var(--accent-soft); color: var(--accent); }
+.dot.who-workbench { background: var(--line-soft); color: var(--muted); }
+.dot.who-you { background: var(--line-soft); color: var(--ink); }
+
+.chip.download { flex-direction: column; align-items: flex-start; gap: 1px;
+  border-style: dashed; padding: 7px 11px; }
+.chip.download:hover { border-color: var(--accent); color: var(--accent); }
+
+.tool.refused { border-color: var(--flag); background: var(--flag-soft); }
+.tool.refused .tick { color: var(--flag); }
+
+.tag-syn {
+  margin-left: 5px; font-size: 10px; letter-spacing: 0.03em; color: var(--flag);
+  background: var(--flag-soft); padding: 1px 5px; border-radius: 4px; white-space: nowrap;
+}
+
+/* --- the locked configuration screen ------------------------------------- */
+
+table.grid.config td { vertical-align: top; padding: 7px; }
+table.grid.config td.k { color: var(--muted); width: 150px; }
+table.grid.config tr.locked td { color: var(--ink); }
+table.grid.config tr.locked td.k { color: var(--faint); }
+.lock { opacity: 0.45; font-size: 11px; }
+
+@media (max-width: 1020px) {
+  .home-grid, .new-grid { grid-template-columns: 1fr; gap: 22px; }
+}

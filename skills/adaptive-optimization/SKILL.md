@@ -46,17 +46,33 @@ artifact. All paths below are relative to the repository root.
 | --- | --- | --- |
 | 1 | `skills/adaptive-optimization/scripts/generate_candidates.py` | `candidates/pool_NNN.json` |
 | 2 | `skills/adaptive-optimization/scripts/select_batch.py` | `batches/batch_NNN.json` |
-| 3 | registry: `submit_batch` then `pull_assay_results` | the round's results CSV |
-| 4 | `skills/adaptive-optimization/scripts/import_round.py` | `evidence/snapshot_NNN.json` |
-| 5 | `skills/adaptive-optimization/scripts/evaluate_prior.py` | `batches/batch_NNN.eval.json` |
-| 6 | `skills/adaptive-optimization/scripts/fit_surrogates.py` | `models/run_NNN.json` |
+| 3 | registry: `submit_batch` | the round's identifiers and plate layout |
+| 4 | registry: `export_submission` | the order file the lab receives |
+| 5 | registry: `check_run_status` | whether the assay has reported yet |
+| 6 | registry: `pull_assay_results` | the round's results CSV |
+| 7 | `skills/adaptive-optimization/scripts/import_round.py` | `evidence/snapshot_NNN.json` |
+| 8 | `skills/adaptive-optimization/scripts/evaluate_prior.py` | `batches/batch_NNN.eval.json` |
+| 9 | `skills/adaptive-optimization/scripts/fit_surrogates.py` | `models/run_NNN.json` |
+
+**Steps 3 to 6 are a laboratory, not a function call.** A submitted round does
+not report the moment it is submitted. `export_submission` writes what goes
+out — construct, sample, design, plate and sequence, with no value column,
+because an order is not a result. `check_run_status` answers whether the assay
+has finished, and while it has not, `pull_assay_results` **refuses** and says
+so. That refusal is the boundary working: the workbench cannot read a result
+the laboratory has not produced.
+
+A scripted campaign never waits, because `submit_batch` holds a round open
+only when asked to (`--stagger`, off by default), and nothing in this list
+passes it. The interactive surfaces do, so that approving a batch and reading
+its data are two moments rather than one second.
 
 Round 1 needs nothing extra. With no model run on disk, `select_batch` takes
 the seed branch and returns the template's round-1 policy batch, saying so in
 the rationale.
 
 `import_round` prints whether the round is **flagged**. A flagged round stops
-the loop: do not run step 6 and do not select the next batch until the round
+the loop: do not run step 9 and do not select the next batch until the round
 has a ruling. Read the diagnosis procedure below.
 
 Two more scripts serve that case:
@@ -165,7 +181,7 @@ bridge estimate and never a number you supply, which is the same rule as rule
 9. Then act on the ruling, which is the only thing that changes any data:
 
    - `refit_only` or `no_action` -- change nothing. The round is ruled and the
-     loop is unblocked; go straight to step 6 of the round loop.
+     loop is unblocked; go straight to step 9 of the round loop.
    - `apply_offset_correction` -- re-import the round naming the ruling:
      `import_round.py ... --offset always --authority decision_NNN`. It checks
      the record: the authority has to exist, be ruled, and recommend the
