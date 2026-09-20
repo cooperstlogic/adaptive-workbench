@@ -57,7 +57,7 @@
     },
     {
       "path": "data/synthetic.py",
-      "sha256": "ada94e20ecbd8316bc03a64209e3e19197b2818f4a7fd35a590e8fe1ea4e299f",
+      "sha256": "4779f2eab85706addcce89508388be25be0d2b24a3150fa4b64592d549ae5b8d",
       "verbatim": true
     },
     {
@@ -67,7 +67,7 @@
     },
     {
       "path": "data/landscape_manifest.json",
-      "sha256": "ac1aabd1b8e1baf50b1f900dd24fb5abd6ab8cc45d1314f345abf74b4bd4b8ff",
+      "sha256": "140903c2722d644b9463aacc49af9cfa297e70220e3d14d9321b3c5a43582b38",
       "verbatim": true
     },
     {
@@ -127,13 +127,13 @@
     },
     {
       "path": "wb_driver.py",
-      "sha256": "2b26f670f26f9a9446a231ad706bfb9b9da24294e1bcc9559b88915c5f1018f6",
+      "sha256": "d7d489081a4b698c57fcd327d7c3489caa2f8d042ed5c67c854863ee8e8bf4b4",
       "source": "web/py/wb_driver.py",
       "verbatim": false
     }
   ],
-  "commit": "bedace952f48296a10f681d579ad078f335a12f0",
-  "hash": "sha256:ebd881bc01f2dc163e1bbf3380146c13638853997c92770693150b26e6cb1e08",
+  "commit": "257b8ffa30599a4020756308b8eb78944866a220",
+  "hash": "sha256:81e7f1dbe504975346f56955d9333e61ea9720e344512256e394269a0b5f4d69",
   "kind": "browser_bundle",
   "mount": "/workbench",
   "note": "code is copied byte for byte from the repository and laid out in the same shape, so Pyodide imports the same modules the CLI imports. state is the committed project rewound to before round 4 was submitted. reference is read for replay and never executed",
@@ -160,7 +160,19 @@
   "state": [
     {
       "path": "lims_store/demo-trastuzumab.json",
-      "sha256": "652807a2a9da6a2bb1f2e7d07e35aaf4be55c60d6aaced1ec023f637c991df96"
+      "sha256": "23d50274bc2e5b2665d2285cc4c5090f8c98e52226b0b3d5d4d9bb9c7b29c7e6"
+    },
+    {
+      "path": "lims_store/exports/demo-trastuzumab_round1_order.csv",
+      "sha256": "9d399c940a8ee3c181de34194d93417a324bde6ef01c667d632b65fdc97df3ad"
+    },
+    {
+      "path": "lims_store/exports/demo-trastuzumab_round2_order.csv",
+      "sha256": "93ec5169513f1d47100efc56138dde7573b862efce52aceb6747c7622f1eccee"
+    },
+    {
+      "path": "lims_store/exports/demo-trastuzumab_round3_order.csv",
+      "sha256": "a329eee5a47c14f5e9b6edc20ff20a6ae8a2552025b8741107a010425f44b674"
     },
     {
       "path": "projects/demo-trastuzumab/batches/batch_001.eval.json",
@@ -248,7 +260,7 @@
     },
     {
       "path": "projects/demo-trastuzumab/rounds.json",
-      "sha256": "1eec2d6b135f45c2155ec386a09b16b2c9388de85623a941982af92630ff9ed6"
+      "sha256": "7fb71ec9092be989fee4fdee79b622370f7ada73968e0cdb730705a241b45ef5"
     }
   ]
 }

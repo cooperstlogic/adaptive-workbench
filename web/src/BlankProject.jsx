@@ -24,10 +24,12 @@ import * as agent from "./agent.js";
 import * as blank from "./blank.js";
 import * as meta from "./meta.js";
 import * as router from "./router.js";
-import { CentreHead, MODEL_LABEL, elapsed } from "./lib.jsx";
+import { CentreHead, MODEL_LABEL, RailToggle, elapsed } from "./lib.jsx";
 
 export default function BlankProject({ route, project, bump, live, reprobe, model, setModel }) {
   const [rec, setRec] = useState(project);
+  const [collapsed, setCollapsed] = useState(false);
+  const rail = { hidden: collapsed, toggle: () => setCollapsed((c) => !c) };
   // The answer being streamed, if a model is seated. A blank project is a
   // chat with nothing declared: no tools, no context, and the answer says
   // what has not been declared when asked.
@@ -117,14 +119,14 @@ export default function BlankProject({ route, project, bump, live, reprobe, mode
   return (
     <div className="shell">
       <div className="body">
-        <nav className="rail">
+        <nav className={`rail${collapsed ? " is-collapsed" : ""}`}>
           <div className="rail-head">
             <a className="rail-back" href="#/" title="All projects">←</a>
             <button className="rail-project">
               <span className="ellipsis">{rec.title}</span>
               <span className="chev">⌄</span>
             </button>
-            <button className="rail-collapse" title="Collapse">▤</button>
+            <RailToggle rail={rail} />
           </div>
           <div className="rail-sub tiny faint">No template</div>
           <a className="rail-item" href={router.href({ kind: "session", project: pid,
@@ -164,7 +166,8 @@ export default function BlankProject({ route, project, bump, live, reprobe, mode
         </nav>
 
         <main className="centre">
-          <CentreHead title={session?.title || "New session"} sub={rec.title} />
+          <CentreHead title={session?.title || "New session"} sub={rec.title}
+                      lead={<RailToggle rail={rail} lead />} />
           <div className="centre-inner thread">
             {turns.map((t, i) => {
               const inflight = streaming && streaming.index === i;

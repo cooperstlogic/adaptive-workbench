@@ -149,9 +149,9 @@ export function call(name, args = {}) {
   return out.result;
 }
 
-// The same call, for the places that render a suggestion list rather than
-// perform an action: a project that has no round graph yet should show no
-// suggestions, not an error banner.
+// The same call, for the places that render a list rather than perform an
+// action: a project that has no round graph yet should show no history and
+// no project list, not an error banner.
 export function safeCall(name, args = {}) {
   try {
     return call(name, args);

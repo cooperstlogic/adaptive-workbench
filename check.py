@@ -232,7 +232,16 @@ def main():
     check("realized linear R2 hits the 0.60 target",
           abs(d["realized_linear_r2"] - 0.60) < 0.01, "%.4f" % d["realized_linear_r2"])
     check("parent sits exactly at 9.000 pKD", abs(d["parent_pkd"] - 9.0) < 1e-9, "%.4f" % d["parent_pkd"])
-    check("threshold is the recorded 10.762", abs(d["threshold_pkd"] - 10.762) < 0.001, "%.3f" % d["threshold_pkd"])
+    check("threshold is the amended 11.006", abs(d["threshold_pkd"] - 11.006) < 0.001, "%.3f" % d["threshold_pkd"])
+    amend = (man.get("amendments") or [{}])[0]
+    check("the amendment is recorded with the superseded value intact",
+          amend.get("field") == "derived.threshold_pkd"
+          and abs(amend.get("from", {}).get("threshold_pkd", 0) - 10.76156) < 1e-5
+          and amend.get("pre_registered") is False
+          and amend.get("after_seeing_results") is True,
+          "%s -> %s, pre_registered %s"
+          % (amend.get("from", {}).get("threshold_pkd"), amend.get("to", {}).get("threshold_pkd"),
+             amend.get("pre_registered")))
     check("detection limit is the recorded 6.861", abs(d["detection_limit_pkd"] - 6.861) < 0.001, "%.3f" % d["detection_limit_pkd"])
     check("cliff at VH 103, parent residue F",
           d["cliff_position"] == 103 and d["cliff_parent_residue"] == "F",
@@ -257,7 +266,10 @@ def main():
     above = int((v > d["threshold_pkd"]).sum())
     check("no single mutant can reach threshold", singles_max < d["threshold_pkd"],
           "best single %.3f < %.3f" % (singles_max, d["threshold_pkd"]))
-    check("threshold is reachable but rare", 40 <= above <= 120,
+    # Widened from 40-120 when the gate was amended upward: the band is a
+    # sanity rail on "reachable but rare", not a pre-registered quantity, and
+    # 25 feasible designs is still a target twenty seeds can find.
+    check("threshold is reachable but rare", 15 <= above <= 120,
           "%d of %d feasible (%.2f%%)" % (above, len(kept), 100.0 * above / len(kept)))
 
     print("\nProject instantiation (phase 1 done-condition)")
@@ -427,16 +439,21 @@ def main():
 
     print("\nPhase 2 gate: guided separates from random")
     gate = camp["gate"]
-    check("the campaign scored the pre-registered threshold on the built landscape",
-          abs(camp["threshold_pkd"] - 10.762) < 0.001
+    check("the campaign scored the amended threshold on the built landscape",
+          abs(camp["threshold_pkd"] - 11.006) < 0.001
           and camp["landscape_build_hash"] == man["build_hash"],
           "threshold %.3f, landscape %s" % (camp["threshold_pkd"], camp["landscape_build_hash"][:19] + "..."))
     check("20 seeds per arm over 6 rounds",
           camp["n_seeds"] == 20 and camp["n_rounds"] == 6
           and all(len(v) == 20 for v in camp["runs"].values()),
           "%d arms x %d seeds" % (len(camp["runs"]), camp["n_seeds"]))
-    check("guided is never slower to threshold than random on any seed",
-          gate["guided_never_slower"] and gate["guided_faster_on_more_seeds"],
+    # Was "never slower on any seed" until the gate was amended upward. That
+    # property held only because the old threshold was ceiling-limited: guided
+    # sat on the round-2 floor in every seed, so it had no room to lose one.
+    # At 11.006 it loses one of twenty, which is what the sign test is for.
+    # The invariant now asserts what the gate itself requires.
+    check("guided is faster to threshold than random, significantly, over the paired seeds",
+          gate["guided_faster_on_more_seeds"] and gate["sign_test_significant_at_0.05"],
           "%d faster, %d slower, p = %.4f, mean %.2f vs %.2f rounds"
           % (gate["paired_sign_test"]["wins"], gate["paired_sign_test"]["losses"],
              gate["paired_sign_test"]["p_value"], gate["mean_rounds_to_threshold"][0],
@@ -1479,8 +1496,7 @@ def main():
                   and lab["reported"]["reported"] is True
                   and lab["reported"]["at_lab"] is False
                   and lab["reported"]["needs_you"] == "results"
-                  and lab["reported"]["landing"] == "r5"
-                  and lab["reported"]["asks"][0] == "results_back",
+                  and lab["reported"]["landing"] == "r5",
                   "round 5 refused with %s, released by hand, and then waiting to be "
                   "pulled rather than waiting for approval"
                   % (lab["first_check"]["expected"] or "?")[:10])
@@ -1498,16 +1514,22 @@ def main():
                   "four commands from one tool call; round 5 comes back flagged at "
                   "%.6f pKD, the same number the product path gets"
                   % lab["tool"]["mean_signed_residual"])
-            check("a round that came back quiet earns an ask only until it is carried "
-                  "forward, and then it earns nothing",
+            check("a round that came back quiet is `imported` until it is carried "
+                  "forward, and `complete` once it has",
                   lab["quiet"]["status"] == "imported"
                   and lab["quiet"]["flagged"] is False
-                  and lab["quiet"]["asks"] == ["live", "agent"]
-                  and lab["settled"]["status"] == "complete"
-                  and lab["settled"]["asks"] == [],
-                  "round 1 of a project created here: [%s] while the column is still "
-                  "offering to fit it, [] once it has"
-                  % ", ".join(lab["quiet"]["asks"]))
+                  and lab["settled"]["status"] == "complete",
+                  "round 1 of a project created here: %s while the column is still "
+                  "offering to fit it, %s once it has"
+                  % (lab["quiet"]["status"], lab["settled"]["status"]))
+            arr = lab["quiet"]["arrival"]
+            check("and a seed round arrives through the same ask with no verdict on it: "
+                  "nothing predicted it, so there is no residual and no calibration",
+                  arr["ready"] is True and arr["scored"] is False
+                  and arr["has_statistic"] is False and arr["rows"] == 96
+                  and lab["quiet"]["evaluation"] is None,
+                  "%d rows in, and the figures about where the model put them are absent "
+                  "rather than zero" % arr["rows"])
             check("it refuses a round already imported and a round never submitted, and "
                   "the refusal goes back as a result rather than ending the turn",
                   lab["tool_refusals"]["imported"]["refused"]
@@ -1572,21 +1594,6 @@ def main():
                   ("asked for %s; pass 2 answers it, %d of %d results match"
                    % (pb["requested"], pb["verified"]["diagnostics"],
                       pb["verified"]["of_diagnostics"])) if pb else "no recorded push-back")
-            sg = browser.get("suggested") or {}
-            check("the composer suggests nothing until the project's state earns it, and "
-                  "a flagged round earns it (decisions 158 and 165)",
-                  sg.get("awaiting_approval") == [] and sg.get("settled") == []
-                  and sg.get("adhoc") == [] and sg.get("quiet") == []
-                  and sg.get("seed") == []
-                  and sg.get("flagged") == ["why_flagged", "whats_waiting", "agent"],
-                  ("nothing on a batch awaiting approval, an ad-hoc session, or any of "
-                   "rounds 1 to 3, which are settled; [%s] once round 4 flags, led by %r"
-                   % (", ".join(sg.get("flagged", [])), sg.get("lead"))) if sg else "none")
-            check("and every suggested ask is a prompt for the model, the agent's option "
-                  "last, with the briefing still answering each keyed one without a seat",
-                  sg.get("prompts") is True and sg.get("agent_last") is True
-                  and sg.get("briefed") is True,
-                  "each carries the text it sends; the no-key path still answers them")
             check("the context the model is handed is read from artifacts and fits the "
                   "cached prefix",
                   browser["context"]["rows"] == 48 and browser["context"]["decisions"] >= 2

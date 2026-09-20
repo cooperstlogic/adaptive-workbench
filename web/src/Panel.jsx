@@ -370,7 +370,10 @@ function ProgressTab({ ctx }) {
       )}
 
       <h3 style={{ marginTop: 10 }}>Calibration of the last scored round</h3>
-      {evaluation
+      {/* A round chosen without a model was predicted by nothing, so
+          evaluate_prior wrote no calibration for it and there is no coverage
+          to draw. The seed round of a new project is that round. */}
+      {evaluation && evaluation.calibration
         ? <>
             <CalibrationChart evaluation={evaluation} />
             <KV rows={[
@@ -390,7 +393,7 @@ function ProgressTab({ ctx }) {
             ]} />
             <p className="tiny faint">{evaluation.calibration.frame_note}</p>
           </>
-        : <Empty>No round has been scored yet.</Empty>}
+        : <Empty>No round has been scored against a model yet.</Empty>}
     </div>
   );
 }

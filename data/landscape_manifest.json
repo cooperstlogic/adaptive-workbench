@@ -1,5 +1,26 @@
 {
-  "build_hash": "sha256:c9b2566abc75f0dba893f4c6628c9bb1213dd2921fa4317b8751be03d2ce3318",
+  "amendments": [
+    {
+      "after_seeing_results": true,
+      "authorized_by": "Dylan Webster",
+      "date": "2026-09-20",
+      "field": "derived.threshold_pkd",
+      "from": {
+        "param": "threshold_percentile = 99.0",
+        "rule": "99th percentile of the enumerated pool",
+        "threshold_pkd": 10.76156
+      },
+      "note": "Chosen after inspecting a sweep of candidate thresholds over the completed runs. This is an amendment and not a pre-registration; the separation it reports is not protected by the commit order that protects the rest of this manifest.",
+      "pre_registered": false,
+      "reason": "The pre-registered gate sat 66% of the way from the parent to the landscape maximum, low enough that a blind 48-well draw cleared it 39% of the time and guided hit it at round 2 in every seed. Rounds-to-threshold was therefore ceiling-limited: both arms had a median of 2.0 and 12 of 20 paired seeds tied. The new rule sits above the additive ceiling reachable from the round-1 scan, so the metric has resolution.",
+      "to": {
+        "param": "threshold_climb_fraction = 0.75",
+        "rule": "fraction of the parent-to-maximum climb",
+        "threshold_pkd": 11.00605
+      }
+    }
+  ],
+  "build_hash": "sha256:74446e2ce0cb50ccd5c06f529df51e3244067783ab1e0a0f4807e14c84476c91",
   "derived": {
     "beta": 0.552696,
     "cliff_parent_residue": "F",
@@ -12,7 +33,7 @@
     "landscape_min_pkd": 4.961059,
     "parent_pkd": 9.0,
     "realized_linear_r2": 0.600764,
-    "threshold_pkd": 10.76156
+    "threshold_pkd": 11.00605
   },
   "editable_region": [
     99,
@@ -33,7 +54,7 @@
     "round_offset_sigma": 0.1,
     "seed": 20260918,
     "target_linear_r2": 0.6,
-    "threshold_percentile": 99.0
+    "threshold_climb_fraction": 0.75
   },
   "parent": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAMDYWGQGTLVTVSS",
   "schema_version": 1,

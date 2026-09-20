@@ -19,12 +19,15 @@ over rounds.** Frame it as that positive vision, not as a gap in the product.
 
 **The build is complete and deployed** — https://adaptive-workbench-iota.vercel.app, on
 Vercel rather than Netlify because the proposal turn runs 70 to 110 seconds and Netlify's
-streaming limit is a hard 60.
+streaming limit is a hard 60. **Deploys come from GitHub**: a push to `main` is production
+and every other branch gets a preview. The Vercel project's Root Directory is `web`, so
+the CLI is run from the repository root, and the key and the budget variables are set on
+Production only — a preview runs without a seat and spends nothing.
 
 ## Commands
 
 - Use `.venv/bin/python`, never `python3` — the system interpreter has no numpy.
-- **Run `.venv/bin/python check.py` before and after any change.** It verifies 198
+- **Run `.venv/bin/python check.py` before and after any change.** It verifies 197
   invariants; a failure means the state drifted from what is documented. It takes about
   forty seconds, because it runs two full six-round campaigns through the CLI, checks them
   against the evaluator, drives both connectors over the MCP protocol, boots Pyodide twice
@@ -65,9 +68,18 @@ streaming limit is a hard 60.
    ad hoc, only read-only against mounted snapshot arrays, only with the source stored
    beside the result, and the number is evidence a human reads, never an input to a code
    path. The moment an LLM is doing the statistics behind the chart, the claim is dead.
-9. **Landscape parameters are pre-registered and the threshold is fixed at 10.762 pKD.**
-   Do not recompute, re-pick or adjust it; do not change the landscape or its parameters.
-   Git history proves the order. If guided does not separate from random, say so.
+9. **Landscape parameters are pre-registered; the threshold was amended once, on the record.**
+   Do not change the landscape, the seed or any other parameter — git history proves the
+   order and `landscape.npz` is still byte-for-byte what `473ac01` produced. The gate is the
+   one exception: it was moved on 2026-09-20 from the pre-registered 99th percentile
+   (10.762 pKD) to 75% of the parent-to-max climb (**11.006 pKD**), after the runs were seen,
+   because rounds-to-threshold was ceiling-limited and had no resolution. **A threshold moved
+   after the fact is an amendment and is written down as one**: the superseded rule and value
+   stay in the `amendments` block of `data/landscape_manifest.json`, the README states it in
+   its own section, and `check.py` asserts the block is intact. Never restate the amended
+   number as pre-registered, and never quote its margin without the amendment beside it.
+   **Any further move needs the same treatment or it does not happen.** If guided does not
+   separate from random, say so.
 10. **Selection must be reproducible, and it is checked.** Ties in predictive uncertainty
     are the normal case rather than a corner case, so anything that ranks candidates breaks
     its ties on a stated reason and then on pool order, never on array order. `check.py`
@@ -123,19 +135,19 @@ person can start an ad-hoc one at any time.
 
 **Decisions are buttons; questions are asks.** Approval and the four ruling verbs are typed
 controls outside the composer — that is why the approval primitive is not a chat interrupt.
-Everything that only *reads* state belongs in the composer, as a contextual suggested ask.
+Everything that only *reads* state belongs in the composer, as free text to the seat.
 
-**Suggested asks go to the model, and only when the state gives a reason to suggest one.**
-A round at the lab or one whose results are in unpulled, a flagged round nobody has ruled
-on, a round that came back quiet and has not been carried forward yet: those earn a card
-(`Choices.jsx`). A batch awaiting approval, a settled round and a new session earn nothing,
-and the composer stands alone; do not put a generic ask back under it. A round is settled
-the moment it is fitted and the next batch is out, however quietly it came back. Every
-option goes to the seat when there is one, except the results check, which is a call to the
-registry and says so where it sits. The deterministic briefing `wb_driver.ask` assembles
-from artifacts on disk is what answers them when there is no seat, and **it is not to be
-removed**: it is the no-key path, and the figures in it resolve to `core/` functions in the
-Notebook tab.
+**Nothing sits over the composer.** There were suggested asks once, presented as a card of
+numbered options; they were more distraction than help and are gone, together with the
+driver's `suggested_asks` and the checks on it. Do not put a suggestion, a chip or a
+generic ask back under the box. Without a seat the composer says so and stays disabled;
+the loop still runs entirely on buttons. **The results check is a button**, *Ask the
+registry*, beside the lab control — it is a call to the registry rather than a question,
+the model cannot make it, and it goes through `wb_driver.ask("results_back")` so the turn
+it leaves is a question and the registry's answer. That deterministic briefing, assembled
+from artifacts on disk, **is not to be removed**: it is what the arrival renders, and the
+figures in it resolve to `core/` functions in the Notebook tab. A round is settled the
+moment it is fitted and the next batch is out, however quietly it came back.
 
 **The lab is not instantaneous, and it must not become so again.** Approving a batch
 submits it and writes the order file the lab receives, and then stops. Whether the results

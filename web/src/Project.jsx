@@ -22,7 +22,7 @@ import Session from "./Session.jsx";
 import * as agent from "./agent.js";
 import * as router from "./router.js";
 import * as rt from "./runtime.js";
-import { Badge, Hash, elapsed, projectTitle, templateTitle } from "./lib.jsx";
+import { Badge, Hash, RailToggle, elapsed, projectTitle, templateTitle } from "./lib.jsx";
 
 // Under this width the artifact panel is a sheet over the conversation rather
 // than a column beside it. The same number is in styles.css; the stylesheet
@@ -107,7 +107,9 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
   const [lineage, setLineage] = useState(null);
   const [artifacts, setArtifacts] = useState({});
   const [saved, setSaved] = useState(null);
+  // The rail: hidden altogether or not, from its own button at either end.
   const [collapsed, setCollapsed] = useState(false);
+  const toggleRail = useCallback(() => setCollapsed((c) => !c), []);
   // The artifact panel: a column beside the conversation that can be hidden
   // and dragged, or under the narrow breakpoint a sheet that starts closed
   // and is opened from the title bar. Crossing the breakpoint resets it.
@@ -215,6 +217,11 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     }
   }, []);
 
+  // One command, with the project re-read afterwards whether or not it
+  // finished. A call is several scripts in a row -- check_results is four --
+  // and a failure in the last of them leaves the ones before it done. Reading
+  // the view only on success left the column offering a button for a state
+  // the project had already left, and the next click hit a refusal.
   const act = useCallback(async (name, fn) => {
     setActing(name);
     setError(null);
@@ -222,11 +229,13 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     try {
       await rt.paint();
       out = fn();
-      setView(rt.call("view", { project: pid }));
-      setSaved(rt.saveOverlay());
     } catch (err) {
       setError(`${err.message}${err.traceback ? `\n${err.traceback}` : ""}`);
     } finally {
+      try {
+        setView(rt.call("view", { project: pid }));
+        setSaved(rt.saveOverlay());
+      } catch { /* the view is what it was; the error above says why */ }
       setActing(null);
     }
     return out;
@@ -263,11 +272,14 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     try {
       await rt.paint();
       out = await fn();
-      setView(rt.call("view", { project: pid }));
-      setSaved(rt.saveOverlay());
     } catch (err) {
       setError(`${err.message}${err.traceback ? `\n${err.traceback}` : ""}`);
     } finally {
+      // As in `act`: a turn that stopped part way still ran the tools it ran.
+      try {
+        setView(rt.call("view", { project: pid }));
+        setSaved(rt.saveOverlay());
+      } catch { /* the view is what it was; the error above says why */ }
       setAgentBusy(false);
       setAgentTurn(null);
       inFlight.current = null;
@@ -318,6 +330,7 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     drops, setDrops, dropNotes, setDropNotes,
     proposal, live, model, setModel, agentTurn, agentBusy,
     panel: { open: panelOpen, narrow, toggle: togglePanel },
+    rail: { hidden: collapsed, toggle: toggleRail },
     onDiagnoseLive: () => diagnose("live"),
     onReplay: (pass = 1) => diagnose("replay", { pass }),
     onPushbackLive: (ruling) => diagnose("live", { ruling }),
@@ -367,11 +380,8 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     refresh,
   }), [pid, view, campaign, round, roundView, sessionId, artifacts, acting, agentBusy, error,
        onTrace, traced, lineage, drops, dropNotes, proposal, live, model, setModel, agentTurn,
-       panelOpen, narrow, togglePanel, diagnose, askLive, act, refresh]);
-
-  const suggestionsFor = useMemo(
-    () => (view ? rt.safeCall("suggested_asks", { project: pid, round_id: round }) : []),
-    [view, pid, round]);
+       panelOpen, narrow, togglePanel, collapsed, toggleRail, diagnose, askLive, act,
+       refresh]);
 
   if (!view) {
     return (
@@ -389,7 +399,6 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
   const sessions = view.sessions || [];
   const active = sessions.filter((s) => s.needs_you || s.at_lab || s.kind === "adhoc");
   const older = sessions.filter((s) => !active.includes(s));
-  const suggestions = suggestionsFor;
 
   const SessionLink = ({ s }) => (
     <a key={s.id} className="rail-session"
@@ -405,8 +414,10 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
   );
 
   const showPanel = route.kind === "session" && panelOpen;
+  // The panel's width cap counts the rail, and a hidden rail is nought wide.
   const widths = {};
-  if (rail.width) widths["--rail-w"] = `${rail.width}px`;
+  if (collapsed) widths["--rail-w"] = "0px";
+  else if (rail.width) widths["--rail-w"] = `${rail.width}px`;
   if (panel.width) widths["--panel-w"] = `${panel.width}px`;
 
   return (
@@ -420,8 +431,7 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
               <span className="ellipsis">{projectTitle(view.project)}</span>
               <span className="chev">⌄</span>
             </button>
-            <button className="rail-collapse" onClick={() => setCollapsed(!collapsed)}
-                    title="Collapse">▤</button>
+            <RailToggle rail={ctx.rail} />
           </div>
           <div className="rail-sub mono tiny faint">{view.project.id}</div>
 
@@ -468,10 +478,10 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
                                                         id: `r${r}` })} />
           )}
           {route.kind === "session" && round !== null && roundView && (
-            <Session ctx={ctx} stored={stored} history={history} suggestions={suggestions} />
+            <Session ctx={ctx} stored={stored} history={history} />
           )}
           {route.kind === "session" && round === null && route.id !== "new" && (
-            <AdHoc ctx={ctx} stored={stored} suggestions={suggestions} />
+            <AdHoc ctx={ctx} stored={stored} />
           )}
         </main>
 

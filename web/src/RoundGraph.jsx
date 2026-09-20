@@ -9,7 +9,7 @@
 // that graph, read straight out of rounds.json. It does not say so: the chips
 // carry the hashes, and the page is the graph.
 
-import { Badge, Empty, elapsed, n, pct, signed, when } from "./lib.jsx";
+import { Badge, Empty, RailToggle, elapsed, n, pct, signed, when } from "./lib.jsx";
 
 const LINKS = [
   ["pool", "candidates enumerated and filtered"],
@@ -26,7 +26,7 @@ export default function RoundGraph({ ctx, onOpenRound }) {
     <div className="centre-inner">
       <div className="spread">
         <div>
-          <h2>Rounds</h2>
+          <div className="row"><RailToggle rail={ctx.rail} lead /><h2>Rounds</h2></div>
           <p className="small muted" style={{ margin: "2px 0 0" }}>
             {view.project.id} · {view.rounds.length} rounds · read from{" "}
             <span className="mono">rounds.json</span>

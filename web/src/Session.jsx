@@ -20,9 +20,11 @@
 //
 // **The round goes to a laboratory on the way through.** Approving signs the
 // batch, submits it and writes the order file the lab would receive — and
-// then stops. Whether the results are back is a separate question, asked
-// under the composer, answered by the registry, and refused the first time
-// with the date it is expected.
+// then stops. Whether the results are back is a separate call to the
+// registry, a button beside the lab control rather than a question in the
+// composer because the model cannot reach the registry; it is refused the
+// first time with the date it is expected, and the answer is the briefing
+// the driver assembles from what came back.
 //
 // **The agent sits in this column, and only its turns carry a badge.** A
 // flagged round is diagnosed by a model in the centre seat when one is
@@ -47,7 +49,8 @@ import Tool from "./Tool.jsx";
 import Turn from "./Turn.jsx";
 import { recordedPushback } from "./agent.js";
 import {
-  ACTION_LABEL, Badge, CentreHead, Hash, PanelToggle, VERBS, dayMonth, n, pct, signed,
+  ACTION_LABEL, Badge, CentreHead, Hash, PanelToggle, RailToggle, VERBS, dayMonth, n, pct,
+  signed,
 } from "./lib.jsx";
 
 // The template's own list, with the two arguments that change what a test
@@ -92,7 +95,7 @@ function AskTurn({ turn, log, live, ctx }) {
   );
 }
 
-export default function Session({ ctx, stored, history, suggestions }) {
+export default function Session({ ctx, stored, history }) {
   const {
     view, round, roundView, decision, log, busy, acting, error, sessionId, batch,
     onApprove, onDiagnostic, onRule, onAdvance, onContinue, onRelease,
@@ -257,20 +260,38 @@ export default function Session({ ctx, stored, history, suggestions }) {
   // that approved it needs something to answer; the hash is quoted only while
   // the batch is unsigned, since signing changes it. A round whose record
   // came from elsewhere has the same sentence from History instead.
+  //
+  // A seed round gets the sentence History gives it, for the same reason: it
+  // came from the template's policy and not from a fit, so there is no model
+  // to name and no round before it to have fit -- and its composition is
+  // three zeroes and a total, because `seed_batch` fills every slot with a
+  // pick.
   const pending = stage === "awaiting approval";
   const fromRecord = !!(record && record.steps.length);
   if (roundView.batch && !fromRecord && (pending || sendSteps.length > 0)) {
+    const proposed = pending ? "has proposed" : "proposed";
+    const hashed = pending && (
+      <> Unsigned, it hashes to <Hash value={roundView.batch.hash} />.</>
+    );
     put(selectionSteps.length ? selectionSteps[0].n : PAST, "proposed", (
       <Turn who="workbench">
-        <p>
-          The optimizer {pending ? "has proposed" : "proposed"} {roundView.batch.n} wells for
-          round {round} — {roundView.batch.composition.control} control,{" "}
-          {roundView.batch.composition.replicate} replicate,{" "}
-          {roundView.batch.composition.exploration} exploration and{" "}
-          {roundView.batch.composition.pick} fresh picks — from the{" "}
-          {roundView.batch.model_winner} fit of round {round - 1}.
-          {pending && <> Unsigned, it hashes to <Hash value={roundView.batch.hash} />.</>}
-        </p>
+        {roundView.batch.mode === "seed" ? (
+          <p>
+            Round {round} {pending ? "has" : "had"} no fit to select from, so the optimizer{" "}
+            {proposed} {roundView.batch.n} wells from the template's{" "}
+            <span className="mono">{batch?.policy?.round1_policy || "seed"}</span> policy,
+            all of them fresh picks.{hashed}
+          </p>
+        ) : (
+          <p>
+            The optimizer {proposed} {roundView.batch.n} wells for
+            round {round} — {roundView.batch.composition.control} control,{" "}
+            {roundView.batch.composition.replicate} replicate,{" "}
+            {roundView.batch.composition.exploration} exploration and{" "}
+            {roundView.batch.composition.pick} fresh picks — from the{" "}
+            {roundView.batch.model_winner} fit of round {round - 1}.{hashed}
+          </p>
+        )}
         <Chips entries={selectionSteps} />
       </Turn>
     ));
@@ -356,6 +377,17 @@ export default function Session({ ctx, stored, history, suggestions }) {
     ));
   }
 
+  // The registry check: the one call in this column that is not a decision.
+  // It is a button because the model cannot make it, and it is the same
+  // `ask` the driver answers with a briefing, so the turn it leaves is a
+  // question and its answer.
+  const askRegistry = (
+    <button className="btn small" disabled={busy}
+            onClick={() => onAsk("results_back", round, sessionId)}>
+      {spin("ask")} Ask the registry
+    </button>
+  );
+
   if (roundView.at_lab) {
     put(NOW, "at-lab", (
       <Turn who="workbench">
@@ -363,6 +395,7 @@ export default function Session({ ctx, stored, history, suggestions }) {
           <p>Nothing here moves until the assay reports.</p>
         )}
         <div className="row wrap" style={{ marginTop: 10 }}>
+          {askRegistry}
           <button className="btn small" disabled={busy} onClick={onRelease}>
             {spin("release")} Have the lab report now
           </button>
@@ -372,31 +405,33 @@ export default function Session({ ctx, stored, history, suggestions }) {
     ));
   }
 
-  // The lab has reported and nobody has pulled it. Before the control above
-  // existed this state lasted as long as one call, because the ask that
-  // released the round also imported it. The release is a command like any
-  // other and stays in the stream once the round has been pulled; the
-  // sentence about the registry holding the round lasts only while it does.
-  const holding = roundView.reported && (
-    <p>
-      The registry has round {round}: {lab?.n_rows || 0} rows across{" "}
-      {lab?.n_samples || 0} samples on assay {lab?.assay_version}
-      {lab?.released_by && <> — reported early, by {lab.released_by}</>}. Nothing is
-      imported until it is asked for.
-    </p>
-  );
+  // The release is a command like any other and stays in the stream once the
+  // round has been pulled.
   if (releaseSteps.length > 0) {
     put(before(releaseSteps[0].n), "released", (
       <>
         <Turn who="you"><p>Have the lab report now</p></Turn>
-        <Turn who="workbench">
-          <Chips entries={releaseSteps} />
-          {holding}
-        </Turn>
+        <Turn who="workbench"><Chips entries={releaseSteps} /></Turn>
       </>
     ));
-  } else if (roundView.reported) {
-    put(NOW, "reported", <Turn who="workbench">{holding}</Turn>);
+  }
+
+  // The lab has reported and nobody has pulled it. Before the release control
+  // existed this state lasted as long as one call, because the ask that
+  // released the round also imported it; now a person can stand in it, and
+  // the way out is the same call.
+  if (roundView.reported) {
+    put(NOW, "reported", (
+      <Turn who="workbench">
+        <p>
+          The registry has round {round}: {lab?.n_rows || 0} rows across{" "}
+          {lab?.n_samples || 0} samples on assay {lab?.assay_version}
+          {lab?.released_by && <> — reported early, by {lab.released_by}</>}. Nothing is
+          imported until it is asked for.
+        </p>
+        <div className="row wrap" style={{ marginTop: 10 }}>{askRegistry}</div>
+      </Turn>
+    ));
   }
 
   // The answer to the ask, where the ask landed. If nobody asked -- a round
@@ -718,6 +753,7 @@ export default function Session({ ctx, stored, history, suggestions }) {
                   sub={`${view.project.lead.name} ${view.project.lead.chain} → ${
                     view.project.target} · ${view.n_designs} designs · assay ${
                     roundView.assay_version || "not yet run"}`}
+                  lead={<RailToggle rail={ctx.rail} lead />}
                   aside={<PanelToggle panel={ctx.panel} />}>
         {roundView.flagged && <Badge kind="flag">flagged</Badge>}
         {roundView.at_lab && <Badge kind="attn">at the lab</Badge>}
@@ -727,11 +763,8 @@ export default function Session({ ctx, stored, history, suggestions }) {
 
         {items.map((it) => <Fragment key={it.key}>{it.node}</Fragment>)}
 
-        <Composer key={sessionId} suggestions={suggestions} busy={busy}
-                  asked={storedTurns.filter((t) => t.kind !== "agent" || t.task !== "diagnose").length}
-                  live={live} model={model} setModel={setModel}
+        <Composer key={sessionId} busy={busy} live={live} model={model} setModel={setModel}
                   placeholder={`Ask about round ${round}…`}
-                  onAsk={(key, forRound) => onAsk(key, forRound, sessionId)}
                   onSend={(text, chosen, label) => onAskLive(text, chosen, label)} />
       </div>
     </>

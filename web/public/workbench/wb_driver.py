@@ -323,8 +323,12 @@ def _round_view(state, entry, project_id):
         "refs": {k: entry[k] for k in ("pool", "batch", "snapshot", "evaluation",
                                        "model", "decision") if k in entry},
         "submission": entry.get("submission"),
+        # Only an order file that is actually on the mount, as the stream's
+        # "submitted" step already does: a path the page cannot serve is a
+        # download that fails on the click.
         "order": (_order_csv(project_id, r).replace(MOUNT + "/", "")
-                  if entry.get("submission") else None),
+                  if entry.get("submission") and os.path.exists(_order_csv(project_id, r))
+                  else None),
         "reconciliation": None if snap is None else snap["reconciliation"],
         "batch": None if batch is None else {
             "hash": batch["hash"], "mode": batch["mode"], "n": len(batch["approved"]),
@@ -992,6 +996,10 @@ def _lab_briefing(pid, round_id, session_id):
     Not ready is an answer: it names the date and leaves the ask offered. Ready
     is where there is finally something to say, and the reconciliation and the
     anomaly verdict land in the same turn, because the arrival is one event.
+
+    A seed round has no verdict to land: nothing predicted it, so there is no
+    residual to take and ``anomaly_flag`` returned none. ``scored`` says which
+    kind of arrival this is, and the figures are absent rather than zero.
     """
     res = check_results(round_id, project=pid, session=session_id)
     res.pop("ran", None)
@@ -1003,12 +1011,21 @@ def _lab_briefing(pid, round_id, session_id):
                     submitted=res.get("submitted"), expected=res.get("expected"),
                     assay_version=res.get("assay_version"), refusal=res.get("refusal"))
     rec = res["reconciliation"]
-    return dict(base, ready=True, status="complete",
-                assay_version=res["assay_version"], plates=res["plates"],
-                rows=rec["rows"], samples=rec["samples"], designs=rec["designs"],
-                n_ok=rec["n_ok"], n_failed=rec["n_failed"], n_censored=rec["n_censored"],
-                unreconciled=rec["unreconciled_rows"],
-                flagged=res["flagged"],
+    out = dict(base, ready=True, status="complete",
+               assay_version=res["assay_version"], plates=res["plates"],
+               rows=rec["rows"], samples=rec["samples"], designs=rec["designs"],
+               n_ok=rec["n_ok"], n_failed=rec["n_failed"], n_censored=rec["n_censored"],
+               unreconciled=rec["unreconciled_rows"],
+               flagged=res["flagged"], scored=res["anomaly"] is not None,
+               reads=["lims_store/%s.json" % pid,
+                      "evidence/snapshot_%03d.json" % round_id])
+    if res["anomaly"] is None:
+        # A round chosen without a model -- the seed round of any project --
+        # was predicted by nothing, so there is no residual to take and
+        # `anomaly_flag` returned none. It came back and it is in; the
+        # sentence about where the model put these designs has no subject.
+        return out
+    return dict(out,
                 statistic=_figure(res["anomaly"]["mean_signed_residual"],
                                   "core.reconcile.anomaly_flag",
                                   "evidence/snapshot_%03d.json" % round_id,
@@ -1017,9 +1034,7 @@ def _lab_briefing(pid, round_id, session_id):
                                 "core.reconcile.anomaly_flag", "objectives.json",
                                 "trigger", "pKD"),
                 n_compared=res["anomaly"]["n_compared"],
-                known_version_offset=res["anomaly"]["known_version_offset"],
-                reads=["lims_store/%s.json" % pid,
-                       "evidence/snapshot_%03d.json" % round_id])
+                known_version_offset=res["anomaly"]["known_version_offset"])
 
 
 def _figure(value, source, artifact_path, label, unit=None, synthetic=False, args=None):
@@ -1198,116 +1213,6 @@ def round_history(round_id, project=None):
         })
     return {"round": r, "steps": steps, "reads": reads,
             "source": "the round's own artifacts; no command in this browser produced them"}
-
-
-def suggested_asks(project=None, round_id=None):
-    """What to offer over the composer, when the project's state gives a reason to.
-
-    Offered only when there is something to suggest: a round at the lab or one
-    whose results are in and unpulled, a flagged round nobody has ruled on, a
-    round that came back quiet and has not been carried forward yet. A new
-    session with nothing pending gets nothing over the composer -- *where are
-    we?* and *what does this template declare?* are questions a person types,
-    not ones the workbench presses (decision 158). Neither does a settled
-    round: once it is fitted and the next batch is out, there is no open
-    question in it to press on anybody (decision 165).
-
-    Each entry is a prompt for the model in the centre seat -- ``title`` is
-    what the card shows and the bubble repeats, ``question`` is the text that
-    is sent, ``lead`` on the first is the state that earned the card -- except
-    the one marked ``registry``, which is a call to the laboratory's registry
-    and not a question about state; the model cannot reach the registry, and
-    asking is what moves a staggered round (decision 130). Without a live seat
-    the page answers every keyed entry from the briefing ``ask`` assembles.
-    """
-    pid = project or DEMO
-    if not os.path.isfile(os.path.join(_root(pid), "project.json")):
-        return []
-    v_state = _state(pid)
-    entries = v_state["rounds"]["rounds"]
-    rounds = [_round_view(v_state, e, pid) for e in entries]
-    waiting = next((r for r in rounds if r["at_lab"] or r["reported"]), None)
-    flagged = next((r for r in rounds if r["status"] == "flagged, ruling pending"), None)
-    focus = None
-    if round_id is not None:
-        focus = next((r for r in rounds if r["round"] == int(round_id)), None)
-
-    out = []
-    lab = (focus if (focus is not None and (focus["at_lab"] or focus["reported"]))
-           else waiting)
-    if lab is not None:
-        out.append({"key": "results_back", "round": lab["round"], "registry": True,
-                    # The card reopens when the reason changes, and a run that
-                    # has reported is a different reason from a run that has
-                    # not, under the same key.
-                    "state": "reported" if lab["reported"] else "at the lab",
-                    "lead": ("Round %d's results are in and nobody has pulled them."
-                             % lab["round"] if lab["reported"]
-                             else "Round %d is at the lab." % lab["round"]),
-                    "text": "Have round %d's results come back?" % lab["round"],
-                    "title": "Have round %d's results come back?" % lab["round"],
-                    "question": ("Ask the registry. It has the run: asking pulls it, "
-                                 "reconciles it against the designs that were submitted "
-                                 "and scores it against what the model predicted."
-                                 if lab["reported"] else
-                                 "Ask the registry. It refuses with the date it expects "
-                                 "until the laboratory has reported, and imports and "
-                                 "evaluates the round once it has."),
-                    "cons": "A call to the registry, not a question for the model"})
-    flag = (focus if (focus is not None and focus["status"] == "flagged, ruling pending")
-            else flagged)
-    if flag is not None:
-        out.append({"key": "why_flagged", "round": flag["round"],
-                    "lead": "Round %d flagged, and nobody has ruled on it." % flag["round"],
-                    "text": "Why did round %d flag?" % flag["round"],
-                    "title": "Why did round %d flag?" % flag["round"],
-                    "question": ("Why did round %d flag? Read the anomaly against its "
-                                 "calibration and the bridge, and say what the flag does "
-                                 "and does not establish on its own." % flag["round"]),
-                    "pros": "Reads the flag against its calibration and bridge without running anything",
-                    "cons": "Nothing is proposed and nothing is written"})
-    # Decision 66: the agent speaks on quiet rounds too. Here that is an ask
-    # rather than an alarm -- a live question the person can put to the model
-    # about a round that did not flag. The page offers it only when a live
-    # session is available, because nothing on disk answers it.
-    #
-    # Only while the round is still the open question, though -- decision 165.
-    # "Came back and did not flag" describes a round from the moment it is
-    # imported until someone fits it and moves on, and after that it describes
-    # a round from six weeks ago with the next three behind it. A settled
-    # round earns nothing (158), and the status is what says which: `imported`
-    # is the state where the column is still offering to fit it.
-    if focus is not None and focus["flagged"] is False and focus["status"] == "imported":
-        out.append({"key": "live", "round": focus["round"],
-                    "lead": "Round %d came back and did not flag." % focus["round"],
-                    "text": "Anything to decide in round %d?" % focus["round"],
-                    "title": "Anything to decide in round %d?" % focus["round"],
-                    "question": ("Round %d came back and did not flag. In one or two "
-                                 "sentences, from its calibration and its bridge: is there "
-                                 "anything in it to decide, or was it as quiet as the flag "
-                                 "says?" % focus["round"])})
-    if out and (waiting or flagged):
-        out.append({"key": "whats_waiting", "round": None,
-                    "text": "What's waiting on me?", "title": "What's waiting on me?",
-                    "question": ("What's waiting on me? Every open item — a flagged round "
-                                 "without a ruling, a batch awaiting approval, a round at "
-                                 "the lab — and what each one needs from me.")})
-    seen, unique = set(), []
-    for a in out:
-        if a["key"] not in seen:
-            seen.add(a["key"])
-            unique.append(a)
-    if not unique:
-        return []
-    # The option under the numbered ones. It is not a read of anything in
-    # particular, so it has no briefing to fall back on and the page offers
-    # it only when a model is seated.
-    return unique + [{
-        "key": "agent", "round": None, "agent": True,
-        "text": "Let the agent decide", "title": "Let the agent decide",
-        "question": ("Look at where this project is and decide what most needs attention "
-                     "now; then answer that yourself, from the context and the read tools."),
-    }]
 
 
 QUESTIONS = {

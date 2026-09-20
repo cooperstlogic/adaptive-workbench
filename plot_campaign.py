@@ -70,7 +70,7 @@ def _panel(ax, payload, arms, key, theme, title, subtitle):
     # Labelled below the rule at the right edge: every arm has left that space
     # by round 3, so the label lands on the surface rather than on a band.
     ax.axhline(threshold, color=t["muted"], linewidth=1.2, linestyle=(0, (5, 4)), zorder=1)
-    ax.annotate("pre-registered threshold  %.3f" % threshold,
+    ax.annotate("amended threshold  %.3f" % threshold,
                 xy=(payload["n_rounds"] + 0.78, threshold), xytext=(0, -7),
                 textcoords="offset points", ha="right", va="top",
                 fontsize=8.5, color=t["muted"])
@@ -79,6 +79,7 @@ def _panel(ax, payload, arms, key, theme, title, subtitle):
     ax.axvspan(3.5, payload["n_rounds"] + 0.85, color=t["muted"], alpha=0.05,
                linewidth=0, zorder=0)
 
+    ends = []
     for arm in arms:
         q = [r[key] for r in payload["summary"][arm]["per_round"]]
         med = np.array([x["median"] for x in q])
@@ -90,9 +91,28 @@ def _panel(ax, payload, arms, key, theme, title, subtitle):
                 solid_capstyle="round", label=LABEL[arm])
         ax.plot(rounds, med, "o", color=c, markersize=4.5, zorder=5,
                 markeredgecolor=t["surface"], markeredgewidth=2.0)
-        # Direct labels at the endpoint. Slot 3 sits below 3:1 on the light
-        # surface, so the label is the relief, not a nicety.
-        ax.annotate("%.2f" % med[-1], xy=(rounds[-1], med[-1]), xytext=(7, -3),
+        ends.append((float(med[-1]), c))
+
+    # Direct labels at the endpoint. Slot 3 sits below 3:1 on the light
+    # surface, so the label is the relief, not a nicety.
+    #
+    # Two arms can finish within a few hundredths of each other -- at the
+    # amended threshold the naive arm lands on random's line in the right
+    # panel -- so the labels are pushed apart before they are drawn. The
+    # marker stays on the true value; only the text moves. The gap is a
+    # fraction of the autoscaled range rather than a pixel count, so it
+    # survives tight_layout and both output dpi settings.
+    # The threshold rule is an occupant of the same strip and is seeded into
+    # the list as a blocker with no label of its own: an arm that finishes on
+    # the gate would otherwise have the dashes drawn through its digits.
+    span = ax.get_ylim()[1] - ax.get_ylim()[0]
+    gap, placed = 0.045 * span, []
+    for value, c in sorted(ends + [(threshold, None)], key=lambda e: e[0]):
+        y = value if not placed or value - placed[-1] >= gap else placed[-1] + gap
+        placed.append(y)
+        if c is None:
+            continue
+        ax.annotate("%.2f" % value, xy=(rounds[-1], y), xytext=(7, -3),
                     textcoords="offset points", ha="left", va="center",
                     fontsize=9.5, color=c, fontweight="bold")
 

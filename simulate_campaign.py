@@ -10,9 +10,13 @@ the diagnostic line -- the line that asks what each arm actually picked,
 before the simulated assay added noise to the answer. Nothing on a product
 path may do this.
 
-The threshold it scores against was pre-registered (README.md, "Pre-registered
-landscape parameters") and committed before this file first ran. If guided does not separate from
-random, the deliverable is a sentence saying it did not.
+The threshold it scores against is an amendment, not a pre-registration. The
+rule was changed on 2026-09-20, after this file had already run, from the
+pre-registered 99th percentile to a fraction of the parent-to-maximum climb --
+see README.md, "Amendment: the threshold rule", and the ``amendments`` block in
+data/landscape_manifest.json. Every other landscape parameter is still the
+pre-registered one. If guided does not separate from random, the deliverable is
+a sentence saying it did not.
 """
 
 import argparse
@@ -373,8 +377,10 @@ def report(ctx, summary, comparisons, arms, elapsed):
     w("  SYNTHETIC LANDSCAPE. This shows the loop converges. It does not show that")
     w("  the method finds better antibodies.")
     w("")
-    w("  threshold %.3f pKD, pre-registered as the 99th percentile before any run"
-      % ctx.threshold)
+    w("  threshold %.3f pKD, AMENDED 2026-09-20 to %.0f%% of the parent-to-max climb;"
+      % (ctx.threshold, 100 * synthetic.PARAMS["threshold_climb_fraction"]))
+    w("  it supersedes the pre-registered 99th percentile at 10.762 and was chosen")
+    w("  after the runs were seen. The landscape itself did not move.")
     w("  %d of %d feasible designs are above it (%.2f%%)"
       % (ctx.n_above, len(ctx.feasible), 100.0 * ctx.n_above / len(ctx.feasible)))
     w("  %d seeds per arm, %d rounds, batch of %d, shared round-1 single-mutant scan"
@@ -440,18 +446,19 @@ def gate_verdict(ctx, summary, comparison):
     """The hour-3 gate, stated as a pass or a failure and nothing in between.
 
     The criterion is the one written down before any of this ran:
-    guided reaches the pre-registered threshold in measurably fewer rounds
-    than random over twenty seeds per arm, and the interquartile bands
-    separate. Because the twenty runs are paired -- same landscape, same
+    guided reaches the threshold in measurably fewer rounds than random over
+    twenty seeds per arm, and the interquartile bands separate. The criterion
+    is unchanged; the threshold it is evaluated at was amended afterwards. Because the twenty runs are paired -- same landscape, same
     round-1 batch, same assay draws, one arm differing -- the measurement is
     the paired comparison across those seeds.
 
     The median of rounds-to-threshold is reported and is deliberately not the
-    test. It is a discrete count with a floor at two, guided lands on that
-    floor in most seeds, and it ties at 2.0 for both arms while guided is
-    never once slower. A statistic with no resolution is not evidence either
-    way, and reading a tie there as a failure would be as wrong as reading it
-    as a pass.
+    test. It is a discrete count with a floor at two -- no single mutant can
+    clear the gate, so no run can finish before round two -- and under the
+    pre-registered threshold guided sat on that floor in every seed, tying the
+    median at 2.0 for both arms. A statistic with no resolution is not evidence
+    either way. ``median_has_no_resolution`` reports whether that is still the
+    case at whatever threshold is in force.
     """
     rt = comparison["rounds_to_threshold"]
     st = rt["sign_test"]
@@ -462,9 +469,9 @@ def gate_verdict(ctx, summary, comparison):
     passed = bool(faster and significant and separated)
     return {
         "passed": passed,
-        "criterion": ("guided reaches the pre-registered threshold in measurably fewer "
-                      "rounds than random over 20 paired seeds, and the interquartile "
-                      "bands separate"),
+        "criterion": ("guided reaches the threshold in measurably fewer rounds than "
+                      "random over 20 paired seeds, and the interquartile bands "
+                      "separate"),
         "guided_faster_on_more_seeds": bool(faster),
         "guided_never_slower": never_slower,
         "paired_sign_test": st,
@@ -475,10 +482,11 @@ def gate_verdict(ctx, summary, comparison):
         "interquartile_bands_separate": separated,
         "rounds_where_bands_separate": comparison["rounds_separated_observed"],
         "statement": (
-            "GATE PASSED: guided selection reaches the pre-registered threshold in "
-            "fewer rounds than random over 20 paired seeds, and the interquartile "
-            "bands separate. The landscape is synthetic, so this shows the loop "
-            "converges and not that the method finds better antibodies."
+            "GATE PASSED: guided selection reaches the threshold in fewer rounds "
+            "than random over 20 paired seeds, and the interquartile bands separate. "
+            "The threshold was amended after the runs were seen, so the margin is "
+            "not protected by pre-registration. The landscape is synthetic, so this "
+            "shows the loop converges and not that the method finds better antibodies."
             if passed else
             "GATE NOT PASSED: guided selection did not separate from random on this "
             "landscape. The landscape and the threshold stay as they are."
@@ -552,8 +560,14 @@ def main(argv=None):
         "unit": schema.UNIT,
         "landscape_build_hash": ctx.manifest["build_hash"],
         "threshold_pkd": ctx.threshold,
-        "threshold_provenance": ("99th percentile of the landscape, pre-registered and "
-                                 "committed before any campaign ran"),
+        "threshold_provenance": ("%.0f%% of the parent-to-maximum climb. AMENDED 2026-09-20, "
+                                 "after the campaign had run and after a sweep of candidate "
+                                 "thresholds was inspected; it supersedes the pre-registered "
+                                 "99th percentile at 10.762 pKD. The landscape and every other "
+                                 "parameter are unchanged and still pre-registered. See the "
+                                 "amendments block in data/landscape_manifest.json."
+                                 % (100 * synthetic.PARAMS["threshold_climb_fraction"])),
+        "threshold_amendment": ctx.manifest.get("amendments", []),
         "detection_limit_pkd": ctx.detection_limit,
         "n_seeds": args.seeds,
         "n_rounds": args.rounds,

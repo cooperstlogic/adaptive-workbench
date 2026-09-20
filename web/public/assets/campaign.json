@@ -1,5 +1,5 @@
 {
-  "above_threshold": 74,
+  "above_threshold": 25,
   "arms": {
     "guided": {
       "correct_offsets": true,
@@ -86,22 +86,22 @@
         6
       ],
       "rounds_to_threshold": {
-        "delta": 0.95,
+        "delta": 1.85,
         "mean": [
-          2.0,
-          2.95
+          2.35,
+          4.2
         ],
         "median": [
           2.0,
-          2.0
+          3.5
         ],
-        "never_slower": true,
+        "never_slower": false,
         "note": "runs that never reached the threshold are recorded as 7",
         "sign_test": {
-          "losses": 0,
-          "p_value": 0.007812,
-          "ties": 12,
-          "wins": 8
+          "losses": 1,
+          "p_value": 0.000519,
+          "ties": 4,
+          "wins": 15
         }
       }
     },
@@ -172,46 +172,46 @@
       "rounds_to_threshold": {
         "delta": 0.0,
         "mean": [
-          2.0,
-          2.0
+          2.35,
+          2.35
         ],
         "median": [
           2.0,
           2.0
         ],
-        "never_slower": true,
+        "never_slower": false,
         "note": "runs that never reached the threshold are recorded as 7",
         "sign_test": {
-          "losses": 0,
-          "p_value": 1.0,
-          "ties": 20,
-          "wins": 0
+          "losses": 4,
+          "p_value": 0.6875,
+          "ties": 14,
+          "wins": 2
         }
       }
     }
   ],
   "detection_limit_pkd": 6.860511,
-  "elapsed_seconds": 34.449687,
+  "elapsed_seconds": 34.74964,
   "feasible_pool": 7294,
   "gate": {
-    "criterion": "guided reaches the pre-registered threshold in measurably fewer rounds than random over 20 paired seeds, and the interquartile bands separate",
+    "criterion": "guided reaches the threshold in measurably fewer rounds than random over 20 paired seeds, and the interquartile bands separate",
     "guided_faster_on_more_seeds": true,
-    "guided_never_slower": true,
+    "guided_never_slower": false,
     "interquartile_bands_separate": true,
     "mean_rounds_to_threshold": [
-      2.0,
-      2.95
+      2.35,
+      4.2
     ],
-    "median_has_no_resolution": true,
+    "median_has_no_resolution": false,
     "median_rounds_to_threshold": [
       2.0,
-      2.0
+      3.5
     ],
     "paired_sign_test": {
-      "losses": 0,
-      "p_value": 0.007812,
-      "ties": 12,
-      "wins": 8
+      "losses": 1,
+      "p_value": 0.000519,
+      "ties": 4,
+      "wins": 15
     },
     "passed": true,
     "rounds_where_bands_separate": [
@@ -220,11 +220,11 @@
       6
     ],
     "sign_test_significant_at_0.05": true,
-    "statement": "GATE PASSED: guided selection reaches the pre-registered threshold in fewer rounds than random over 20 paired seeds, and the interquartile bands separate. The landscape is synthetic, so this shows the loop converges and not that the method finds better antibodies."
+    "statement": "GATE PASSED: guided selection reaches the threshold in fewer rounds than random over 20 paired seeds, and the interquartile bands separate. The threshold was amended after the runs were seen, so the margin is not protected by pre-registration. The landscape is synthetic, so this shows the loop converges and not that the method finds better antibodies."
   },
-  "hash": "sha256:dbd940af90834ae85904b9fce3003799d1dfdd68e04e6fa412e3043f4b7358ad",
+  "hash": "sha256:c37cfb8bd4a2aad8e07cbbfa7cfccb8dc18b9ae3987d9236b845a56a6ab8c295",
   "kind": "campaign_comparison",
-  "landscape_build_hash": "sha256:c9b2566abc75f0dba893f4c6628c9bb1213dd2921fa4317b8751be03d2ce3318",
+  "landscape_build_hash": "sha256:74446e2ce0cb50ccd5c06f529df51e3244067783ab1e0a0f4807e14c84476c91",
   "n_rounds": 6,
   "n_seeds": 20,
   "runs": {
@@ -14313,8 +14313,8 @@
         "q3": 11.839261
       },
       "label": "model-guided, offsets corrected",
-      "mean_rounds_to_threshold": 2.0,
-      "mean_rounds_to_threshold_landscape": 2.0,
+      "mean_rounds_to_threshold": 2.35,
+      "mean_rounds_to_threshold_landscape": 2.25,
       "median_rounds_to_threshold": 2.0,
       "median_rounds_to_threshold_landscape": 2.0,
       "n_runs": 20,
@@ -14381,8 +14381,8 @@
             "q1": 11.004932,
             "q3": 11.339634
           },
-          "reached_threshold": 1.0,
-          "reached_threshold_landscape": 1.0,
+          "reached_threshold": 0.8,
+          "reached_threshold_landscape": 0.85,
           "round": 2
         },
         {
@@ -14414,8 +14414,8 @@
             "q1": 11.061602,
             "q3": 11.674179
           },
-          "reached_threshold": 1.0,
-          "reached_threshold_landscape": 1.0,
+          "reached_threshold": 0.9,
+          "reached_threshold_landscape": 0.95,
           "round": 3
         },
         {
@@ -14447,8 +14447,8 @@
             "q1": 11.116805,
             "q3": 11.674179
           },
-          "reached_threshold": 1.0,
-          "reached_threshold_landscape": 1.0,
+          "reached_threshold": 0.95,
+          "reached_threshold_landscape": 0.95,
           "round": 4
         },
         {
@@ -14529,13 +14529,13 @@
         2,
         2,
         2,
+        5,
+        3,
         2,
         2,
+        4,
         2,
-        2,
-        2,
-        2,
-        2,
+        3,
         2,
         2,
         2,
@@ -14543,6 +14543,7 @@
       ],
       "rounds_to_threshold_landscape": [
         2,
+        3,
         2,
         2,
         2,
@@ -14550,14 +14551,13 @@
         2,
         2,
         2,
+        5,
         2,
         2,
         2,
         2,
         2,
-        2,
-        2,
-        2,
+        3,
         2,
         2,
         2,
@@ -14580,8 +14580,8 @@
         "q3": 11.11243
       },
       "label": "model-guided, measurements pooled naively",
-      "mean_rounds_to_threshold": 2.0,
-      "mean_rounds_to_threshold_landscape": 2.0,
+      "mean_rounds_to_threshold": 2.35,
+      "mean_rounds_to_threshold_landscape": 2.25,
       "median_rounds_to_threshold": 2.0,
       "median_rounds_to_threshold_landscape": 2.0,
       "n_runs": 20,
@@ -14648,8 +14648,8 @@
             "q1": 11.004932,
             "q3": 11.339634
           },
-          "reached_threshold": 1.0,
-          "reached_threshold_landscape": 1.0,
+          "reached_threshold": 0.85,
+          "reached_threshold_landscape": 0.85,
           "round": 2
         },
         {
@@ -14681,8 +14681,8 @@
             "q1": 11.015324,
             "q3": 11.674179
           },
-          "reached_threshold": 1.0,
-          "reached_threshold_landscape": 1.0,
+          "reached_threshold": 0.95,
+          "reached_threshold_landscape": 0.95,
           "round": 3
         },
         {
@@ -14714,8 +14714,8 @@
             "q1": 10.992911,
             "q3": 11.39773
           },
-          "reached_threshold": 1.0,
-          "reached_threshold_landscape": 1.0,
+          "reached_threshold": 0.8,
+          "reached_threshold_landscape": 0.95,
           "round": 4
         },
         {
@@ -14747,7 +14747,7 @@
             "q1": 10.974807,
             "q3": 11.30558
           },
-          "reached_threshold": 1.0,
+          "reached_threshold": 0.75,
           "reached_threshold_landscape": 1.0,
           "round": 5
         },
@@ -14780,12 +14780,12 @@
             "q1": 10.974807,
             "q3": 11.674179
           },
-          "reached_threshold": 0.9,
+          "reached_threshold": 0.5,
           "reached_threshold_landscape": 1.0,
           "round": 6
         }
       ],
-      "reached_by_final_round": 1.0,
+      "reached_by_final_round": 0.95,
       "rounds_to_threshold": [
         2,
         2,
@@ -14798,10 +14798,10 @@
         2,
         2,
         2,
+        7,
         2,
-        2,
-        2,
-        2,
+        3,
+        3,
         2,
         2,
         2,
@@ -14810,6 +14810,7 @@
       ],
       "rounds_to_threshold_landscape": [
         2,
+        3,
         2,
         2,
         2,
@@ -14817,14 +14818,13 @@
         2,
         2,
         2,
+        5,
         2,
         2,
         2,
         2,
         2,
-        2,
-        2,
-        2,
+        3,
         2,
         2,
         2,
@@ -14847,10 +14847,10 @@
         "q3": 11.344444
       },
       "label": "random from the feasible pool",
-      "mean_rounds_to_threshold": 2.95,
-      "mean_rounds_to_threshold_landscape": 3.45,
-      "median_rounds_to_threshold": 2.0,
-      "median_rounds_to_threshold_landscape": 3.0,
+      "mean_rounds_to_threshold": 4.2,
+      "mean_rounds_to_threshold_landscape": 4.7,
+      "median_rounds_to_threshold": 3.5,
+      "median_rounds_to_threshold_landscape": 4.0,
       "n_runs": 20,
       "per_round": [
         {
@@ -14915,8 +14915,8 @@
             "q1": 10.455322,
             "q3": 10.969965
           },
-          "reached_threshold": 0.6,
-          "reached_threshold_landscape": 0.4,
+          "reached_threshold": 0.25,
+          "reached_threshold_landscape": 0.25,
           "round": 2
         },
         {
@@ -14948,8 +14948,8 @@
             "q1": 10.669571,
             "q3": 11.222279
           },
-          "reached_threshold": 0.7,
-          "reached_threshold_landscape": 0.65,
+          "reached_threshold": 0.45,
+          "reached_threshold_landscape": 0.35,
           "round": 3
         },
         {
@@ -14981,8 +14981,8 @@
             "q1": 10.796059,
             "q3": 11.224823
           },
-          "reached_threshold": 0.85,
-          "reached_threshold_landscape": 0.8,
+          "reached_threshold": 0.65,
+          "reached_threshold_landscape": 0.55,
           "round": 4
         },
         {
@@ -15014,8 +15014,8 @@
             "q1": 10.846168,
             "q3": 11.224823
           },
-          "reached_threshold": 0.9,
-          "reached_threshold_landscape": 0.85,
+          "reached_threshold": 0.7,
+          "reached_threshold_landscape": 0.55,
           "round": 5
         },
         {
@@ -15047,46 +15047,24 @@
             "q1": 10.847131,
             "q3": 11.228277
           },
-          "reached_threshold": 0.9,
-          "reached_threshold_landscape": 0.85,
+          "reached_threshold": 0.7,
+          "reached_threshold_landscape": 0.6,
           "round": 6
         }
       ],
-      "reached_by_final_round": 0.9,
+      "reached_by_final_round": 0.7,
       "rounds_to_threshold": [
-        2,
-        2,
         3,
-        2,
-        4,
-        2,
-        4,
-        2,
-        2,
         3,
-        4,
-        2,
-        2,
         7,
-        3,
-        2,
-        2,
-        7,
-        2,
-        2
-      ],
-      "rounds_to_threshold_landscape": [
-        2,
-        2,
-        3,
         2,
         5,
         4,
         4,
         2,
         3,
-        3,
-        3,
+        7,
+        7,
         2,
         4,
         7,
@@ -15094,14 +15072,57 @@
         2,
         2,
         7,
+        3,
+        7
+      ],
+      "rounds_to_threshold_landscape": [
+        7,
         2,
+        7,
+        2,
+        7,
+        4,
+        6,
+        2,
+        3,
+        7,
+        4,
+        4,
+        4,
+        7,
+        3,
+        2,
+        2,
+        7,
+        7,
         7
       ]
     }
   },
   "synthetic": true,
   "synthetic_note": "The landscape is invented. This chart shows that the decision loop converges; it does not show that the method finds better antibodies.",
-  "threshold_pkd": 10.76156,
-  "threshold_provenance": "99th percentile of the landscape, pre-registered and committed before any campaign ran",
+  "threshold_amendment": [
+    {
+      "after_seeing_results": true,
+      "authorized_by": "Dylan Webster",
+      "date": "2026-09-20",
+      "field": "derived.threshold_pkd",
+      "from": {
+        "param": "threshold_percentile = 99.0",
+        "rule": "99th percentile of the enumerated pool",
+        "threshold_pkd": 10.76156
+      },
+      "note": "Chosen after inspecting a sweep of candidate thresholds over the completed runs. This is an amendment and not a pre-registration; the separation it reports is not protected by the commit order that protects the rest of this manifest.",
+      "pre_registered": false,
+      "reason": "The pre-registered gate sat 66% of the way from the parent to the landscape maximum, low enough that a blind 48-well draw cleared it 39% of the time and guided hit it at round 2 in every seed. Rounds-to-threshold was therefore ceiling-limited: both arms had a median of 2.0 and 12 of 20 paired seeds tied. The new rule sits above the additive ceiling reachable from the round-1 scan, so the metric has resolution.",
+      "to": {
+        "param": "threshold_climb_fraction = 0.75",
+        "rule": "fraction of the parent-to-maximum climb",
+        "threshold_pkd": 11.00605
+      }
+    }
+  ],
+  "threshold_pkd": 11.00605,
+  "threshold_provenance": "75% of the parent-to-maximum climb. AMENDED 2026-09-20, after the campaign had run and after a sweep of candidate thresholds was inspected; it supersedes the pre-registered 99th percentile at 10.762 pKD. The landscape and every other parameter are unchanged and still pre-registered. See the amendments block in data/landscape_manifest.json.",
   "unit": "pKD"
 }
