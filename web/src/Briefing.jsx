@@ -215,17 +215,24 @@ export default function Briefing({ data, ctx }) {
             ? " with nothing left over"
             : `, ${data.unreconciled} rows unreconciled`}.
         </p>
-        <p>
-          {data.flagged ? <>And round {data.round} <b>flagged</b>: </> : <>Round {data.round}{" "}
-            did not flag — </>}
-          its {data.n_compared} fresh designs came back a mean{" "}
-          <b><Fig fig={data.statistic} onTrace={onTrace} /></b> from where the model put
-          them, against a trigger of{" "}
-          <Fig fig={data.trigger} onTrace={onTrace} digits={2} />. The assay version is{" "}
-          {data.assay_version} and the project{" "}
-          {data.known_version_offset === null
-            ? "has never characterized it" : "has an offset on record for it"}.
-        </p>
+        {data.scored === false ? (
+          <p>
+            Round {data.round} was chosen without a model, so there was nothing to score it
+            against and no residual to take. It is the evidence the first fit is made from.
+          </p>
+        ) : (
+          <p>
+            {data.flagged ? <>And round {data.round} <b>flagged</b>: </> : <>Round {data.round}{" "}
+              did not flag — </>}
+            its {data.n_compared} fresh designs came back a mean{" "}
+            <b><Fig fig={data.statistic} onTrace={onTrace} /></b> from where the model put
+            them, against a trigger of{" "}
+            <Fig fig={data.trigger} onTrace={onTrace} digits={2} />. The assay version is{" "}
+            {data.assay_version} and the project{" "}
+            {data.known_version_offset === null
+              ? "has never characterized it" : "has an offset on record for it"}.
+          </p>
+        )}
         <p className="small muted">
           {data.flagged ? "Deciding what it means is next." : "Nothing to decide."}
         </p>

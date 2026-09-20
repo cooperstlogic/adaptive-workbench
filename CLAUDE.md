@@ -24,7 +24,7 @@ streaming limit is a hard 60.
 ## Commands
 
 - Use `.venv/bin/python`, never `python3` — the system interpreter has no numpy.
-- **Run `.venv/bin/python check.py` before and after any change.** It verifies 196
+- **Run `.venv/bin/python check.py` before and after any change.** It verifies 197
   invariants; a failure means the state drifted from what is documented. It takes about
   forty seconds, because it runs two full six-round campaigns through the CLI, checks them
   against the evaluator, drives both connectors over the MCP protocol, boots Pyodide twice

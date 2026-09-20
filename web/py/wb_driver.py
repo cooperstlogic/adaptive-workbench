@@ -992,6 +992,10 @@ def _lab_briefing(pid, round_id, session_id):
     Not ready is an answer: it names the date and leaves the ask offered. Ready
     is where there is finally something to say, and the reconciliation and the
     anomaly verdict land in the same turn, because the arrival is one event.
+
+    A seed round has no verdict to land: nothing predicted it, so there is no
+    residual to take and ``anomaly_flag`` returned none. ``scored`` says which
+    kind of arrival this is, and the figures are absent rather than zero.
     """
     res = check_results(round_id, project=pid, session=session_id)
     res.pop("ran", None)
@@ -1003,12 +1007,21 @@ def _lab_briefing(pid, round_id, session_id):
                     submitted=res.get("submitted"), expected=res.get("expected"),
                     assay_version=res.get("assay_version"), refusal=res.get("refusal"))
     rec = res["reconciliation"]
-    return dict(base, ready=True, status="complete",
-                assay_version=res["assay_version"], plates=res["plates"],
-                rows=rec["rows"], samples=rec["samples"], designs=rec["designs"],
-                n_ok=rec["n_ok"], n_failed=rec["n_failed"], n_censored=rec["n_censored"],
-                unreconciled=rec["unreconciled_rows"],
-                flagged=res["flagged"],
+    out = dict(base, ready=True, status="complete",
+               assay_version=res["assay_version"], plates=res["plates"],
+               rows=rec["rows"], samples=rec["samples"], designs=rec["designs"],
+               n_ok=rec["n_ok"], n_failed=rec["n_failed"], n_censored=rec["n_censored"],
+               unreconciled=rec["unreconciled_rows"],
+               flagged=res["flagged"], scored=res["anomaly"] is not None,
+               reads=["lims_store/%s.json" % pid,
+                      "evidence/snapshot_%03d.json" % round_id])
+    if res["anomaly"] is None:
+        # A round chosen without a model -- the seed round of any project --
+        # was predicted by nothing, so there is no residual to take and
+        # `anomaly_flag` returned none. It came back and it is in; the
+        # sentence about where the model put these designs has no subject.
+        return out
+    return dict(out,
                 statistic=_figure(res["anomaly"]["mean_signed_residual"],
                                   "core.reconcile.anomaly_flag",
                                   "evidence/snapshot_%03d.json" % round_id,
@@ -1017,9 +1030,7 @@ def _lab_briefing(pid, round_id, session_id):
                                 "core.reconcile.anomaly_flag", "objectives.json",
                                 "trigger", "pKD"),
                 n_compared=res["anomaly"]["n_compared"],
-                known_version_offset=res["anomaly"]["known_version_offset"],
-                reads=["lims_store/%s.json" % pid,
-                       "evidence/snapshot_%03d.json" % round_id])
+                known_version_offset=res["anomaly"]["known_version_offset"])
 
 
 def _figure(value, source, artifact_path, label, unit=None, synthetic=False, args=None):

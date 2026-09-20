@@ -381,12 +381,26 @@ lab.context = (() => {
 // forward and `complete` after, and the project created above is where one
 // can be had: round 1 carries no model predictions, so it cannot flag. Its
 // files were compared against the CLI before any of this ran.
+//
+// It is pulled the way the column pulls it -- `ask`, which is what the
+// registry button calls -- rather than by `check_results` underneath, because
+// the briefing assembled around the result is the part a seed round breaks:
+// nothing predicted it, so there is no residual to take and no calibration
+// to draw, and every figure about where the model put these designs is
+// absent rather than zero.
 const made5 = made.id;
 call("approve", { round_id: 1, by: BY, project: made5 });
 call("release_run", { round_id: 1, project: made5 });
-call("check_results", { round_id: 1, project: made5 });
+const seedArrival = call("ask", { key: "results_back", round_id: 1, project: made5,
+                                  session_id: "r1" });
 const quietRound = call("view", { project: made5 }).rounds.find((r) => r.round === 1);
-lab.quiet = { status: quietRound.status, flagged: quietRound.flagged };
+lab.quiet = {
+  status: quietRound.status, flagged: quietRound.flagged,
+  arrival: { ready: seedArrival.ready, scored: seedArrival.scored,
+             rows: seedArrival.rows, has_statistic: "statistic" in seedArrival },
+  evaluation: (call("artifact", { kind: "batches", round_id: 1, suffix: ".eval",
+                                  project: made5 }) || {}).calibration,
+};
 call("continue_unflagged", { round_id: 1, project: made5 });
 const settledRound = call("view", { project: made5 }).rounds.find((r) => r.round === 1);
 lab.settled = { status: settledRound.status };

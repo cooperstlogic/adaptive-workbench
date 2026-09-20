@@ -215,6 +215,11 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     }
   }, []);
 
+  // One command, with the project re-read afterwards whether or not it
+  // finished. A call is several scripts in a row -- check_results is four --
+  // and a failure in the last of them leaves the ones before it done. Reading
+  // the view only on success left the column offering a button for a state
+  // the project had already left, and the next click hit a refusal.
   const act = useCallback(async (name, fn) => {
     setActing(name);
     setError(null);
@@ -222,11 +227,13 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     try {
       await rt.paint();
       out = fn();
-      setView(rt.call("view", { project: pid }));
-      setSaved(rt.saveOverlay());
     } catch (err) {
       setError(`${err.message}${err.traceback ? `\n${err.traceback}` : ""}`);
     } finally {
+      try {
+        setView(rt.call("view", { project: pid }));
+        setSaved(rt.saveOverlay());
+      } catch { /* the view is what it was; the error above says why */ }
       setActing(null);
     }
     return out;
@@ -263,11 +270,14 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     try {
       await rt.paint();
       out = await fn();
-      setView(rt.call("view", { project: pid }));
-      setSaved(rt.saveOverlay());
     } catch (err) {
       setError(`${err.message}${err.traceback ? `\n${err.traceback}` : ""}`);
     } finally {
+      // As in `act`: a turn that stopped part way still ran the tools it ran.
+      try {
+        setView(rt.call("view", { project: pid }));
+        setSaved(rt.saveOverlay());
+      } catch { /* the view is what it was; the error above says why */ }
       setAgentBusy(false);
       setAgentTurn(null);
       inFlight.current = null;

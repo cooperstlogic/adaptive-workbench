@@ -1505,6 +1505,14 @@ def main():
                   "round 1 of a project created here: %s while the column is still "
                   "offering to fit it, %s once it has"
                   % (lab["quiet"]["status"], lab["settled"]["status"]))
+            arr = lab["quiet"]["arrival"]
+            check("and a seed round arrives through the same ask with no verdict on it: "
+                  "nothing predicted it, so there is no residual and no calibration",
+                  arr["ready"] is True and arr["scored"] is False
+                  and arr["has_statistic"] is False and arr["rows"] == 96
+                  and lab["quiet"]["evaluation"] is None,
+                  "%d rows in, and the figures about where the model put them are absent "
+                  "rather than zero" % arr["rows"])
             check("it refuses a round already imported and a round never submitted, and "
                   "the refusal goes back as a result rather than ending the turn",
                   lab["tool_refusals"]["imported"]["refused"]
