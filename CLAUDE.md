@@ -17,9 +17,6 @@ know-how — the data mappings, the models, the decision logic and the review in
 of objectives, predictions, experiments and outcomes accumulates project-specific value
 over rounds.** Frame it as that positive vision, not as a gap in the product.
 
-It will be read and poked at by people who know this domain. Optimize for work that
-survives scrutiny, not for feature count.
-
 **The build is complete and deployed** — https://adaptive-workbench-iota.vercel.app, on
 Vercel rather than Netlify because the proposal turn runs 70 to 110 seconds and Netlify's
 streaming limit is a hard 60.
