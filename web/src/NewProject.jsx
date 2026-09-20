@@ -180,7 +180,6 @@ export default function NewProject({ bump, campaign }) {
           <a className="tiny faint" href="#/">← {APP}</a>
           <h1 style={{ fontSize: 24, marginTop: 4 }}>Template library</h1>
         </div>
-        <a className="btn small" href={router.href({ kind: "new" })}>+ New project</a>
       </header>
 
       {error && <div className="err" style={{ marginBottom: 16 }}>{error}</div>}
