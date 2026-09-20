@@ -33,7 +33,8 @@ export default function Composer({
   // project's state changes what there is to suggest -- a round comes back,
   // a round flags -- because that is a new reason rather than the old one
   // repeated. Closed by hand until then.
-  const signature = suggestions.map((s) => `${s.key}:${s.round ?? ""}`).join(",");
+  const signature = suggestions
+    .map((s) => `${s.key}:${s.round ?? ""}:${s.state ?? ""}`).join(",");
   const [shown, setShown] = useState(null);
   const at = useRef(signature);
   if (at.current !== signature) {

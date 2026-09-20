@@ -11,21 +11,23 @@ browser runs the round loop on the repository's own modules, writing artifacts
 byte-identical to the CLI's, and the redesign (decisions 122 to 136) gave it two shells,
 the session model, project creation in the browser and a laboratory that has to be waited
 on. **Phase 7 — decisions 137 to 152 — put the model in the centre seat**: one stateless
-function behind the composer, `SKILL.md` as its system prompt, three tools, a signed
+function behind the composer, `SKILL.md` as its system prompt, its tools, a signed
 transcript, a daily cap, and the same stream component stepping the committed record
 without a key with every number recomputed and checked. The round-4 record is two-pass,
-its second pass written by a third headless gate. **Phase 8 is next: the committed demo
-project's opening state, the Vercel deploy, and the public README** — and the first
-thing to verify there is the function under a real key: a proposal turn streamed to its
-end, the Redis store, and `ANTHROPIC_API_KEY` set. The host is Vercel, not Netlify —
-decision 159: the proposal turn runs 70 to 110 seconds and Netlify's streaming limit is
-a hard 60. Full status, results and commands are
+its second pass written by a third headless gate. **The site is deployed and the seat has
+been run live on it** — decision 159, https://adaptive-workbench-iota.vercel.app, behind
+the link's access code (160). The host is Vercel, not Netlify: the proposal turn runs 70
+to 110 seconds and Netlify's streaming limit is a hard 60. **Decisions 162 to 164 filled
+three empty rooms**: a round that ran before this browser opened reads back out of its own
+artifacts instead of opening blank, the laboratory's clock is a control marked
+*simulated*, and the seat can ask the registry itself. **What phase 8 still owes is the
+public README**, and then phase 9's demo script. Full status, results and commands are
 in `README.md`; every settled choice and its reasoning is in `DECISIONS.md`. Read both
 before writing code, and read `skills/adaptive-optimization/SKILL.md` before touching
 anything in the round loop.
 
 - Use `.venv/bin/python`, never `python3` — the system interpreter has no numpy.
-- Run `.venv/bin/python check.py` before and after any phase. It verifies 188 invariants
+- Run `.venv/bin/python check.py` before and after any phase. It verifies 195 invariants
   that correspond to rules here and numbers in `DECISIONS.md`; a failure means the state
   drifted from what is documented. It takes about forty seconds, because it runs two full
   six-round campaigns through the CLI, checks them against the evaluator, drives both
@@ -100,7 +102,13 @@ four. Phase 6 answered 105 with four verbs outside the composer, 106 with the Ro
 submits it and writes the order file the lab receives, and then stops. Whether the results
 are back is a separate question put to the registry, refused the first time with the date
 it is expected. `lims.py`'s `submit_batch` takes `--stagger`, off by default, so every CLI
-path and every existing store is byte-for-byte unaffected — decision 130.
+path and every existing store is byte-for-byte unaffected — decision 130. **The clock can
+be moved by hand, and only by hand** — decision 163: *Have the lab report now* is a
+control marked **simulated**, calling `lims.py release`, and it changes when the registry
+hands the rows over and nothing about what they say. It does not collapse the two
+moments: a released run still has to be pulled by someone asking for it, and the state
+between the two — *results ready* — is a place the interface has. Approving must never
+produce data again.
 
 **Phase 6 is done — decisions 112 to 121.** The browser mounts `core/` byte for byte
 rather than bundling a copy, and `check.py` fails if a copy drifts, so **re-run `python
@@ -114,8 +122,11 @@ on the product path** — reproduced by both surfaces, predicted by `decision_00
 deliberately not in the harness.
 
 **Phase 7 is done — decisions 137 to 152.** Four rules from it. **The model produces no
-numbers, still**: its three tools are two reads and `record_decision.py --propose`, and
-the writer's refusal goes back to it as an error result. **The function is not a proxy**:
+numbers, still**: its tools are two reads, the registry (decision 164) and
+`record_decision.py --propose`, and the writer's refusal goes back to it as an error
+result. `check_lab_results` is the one tool that writes, and what it writes is a round the
+laboratory reported, pulled and imported by the same two scripts every surface runs — no
+number in a record is ever the model's. **The function is not a proxy**:
 it builds every request itself and accepts only transcripts it signed — never loosen
 `validate()` to take a `messages` array. **The session is the conversation, and
 transcripts are still not state** — decision 157, amending 149: a session holds one

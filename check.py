@@ -1296,6 +1296,35 @@ def main():
               "expected %s on the first ask, %d rows on the second"
               % ((first["expected"] or "?")[:10], second["n_rows"]))
 
+        # The other way to the same place: the demo's clock, which a person
+        # presses when eight days is not a thing a demo can wait for.
+        bench = os.path.join(tmp, "bench.json")
+        shutil.copyfile(os.path.join(REPO, "web", "public", "workbench", "lims_store",
+                                     "demo-trastuzumab.json"), bench)
+        bench_root = os.path.join(tmp, "bench-copy")
+        shutil.copytree(lab_root, bench_root)
+        lims_mod.submit_project_batch(bench_root, 4, bench, stagger=True)
+        before_release = schema.read_json(bench)["rounds"]["R4"]
+        released = lims_mod.release_run("R4", bench_root, bench, reason="check.py")
+        after_release = schema.read_json(bench)["rounds"]["R4"]
+        check("the clock can be moved by hand instead, and it moves nothing but the clock",
+              released["released_now"] and before_release["status"] == "running"
+              and after_release["status"] == "complete"
+              and set(after_release) - set(before_release) == {"released_by", "released_at"}
+              and all(after_release[k] == before_release[k]
+                      for k in before_release if k != "status")
+              and lims_mod.pull_to_csv("R4", bench_root, bench)["n_rows"]
+              == before_release["n_rows"],
+              "released by %r: the same %d rows, measured at submission, handed over on "
+              "the day someone asked rather than the day the registry named"
+              % (after_release["released_by"], after_release["n_rows"]))
+        check("and it is a demo device rather than a registry tool, so it is not on the "
+              "list that answers 'does this replace the LIMS'",
+              "release_run" not in [name for name, _ in lims_mod.TOOLS]
+              and lims_mod.release_run("R4", bench_root, bench)["released_now"] is False,
+              "%d tools, none of which finishes an assay; releasing an already-released "
+              "round is a no-op that says so" % len(lims_mod.TOOLS))
+
         order = lims_mod.export_order("R4", lab_root, held)
         submitted = schema.read_json(held)["rounds"]["R4"]["samples"]
         measured = {"value", "unit", "status", "well", "replicate"}
@@ -1399,6 +1428,73 @@ def main():
                   "hands them over, never what they are"
                   % (browser["round4"]["rows"], browser["round4"]["n_failed"],
                      browser["round4"]["n_censored"]))
+
+            # The rounds that ran somewhere else. A session for one of them
+            # used to be a title and a composer, because the command log is
+            # the tab's and theirs is six weeks old on another machine.
+            hist = browser["history"]
+            check("a round that ran before this browser opened reads back out of its own "
+                  "artifacts",
+                  hist["past"] == [
+                      ["proposed", "approved", "submitted", "returned", "scored", "fitted"],
+                      ["proposed", "approved", "submitted", "returned", "scored", "fitted"],
+                      ["proposed", "approved", "submitted", "returned", "scored", "frame",
+                       "fitted"]]
+                  and hist["pending"] == 0
+                  and set(hist["reads"]) == {
+                      "batches/batch_003.json", "candidates/pool_003.json", "designs.json",
+                      "evidence/snapshot_003.json", "batches/batch_003.eval.json",
+                      "models/run_003.json"},
+                  "rounds 1 to 3 in %d steps from %d artifacts each; round 4, selected and "
+                  "not sent, has nothing to read back"
+                  % (len(hist["past"][2]), len(hist["reads"])))
+            check("and every figure in it either names a core/ function that exists or "
+                  "names none at all",
+                  hist["resolve"] and all(f["found"] for f in hist["resolve"])
+                  and all(f["artifact"] for f in hist["figures"]),
+                  "%d of %d figures carry a source and all %d resolve; the rest were "
+                  "computed inside a pipeline script and claim nothing"
+                  % (len(hist["resolve"]), len(hist["figures"]), len(hist["resolve"])))
+
+            lab = browser["lab"]
+            check("the demo's clock is a control, and it is the only thing in the driver "
+                  "that moves one",
+                  lab["submitted"]["status"] == "running"
+                  and lab["first_check"]["ready"] is False
+                  and lab["released"]["status"] == "complete"
+                  and lab["released"]["by"] == "the demo control"
+                  and lab["reported"]["status"] == "results ready"
+                  and lab["reported"]["reported"] is True
+                  and lab["reported"]["at_lab"] is False
+                  and lab["reported"]["needs_you"] == "results"
+                  and lab["reported"]["landing"] == "r5"
+                  and lab["reported"]["asks"][0] == "results_back",
+                  "round 5 refused with %s, released by hand, and then waiting to be "
+                  "pulled rather than waiting for approval"
+                  % (lab["first_check"]["expected"] or "?")[:10])
+            check("and the model can ask the registry itself, which is what the seat was "
+                  "missing",
+                  lab["tool"]["commands"] == ["registry: check_run_status",
+                                              "registry: pull_assay_results",
+                                              "import round 5",
+                                              "score round 5 against its predictions"]
+                  and lab["tool"]["ready"] and lab["tool"]["flagged"]
+                  and lab["tool"]["rows"] == 96
+                  and abs(lab["tool"]["mean_signed_residual"] + 0.818061) < 5e-7
+                  and lab["tool"]["carries_no_commands"]
+                  and lab["context"]["has_lab"],
+                  "four commands from one tool call; round 5 comes back flagged at "
+                  "%.6f pKD, the same number the product path gets"
+                  % lab["tool"]["mean_signed_residual"])
+            check("it refuses a round already imported and a round never submitted, and "
+                  "the refusal goes back as a result rather than ending the turn",
+                  lab["tool_refusals"]["imported"]["refused"]
+                  and lab["tool_refusals"]["imported"]["is_error"]
+                  and "already imported" in lab["tool_refusals"]["imported"]["why"]
+                  and lab["tool_refusals"]["unsubmitted"]["refused"]
+                  and "has not been submitted" in lab["tool_refusals"]["unsubmitted"]["why"],
+                  "a round comes back once: %s"
+                  % lab["tool_refusals"]["imported"]["why"].split("; ")[0])
 
             made_same, made_drift = cli_instantiation_of(browser["files"])
             check("a project instantiated in the browser is one the CLI would have written",
@@ -1582,15 +1678,17 @@ def main():
                   and hk["system_blocks"] == rq["system_blocks"],
                   "Haiku 4.5 rejects both fields by name; everything else about its "
                   "request -- prompt, tools, cap, fallbacks -- is the other model's")
-            check("the model is offered two read tools and one way to hand back, and no way "
-                  "to name a test the template does not permit",
-                  rq["tools"] == ["run_diagnostic", "execute_analysis", "propose_decision"]
-                  and rq["ask_tools"] == ["run_diagnostic", "execute_analysis"]
+            check("the model is offered two read tools, the registry, and one way to hand "
+                  "back, and no way to name a test the template does not permit",
+                  rq["tools"] == ["run_diagnostic", "execute_analysis",
+                                  "check_lab_results", "propose_decision"]
+                  and rq["ask_tools"] == ["run_diagnostic", "execute_analysis",
+                                          "check_lab_results"]
                   and rq["chat_tools"] == []
                   and rq["run_diagnostic_enum"] == list(diagnostics.TESTS)
                   and rq["run_diagnostic_strict"],
-                  "run_diagnostic's enum is the context's permitted list, strict; a chat "
-                  "gets no tools")
+                  "two reads, the registry, and one way to hand back; run_diagnostic's "
+                  "enum is the context's permitted list, strict; a chat gets no tools")
             check("its system prompt is the skill itself",
                   rq["system_has_skill"] and rq["system_blocks"] == 3
                   and fnr["probe"]["skill_sha256"] == hashlib.sha256(

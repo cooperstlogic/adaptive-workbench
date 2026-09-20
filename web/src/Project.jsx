@@ -101,6 +101,14 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     }
   }, [view, sessionId, pid]);
 
+  // What the round did, for a round that did it somewhere else. The command
+  // log is this tab's; a round that ran before the tab was opened has none,
+  // and its story is in its artifacts.
+  const history = useMemo(() => {
+    if (!view || !round) return null;
+    return rt.safeCall("round_history", { round_id: round, project: pid }) || null;
+  }, [view, round, pid]);
+
   /* artifacts for whichever round is open ---------------------------------- */
   useEffect(() => {
     if (!view || !round) { setArtifacts({}); return; }
@@ -242,6 +250,8 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
       setTab("Progress");
       return r;
     }),
+    onRelease: () => act(() =>
+      rt.call("release_run", { round_id: round, project: pid, session: sessionId })),
     onDiagnostic: (test, args) => act(() =>
       rt.call("diagnostic", { round_id: round, test, project: pid, session: sessionId,
                               ...args })),
@@ -375,7 +385,7 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
                                                         id: `r${r}` })} />
           )}
           {route.kind === "session" && round !== null && roundView && (
-            <Session ctx={ctx} stored={stored} suggestions={suggestions} />
+            <Session ctx={ctx} stored={stored} history={history} suggestions={suggestions} />
           )}
           {route.kind === "session" && round === null && route.id !== "new" && (
             <AdHoc ctx={ctx} stored={stored} suggestions={suggestions} />

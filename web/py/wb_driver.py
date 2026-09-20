@@ -271,6 +271,9 @@ def _lab_status(project_id, round_id, peek=True):
             "submitted": rec.get("submitted"),
             "expected": rec.get("expected"),
             "checks": int(rec.get("checks", 0)),
+            "held": "release_on_check" in rec,
+            "released_by": rec.get("released_by"),
+            "released_at": rec.get("released_at"),
             "n_samples": rec.get("n_samples"),
             "n_rows": rec.get("n_rows")}
 
@@ -284,9 +287,16 @@ def _round_view(state, entry, project_id):
     dec = project_mod.read_decision(state, r)
     lab = _lab_status(project_id, r) if entry.get("submission") else None
     at_lab = bool(snap is None and lab and lab["status"] == "running")
+    # The lab has reported and nobody has pulled it yet. Before the release
+    # control existed this state lasted exactly as long as the call that
+    # released the round, because the same ask imported it; now a person can
+    # stand in it, and a round in it is not a round awaiting approval.
+    reported = bool(snap is None and lab and lab["status"] != "running")
     if snap is None:
         if at_lab:
             status = "at the lab"
+        elif reported:
+            status = "results ready"
         elif batch:
             status = "awaiting approval"
         else:
@@ -301,6 +311,7 @@ def _round_view(state, entry, project_id):
         "round": r,
         "status": status,
         "at_lab": at_lab,
+        "reported": reported,
         "lab": lab,
         "flagged": None if snap is None else bool(snap["flagged"]),
         "ruled": project_mod.is_ruled(state, r),
@@ -343,6 +354,7 @@ def view(project=None):
     pending = next((r for r in rounds if r["status"] == "awaiting approval"), None)
     blocked = next((r for r in rounds if r["status"] == "flagged, ruling pending"), None)
     at_lab = next((r for r in rounds if r["at_lab"]), None)
+    reported = next((r for r in rounds if r["reported"]), None)
     last = rounds[-1] if rounds else None
 
     needs_you = None
@@ -363,6 +375,13 @@ def view(project=None):
             "headline": "Round %d — batch waiting for approval" % pending["round"],
             "detail": "%d wells, %s" % (pending["batch"]["n"], pending["batch"]["mode"]),
         }
+    elif reported:
+        needs_you = {
+            "kind": "results",
+            "round": reported["round"],
+            "headline": "Round %d — the lab has reported" % reported["round"],
+            "detail": "%d rows waiting to be pulled" % (reported["lab"]["n_rows"] or 0),
+        }
 
     return {
         "project": state["project"],
@@ -373,7 +392,8 @@ def view(project=None):
         "pending_round": None if pending is None else pending["round"],
         "blocked_round": None if blocked is None else blocked["round"],
         "at_lab_round": None if at_lab is None else at_lab["round"],
-        "active_round": (blocked or pending or at_lab or last or {}).get("round"),
+        "reported_round": None if reported is None else reported["round"],
+        "active_round": (blocked or pending or reported or at_lab or last or {}).get("round"),
         "needs_you": needs_you,
         "log": _log_read(pid)["entries"],
         "sessions": sessions(pid),
@@ -589,46 +609,100 @@ def check_results(round_id, project=None, session=None):
     r = int(round_id)
     pid = project or DEMO
     root, store = _root(pid), _store(pid)
+    state = _state(pid)
+    entry = next((e for e in state["rounds"]["rounds"] if int(e["round"]) == r), None)
+    if entry is None or not entry.get("submission"):
+        raise RuntimeError("round %d has not been submitted; there is nothing at the "
+                           "laboratory to ask about" % r)
+    if project_mod.read_artifact(state, "evidence", r) is not None:
+        # The registry would hand the rows over again -- pulling is a read --
+        # but importing them again would rewrite a snapshot that has already
+        # been scored, ruled on and in round 4's case moved into a corrected
+        # frame. A round comes back once.
+        raise RuntimeError("round %d is already imported; evidence/snapshot_%03d.json "
+                           "holds what came back" % (r, r))
+    ran = []
     entry = _call("lims", "status", ["status", "--project", root, "--round", "R%d" % r,
                                      "--store", store],
                   round_id=r, project=pid, session=session,
                   label="registry: check_run_status",
                   note="binary: a run either has results to hand over or it does not")
+    ran.append(entry)
     lab = _lab_status(pid, r) or {}
     if lab.get("status") == "running":
-        _call("lims", "pull", ["pull", "--project", root, "--round", "R%d" % r,
-                               "--out", _results_csv(pid, r), "--store", store],
-              round_id=r, project=pid, session=session, expect=2,
-              label="registry: pull_assay_results — refused",
-              note="asked anyway, so the refusal is shown rather than described")
+        ran.append(_call("lims", "pull", ["pull", "--project", root, "--round", "R%d" % r,
+                                          "--out", _results_csv(pid, r), "--store", store],
+                         round_id=r, project=pid, session=session, expect=2,
+                         label="registry: pull_assay_results — refused",
+                         note="asked anyway, so the refusal is shown rather than described"))
         return {"round": r, "ready": False, "status": "running",
                 "expected": lab.get("expected"), "submitted": lab.get("submitted"),
                 "assay_version": lab.get("assay_version"),
-                "refusal": entry["output"]}
+                "refusal": entry["output"], "ran": ran}
 
     csv_path = _results_csv(pid, r)
-    _call("lims", "pull", ["pull", "--project", root, "--round", "R%d" % r,
-                           "--out", csv_path, "--store", store],
-          round_id=r, project=pid, session=session, label="registry: pull_assay_results",
-          note="rows keyed by sample id -- no design id, no sequence, no ground truth")
-    _call("script", "import_round",
-          ["--project", root, "--round", r, "--results", csv_path,
-           "--offset", "if-clear", "--authority",
-           "bridge_policy:browser --offset if-clear"],
-          round_id=r, project=pid, session=session, label="import round %d" % r,
-          note="a round that did not flag is normalized from its bridge; a flagged "
-               "one is left raw for a human to rule on")
-    _call("script", "evaluate_prior", ["--project", root, "--round", r],
-          round_id=r, project=pid, session=session,
-          label="score round %d against its predictions" % r)
-    state = _state(pid)
-    snap = project_mod.read_artifact(state, "evidence", r)
-    return {"round": r, "ready": True, "status": "complete",
+    ran.append(_call("lims", "pull", ["pull", "--project", root, "--round", "R%d" % r,
+                                      "--out", csv_path, "--store", store],
+                     round_id=r, project=pid, session=session,
+                     label="registry: pull_assay_results",
+                     note="rows keyed by sample id -- no design id, no sequence, no "
+                          "ground truth"))
+    ran.append(_call("script", "import_round",
+                     ["--project", root, "--round", r, "--results", csv_path,
+                      "--offset", "if-clear", "--authority",
+                      "bridge_policy:browser --offset if-clear"],
+                     round_id=r, project=pid, session=session,
+                     label="import round %d" % r,
+                     note="a round that did not flag is normalized from its bridge; a "
+                          "flagged one is left raw for a human to rule on"))
+    ran.append(_call("script", "evaluate_prior", ["--project", root, "--round", r],
+                     round_id=r, project=pid, session=session,
+                     label="score round %d against its predictions" % r))
+    snap = project_mod.read_artifact(_state(pid), "evidence", r)
+    return {"round": r, "ready": True, "status": "complete", "ran": ran,
             "flagged": bool(snap["flagged"]), "anomaly": snap["anomaly"],
             "frame": snap["frame"], "reconciliation": snap["reconciliation"],
             "assay_version": snap["assay_version"], "source": snap["source"],
             "plates": sorted({p for m in snap["measurements"]
                                for p in (m.get("plates") or [])})}
+
+
+def release_run(round_id, project=None, session=None, reason=None):
+    """Simulated: tell the laboratory to report a round it is still running.
+
+    Every other control in this file is a real call to a real script. This
+    one moves the clock, and it exists because the clock is the only thing in
+    the demo that cannot be waited on honestly: the assay takes eight days,
+    the page says so, and a visitor with ten minutes has no way through that
+    sentence. ``check_run_status`` already releases a held round on the ask
+    after the first, which is a rule nobody watching can see; this is the
+    same release with a control on it that says what it is.
+
+    It is labelled everywhere it appears -- *simulated* on the button, the
+    reason in the registry's record, the command in the log like every other
+    command. What it does not touch is the data: the values were measured by
+    the oracle at submission, and releasing changes when the registry hands
+    them over and nothing about what they say. Nothing is imported here
+    either; the round is still pulled by the ask that asks for it.
+    """
+    r = int(round_id)
+    pid = project or DEMO
+    lab = _lab_status(pid, r)
+    if lab is None:
+        raise RuntimeError("round %d has not been submitted to the registry" % r)
+    if lab["status"] != "running":
+        raise RuntimeError("round %d is not being held: the registry has it as %s"
+                           % (r, lab["status"]))
+    _call("lims", "release",
+          ["release", "--project", _root(pid), "--round", "R%d" % r,
+           # No apostrophe: the log renders a command as it would have been
+           # typed, and an argument that needs quoting must survive it.
+           "--store", _store(pid), "--reason", reason or "the demo control"],
+          round_id=r, project=pid, session=session,
+          label="simulated: the assay reports",
+          note="a demo device and the only one in this file: it moves the laboratory's "
+               "clock, never its data. The values were measured at submission")
+    return {"round": r, "lab": _lab_status(pid, r)}
 
 
 def diagnostic(round_id, test, by=None, offset=None, scope=None, project=None,
@@ -822,14 +896,16 @@ def sessions(project=None):
                 "id": "r%d" % r, "kind": "round", "round": r,
                 "title": "Round %d" % r, "subtitle": rv["status"],
                 "flagged": bool(rv["flagged"]), "at_lab": rv["at_lab"],
-                "needs_you": rv["status"] in ("awaiting approval", "flagged, ruling pending"),
+                "reported": rv["reported"],
+                "needs_you": rv["status"] in ("awaiting approval", "flagged, ruling pending",
+                                              "results ready"),
                 "updated": entry.get("updated"),
             })
     for s in _adhoc_read(pid)["sessions"]:
         if _is_round(s["id"]):
             continue
         out.append({
-            "id": s["id"], "kind": "adhoc", "round": None,
+            "id": s["id"], "kind": "adhoc", "round": None, "reported": False,
             "title": s.get("title") or "New session",
             "subtitle": "%d %s" % (len(s.get("turns", [])),
                                    "exchange" if len(s.get("turns", [])) == 1
@@ -918,6 +994,7 @@ def _lab_briefing(pid, round_id, session_id):
     anomaly verdict land in the same turn, because the arrival is one event.
     """
     res = check_results(round_id, project=pid, session=session_id)
+    res.pop("ran", None)
     base = {"key": "results_back", "question": QUESTIONS["results_back"] % round_id,
             "project": pid, "round": round_id, "kind": "arrival",
             "reads": ["lims_store/%s.json" % pid]}
@@ -933,11 +1010,11 @@ def _lab_briefing(pid, round_id, session_id):
                 unreconciled=rec["unreconciled_rows"],
                 flagged=res["flagged"],
                 statistic=_figure(res["anomaly"]["mean_signed_residual"],
-                                  "core.diagnostics.anomaly_check",
+                                  "core.reconcile.anomaly_flag",
                                   "evidence/snapshot_%03d.json" % round_id,
                                   "mean signed residual", "pKD"),
                 trigger=_figure(res["anomaly"]["trigger_abs_pkd"],
-                                "core.diagnostics.anomaly_check", "objectives.json",
+                                "core.reconcile.anomaly_flag", "objectives.json",
                                 "trigger", "pKD"),
                 n_compared=res["anomaly"]["n_compared"],
                 known_version_offset=res["anomaly"]["known_version_offset"],
@@ -955,6 +1032,172 @@ def _figure(value, source, artifact_path, label, unit=None, synthetic=False, arg
     return {"value": value, "unit": unit, "label": label, "source": source,
             "artifact": artifact_path, "synthetic": bool(synthetic),
             "args": args or {}}
+
+
+def round_history(round_id, project=None):
+    """What happened in a round, read back out of the artifacts it wrote.
+
+    A round that ran before this browser was opened has no command log here
+    -- the log is this tab's, and the shipped campaign's first three rounds
+    ran on a laptop six weeks ago -- so their sessions were a title and a
+    composer and nothing else. That is a lie about the project by omission:
+    those rounds were proposed, signed for, ordered, returned and scored, and
+    every one of those moments is on disk in a file with a hash.
+
+    So this reads them back. It is the briefing pattern applied to one round:
+    typed steps, each carrying the artifact it was read from and the ``core/``
+    function behind any number in it, assembled and never narrated. What it
+    is not is a transcript. No command chip is rendered from it, because no
+    command ran in this tab; the page says *read from the record* and names
+    the files. A round whose steps did happen here has its own log and gets
+    none of this.
+
+    Steps come in two groups. ``before`` is everything up to and including
+    what the round's data said, which the centre column shows above the
+    decision the round produced; ``after`` is the fit that followed the
+    ruling, which it shows below.
+    """
+    r = int(round_id)
+    pid = project or DEMO
+    state = _state(pid)
+    entry = next((e for e in state["rounds"]["rounds"] if int(e["round"]) == r), None)
+    if entry is None or not entry.get("submission"):
+        # Nothing was sent, so nothing happened that the page is not already
+        # showing: a batch awaiting approval is rendered as the thing to do.
+        return {"round": r, "steps": [], "reads": []}
+
+    batch = project_mod.read_artifact(state, "batches", r)
+    pool = project_mod.read_artifact(state, "candidates", r)
+    snap = project_mod.read_artifact(state, "evidence", r)
+    ev = project_mod.read_artifact(state, "batches", r, ".eval")
+    run = project_mod.read_artifact(state, "models", r)
+    sub = entry["submission"]
+    lab = _lab_status(pid, r) or {}
+    refs = [x for x in state["designs"]["external_refs"] if int(x["round"]) == r]
+    steps, reads = [], []
+
+    def read(path):
+        if path not in reads:
+            reads.append(path)
+
+    if batch:
+        read("batches/batch_%03d.json" % r)
+        approval = batch["approval"]
+        steps.append({
+            "step": "proposed", "phase": "before", "at": None,
+            "n": len(batch["approved"]), "mode": batch["mode"],
+            "composition": batch["composition"], "hash": batch["hash"],
+            "model_winner": batch["model_winner"], "from_round": r - 1,
+            "policy": (batch.get("policy") or {}).get("round1_policy")
+                      if batch["mode"] == "seed" else None,
+            "n_enumerated": None if pool is None else pool["enumerated"],
+            "n_feasible": None if pool is None else pool["feasible"],
+            "incumbent": (None if batch["incumbent"] is None
+                          else _figure(batch["incumbent"], "core.reconcile.pool",
+                                       "batches/batch_%03d.json" % r, "incumbent",
+                                       "pKD", synthetic=True)),
+            "n_bridge": len(batch.get("bridge") or []),
+            "n_fresh": len(batch.get("fresh") or []),
+        })
+        if pool is not None:
+            read("candidates/pool_%03d.json" % r)
+        steps.append({
+            "step": "approved", "phase": "before", "at": approval.get("at"),
+            "by": approval.get("by"), "status": approval["status"],
+            "note": approval.get("note") or "",
+            "n": len(batch["approved"]),
+            "overrides": [{"design_id": o.get("design_id"), "note": o.get("note") or ""}
+                          for o in (batch.get("overrides") or [])],
+        })
+
+    steps.append({
+        "step": "submitted", "phase": "before", "at": lab.get("submitted"),
+        "round_id": sub["round_id"], "registry": sub["registry"],
+        "n_samples": sub["n_samples"], "assay_version": sub["assay_version"],
+        "plates": sorted({x["plate"] for x in refs}),
+        "n_constructs": len({x["construct_id"] for x in refs}),
+        "order": (_order_csv(pid, r).replace(MOUNT + "/", "")
+                  if os.path.exists(_order_csv(pid, r)) else None),
+    })
+    read("designs.json")
+
+    if snap is not None:
+        read("evidence/snapshot_%03d.json" % r)
+        rec = snap["reconciliation"]
+        steps.append({
+            "step": "returned", "phase": "before", "at": None,
+            "rows": rec["rows"], "samples": rec["samples"], "designs": rec["designs"],
+            "n_ok": rec["n_ok"], "n_failed": rec["n_failed"],
+            "n_censored": rec["n_censored"], "unreconciled": rec["unreconciled_rows"],
+            "assay_version": snap["assay_version"],
+            "source": (snap.get("source") or {}).get("file"),
+            "plates": sorted({pl for m in snap["measurements"]
+                              for pl in (m.get("plates") or [])}),
+        })
+        a = snap["anomaly"]
+        cal = None if ev is None else ev["calibration"]
+        imp = None if ev is None else ev["improvement"]
+        # The two figures a fit is judged by are computed inside
+        # evaluate_prior.py rather than by a core/ function of their own, so
+        # they carry no source and render as plain numbers: the artifact they
+        # were read from is named under the step and nothing claims more.
+        steps.append({
+            "step": "scored", "phase": "before", "at": None,
+            "flagged": bool(snap["flagged"]),
+            "scored_against_a_model": a is not None,
+            "statistic": (None if a is None
+                          else _figure(a["mean_signed_residual"],
+                                       "core.reconcile.anomaly_flag",
+                                       "evidence/snapshot_%03d.json" % r,
+                                       "mean signed residual", "pKD")),
+            "trigger": (None if a is None
+                        else _figure(a["trigger_abs_pkd"], "core.reconcile.anomaly_flag",
+                                     "objectives.json", "trigger", "pKD")),
+            "n_compared": None if a is None else a["n_compared"],
+            "z": None if a is None else a["z"],
+            "known_version_offset": None if a is None else a["known_version_offset"],
+            "assay_version": snap["assay_version"],
+            "coverage": (None if cal is None
+                         else _figure(cal["realized_coverage"], None,
+                                      "batches/batch_%03d.eval.json" % r,
+                                      "realized coverage")),
+            "nominal_coverage": None if cal is None else cal["nominal_coverage"],
+            "best": (None if imp is None or imp["best_this_round"] is None
+                     else _figure(imp["best_this_round"], None,
+                                  "batches/batch_%03d.eval.json" % r,
+                                  "best this round", "pKD", synthetic=True)),
+            "gain": (None if imp is None or imp["gain_over_incumbent"] is None
+                     else _figure(imp["gain_over_incumbent"], None,
+                                  "batches/batch_%03d.eval.json" % r,
+                                  "gain over the incumbent", "pKD", synthetic=True)),
+        })
+        if ev is not None:
+            read("batches/batch_%03d.eval.json" % r)
+        frame = snap["frame"]
+        if frame.get("offset_applied"):
+            steps.append({
+                "step": "frame", "phase": "before", "at": None,
+                "offset": _figure(frame["offset_applied"],
+                                  "core.reconcile.offset_from_bridge",
+                                  "evidence/snapshot_%03d.json" % r, "frame offset", "pKD"),
+                "authority": frame["authority"],
+                "n_bridge": (frame.get("offset_estimate") or {}).get("n"),
+            })
+
+    if run is not None:
+        read("models/run_%03d.json" % r)
+        nxt = next((e for e in state["rounds"]["rounds"] if int(e["round"]) == r + 1), None)
+        steps.append({
+            "step": "fitted", "phase": "after", "at": None,
+            "winner": run["winner"], "n_observations": run["n_observations"],
+            "hash": run["hash"],
+            "recipes": {k: {"nlpd": v.get("nlpd"), "rmse": v.get("rmse"),
+                            "coverage_80": v.get("coverage_80")}
+                        for k, v in run["recipes"].items()},
+            "next_round": None if nxt is None else int(nxt["round"]),
+        })
+    return {"round": r, "steps": steps, "reads": reads,
+            "source": "the round's own artifacts; no command in this browser produced them"}
 
 
 def suggested_asks(project=None, round_id=None):
@@ -980,20 +1223,31 @@ def suggested_asks(project=None, round_id=None):
     v_state = _state(pid)
     entries = v_state["rounds"]["rounds"]
     rounds = [_round_view(v_state, e, pid) for e in entries]
-    at_lab = next((r for r in rounds if r["at_lab"]), None)
+    waiting = next((r for r in rounds if r["at_lab"] or r["reported"]), None)
     flagged = next((r for r in rounds if r["status"] == "flagged, ruling pending"), None)
     focus = None
     if round_id is not None:
         focus = next((r for r in rounds if r["round"] == int(round_id)), None)
 
     out = []
-    lab = focus if (focus is not None and focus["at_lab"]) else at_lab
+    lab = (focus if (focus is not None and (focus["at_lab"] or focus["reported"]))
+           else waiting)
     if lab is not None:
         out.append({"key": "results_back", "round": lab["round"], "registry": True,
-                    "lead": "Round %d is at the lab." % lab["round"],
+                    # The card reopens when the reason changes, and a run that
+                    # has reported is a different reason from a run that has
+                    # not, under the same key.
+                    "state": "reported" if lab["reported"] else "at the lab",
+                    "lead": ("Round %d's results are in and nobody has pulled them."
+                             % lab["round"] if lab["reported"]
+                             else "Round %d is at the lab." % lab["round"]),
                     "text": "Have round %d's results come back?" % lab["round"],
                     "title": "Have round %d's results come back?" % lab["round"],
-                    "question": ("Ask the registry. It refuses with the date it expects "
+                    "question": ("Ask the registry. It has the run: asking pulls it, "
+                                 "reconciles it against the designs that were submitted "
+                                 "and scores it against what the model predicted."
+                                 if lab["reported"] else
+                                 "Ask the registry. It refuses with the date it expects "
                                  "until the laboratory has reported, and imports and "
                                  "evaluates the round once it has."),
                     "cons": "A call to the registry, not a question for the model"})
@@ -1022,7 +1276,7 @@ def suggested_asks(project=None, round_id=None):
                                  "sentences, from its calibration and its bridge: is there "
                                  "anything in it to decide, or was it as quiet as the flag "
                                  "says?" % focus["round"])})
-    if out and (at_lab or flagged):
+    if out and (waiting or flagged):
         out.append({"key": "whats_waiting", "round": None,
                     "text": "What's waiting on me?", "title": "What's waiting on me?",
                     "question": ("What's waiting on me? Every open item — a flagged round "
@@ -1074,7 +1328,7 @@ def _briefing(pid, key, round_id):
         winner = next((r["model"]["winner"] for r in reversed(rounds) if r["model"]), None)
         moves = [{"round": r["round"],
                   "offset": _figure(r["frame"]["offset_applied"],
-                                    "core.reconcile.estimate_offset",
+                                    "core.reconcile.offset_from_bridge",
                                     "evidence/snapshot_%03d.json" % r["round"],
                                     "frame offset", "pKD"),
                   "authority": r["frame"]["authority"]}
@@ -1128,10 +1382,10 @@ def _briefing(pid, key, round_id):
         return dict(base, kind="flag",
                     flagged=bool(r["flagged"]),
                     statistic=_figure(a["mean_signed_residual"],
-                                      "core.diagnostics.anomaly_check",
+                                      "core.reconcile.anomaly_flag",
                                       "evidence/snapshot_%03d.json" % r["round"],
                                       "mean signed residual", "pKD"),
-                    trigger=_figure(a["trigger_abs_pkd"], "core.diagnostics.anomaly_check",
+                    trigger=_figure(a["trigger_abs_pkd"], "core.reconcile.anomaly_flag",
                                     "objectives.json", "trigger", "pKD"),
                     n_compared=a["n_compared"], z=a["z"], se=a["se"],
                     direction=a["direction"], assay_version=a["assay_version"],
@@ -1420,7 +1674,17 @@ def agent_context(project=None, round_id=None):
             "root": "projects/%s" % pid,
         },
         "objectives": obj,
-        "rounds": [{k: v for k, v in r.items() if k not in ("lab", "order", "refs")}
+        # The lab line is what the seat used to be missing. Without it a model
+        # asked whether a round had come back could only report what the
+        # project's own files said -- "still marked at the lab" -- and had to
+        # say it could not check. `_lab_status` peeks rather than asks, so
+        # assembling the context never releases a held round; asking is still
+        # a tool call the model makes on purpose.
+        "rounds": [dict({k: v for k, v in r.items() if k not in ("lab", "order", "refs")},
+                        lab=None if not r["lab"] else {
+                            k: r["lab"][k] for k in
+                            ("status", "submitted", "expected", "assay_version",
+                             "n_samples", "n_rows", "released_by")})
                    for r in rounds],
         "progress": _cumulative_best(state),
         "focus_round": focus,

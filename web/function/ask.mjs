@@ -21,11 +21,15 @@
 // low-effort model on an antibody-diagnosis prompt with a daily cap, which
 // is not a free endpoint.
 //
-// **Everything the model can do is read.** `run_diagnostic` and
-// `execute_analysis` run in the visitor's Pyodide and write nothing.
-// `propose_decision` is how it hands a diagnosis back; the page gives that
-// payload to `record_decision.py`, which refuses any number in it and
-// recomputes every test. Non-negotiable 7 holds because the writer holds it.
+// **Nothing the model can do produces a number of its own.**
+// `run_diagnostic` and `execute_analysis` run in the visitor's Pyodide and
+// write nothing. `propose_decision` is how it hands a diagnosis back; the
+// page gives that payload to `record_decision.py`, which refuses any number
+// in it and recomputes every test. `check_lab_results` is the one tool that
+// writes, and what it writes is a round the laboratory reported, pulled and
+// imported by the same two scripts every other surface runs -- the model
+// chooses when to ask and supplies nothing that lands in the record.
+// Non-negotiable 7 holds because the writer holds it.
 //
 // **Refusal is handled, and it is not hypothetical.** The hour-5 gate tripped
 // the `bio` classifier three times. `fallbacks: "default"` re-runs a declined
@@ -76,15 +80,16 @@ export const PREAMBLE = `You are Claude, seated in a project session of Shannon 
 
 - \`run_diagnostic\` is skills/adaptive-optimization/scripts/run_diagnostic.py: one named test from core/diagnostics.py, read-only. The template's permitted tests are the only names the tool accepts, and every argument is one of the values the script takes.
 - \`execute_analysis\` is the ad hoc escape hatch the skill describes: a short read-only numpy analysis run against the project's own files, in the visitor's browser. The paths it can read are listed under \`paths\` in the context, relative to the working directory. It cannot reach the simulated laboratory or the registry. Its output is evidence a person reads and is never an input to a code path.
+- \`check_lab_results\` is steps 5 to 8 of the round loop: the registry's check_run_status, and, if the assay has reported, the pull and the import and the scoring that follow it. Asking is what moves a run that is being held, so ask when someone wants to know where a round is rather than to fill the context. Each round's \`lab\` line in the context says where it stood when this turn began. You supply no number to it: the values were measured by the assay when the batch was submitted, and import_round.py and evaluate_prior.py write what they reconcile and score.
 - \`propose_decision\` is record_decision.py --propose, and it is how you hand a diagnosis back. Name the tests; the script re-runs them itself and writes the numbers it gets. It refuses a payload that carries a result. List every ad hoc cut you ran, with its code and the stdout you received. It writes nothing else and it does not rule.
 
-You cannot run the pipeline scripts, submit anything to the registry, or rule. A named person rules on what you propose, with four verbs, outside this conversation. If the ruling comes back as more_evidence_requested, run what was asked for and propose again; the record keeps both passes.
+You cannot select or submit a batch, and you cannot rule. A named person rules on what you propose, with four verbs, outside this conversation. If the ruling comes back as more_evidence_requested, run what was asked for and propose again; the record keeps both passes.
 
 The project's state follows the skill, read from its own artifacts by the workbench. Every affinity value in it is synthetic: the landscape is generated and the assay is an oracle replaying it with noise. Say "synthetic" beside any number you quote.
 
 The conversation is the session's. It may already hold a diagnosis, the questions asked since it, and a ruling, and a question may refer back to any of that. The project's state is re-read from its artifacts on every turn and is authoritative for what has been decided; the conversation is what was said.
 
-How to work in this seat. Before each tool call, say in one or two plain sentences what you are about to run and why: what you know so far and what the result will tell you. Choose the second test from what the first returned. Keep the prose between calls brief; the recommendation's rationale, its alternatives and its if_wrong are where the writing belongs, and a sceptical scientist reads if_wrong first. When you are asked a question rather than to diagnose a round, answer it from the context and the two read tools, in prose, and do not propose. Do not include internal or system XML tags in your response.`;
+How to work in this seat. Before each tool call, say in one or two plain sentences what you are about to run and why: what you know so far and what the result will tell you. Choose the second test from what the first returned. Keep the prose between calls brief; the recommendation's rationale, its alternatives and its if_wrong are where the writing belongs, and a sceptical scientist reads if_wrong first. When you are asked a question rather than to diagnose a round, answer it from the context and the read tools, in prose, and do not propose. Do not include internal or system XML tags in your response.`;
 
 export const skillFingerprint = () => SKILL_SHA256;
 
@@ -171,6 +176,36 @@ export function toolsFor(kind, permitted) {
       required: ["question", "code"],
     },
   };
+  // The one tool that changes what is on disk without a person pressing
+  // something, and it changes which round the project has data for rather
+  // than what any measurement says. Before it existed the seat could read the
+  // project's own files and nothing else, so a model asked whether a round
+  // had come back could only report what the files said -- "still marked at
+  // the lab" -- and had to say it could not check. Claude Code and Claude
+  // Science have had check_run_status on the registry connector since phase
+  // 6b, and the skill this prompt carries describes it as step 5; this is
+  // that surface, in the browser.
+  const check_lab_results = {
+    name: "check_lab_results",
+    description: "Ask the laboratory's registry whether a round's assay has reported, and "
+      + "bring the round in if it has. A run still at the lab comes back with the date it "
+      + "is expected and nothing else; a run that has reported is pulled, reconciled "
+      + "against the designs that were submitted and scored against what the model "
+      + "predicted for them, by the same scripts every other surface runs. Asking is what "
+      + "moves a run the registry is holding. It refuses a round that was never submitted "
+      + "and a round that is already imported.",
+    strict: true,
+    input_schema: {
+      type: "object",
+      properties: {
+        round: { type: "integer",
+                 description: "the round to ask about; each round's lab line in the "
+                   + "context says where it stood when this turn began" },
+      },
+      required: ["round"],
+      additionalProperties: false,
+    },
+  };
   const propose_decision = {
     name: "propose_decision",
     description: "Hand the diagnosis to record_decision.py --propose. Name every hypothesis "
@@ -212,8 +247,8 @@ export function toolsFor(kind, permitted) {
     },
   };
   return kind === "diagnose"
-    ? [run_diagnostic, execute_analysis, propose_decision]
-    : [run_diagnostic, execute_analysis];
+    ? [run_diagnostic, execute_analysis, check_lab_results, propose_decision]
+    : [run_diagnostic, execute_analysis, check_lab_results];
 }
 
 // --- the signature --------------------------------------------------------

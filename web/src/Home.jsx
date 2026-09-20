@@ -151,6 +151,9 @@ export default function Home({ epoch }) {
                     {p.n_flagged > 0 && (
                       <span className="chip">flagged <b className="num">{p.n_flagged}</b></span>
                     )}
+                    {v?.reported_round && (
+                      <span className="chip">round {v.reported_round} reported</span>
+                    )}
                     {v?.at_lab_round && (
                       <span className="chip">round {v.at_lab_round} at the lab</span>
                     )}

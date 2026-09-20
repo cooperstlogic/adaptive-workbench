@@ -1338,3 +1338,66 @@ without it is a 401; `robots.txt` disallows everything and the header and the me
 say `noindex`; and in a browser, the coded link opens the seat, the code is kept, and
 the address bar comes up clean. The $0.30 spent before the store's keys changed shape sits
 under the old key until it expires; today's counters start at zero.
+
+---
+
+## Three empty rooms, and the clock nobody could move — decisions 162 to 164
+
+Three complaints from a walk through the demo, all of them the same shape: the interface
+was telling the truth and saying nothing.
+
+**The sessions for rounds 1 and 3 were blank.** A round session renders this browser's
+command log, and the shipped campaign's first three rounds ran on a laptop six weeks ago,
+so there was nothing to render. Round 2 at least had a decision record to show. Rounds 1
+and 3 opened on a title and a composer, which reads as a product that forgot what it did
+rather than a campaign with four rounds behind it.
+
+**The laboratory could not be made to report.** Approving round 5 sends it; the first ask
+comes back *expected 28 Sep*; and the rule that the *second* ask releases it is written in
+`lims.py` where a visitor never looks. The beat the whole loop exists for — results come
+back, the round flags, the next round starts — was behind a guess.
+
+**And the seat could not see the laboratory at all.** Asked whether a round had finished,
+the model answered: *I don't have a live connection to the registry to check assay status
+myself (that's explicitly out of reach here), so I can't tell you today whether the round
+has actually finished; only that as of this snapshot it's still marked "at the lab."* It
+was right about its tools and wrong about the design: `SKILL.md`, which is its own system
+prompt, describes `check_run_status` as step 5 of the round loop, and Claude Code and
+Claude Science have had it on the registry connector since phase 6b. The browser seat was
+the only one of the three that had been handed the skill and not the step.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 162 | **A round that ran somewhere else reads back out of its own artifacts.** `wb_driver.round_history` assembles typed steps from the files a round wrote — the batch it was selected into, the approval stamp, the submission and its plates, the reconciliation, the anomaly verdict against its trigger, the frame move and its authority, the fit that followed — and `History.jsx` lays them out in the centre column, the approval as the one bubble on the right because a person gave it. It renders only when this browser's log holds nothing for that round, so a round the visitor ran keeps showing what actually ran here. It is a record and not a transcript: no command chip, nothing phrased as though someone said it, the artifacts named underneath, and the one date on screen is the registry's submission stamp, because a batch's approval time is inside its hash and the bundle cannot re-date it | The alternative was to ship a fake conversation for each past round, which is failure mode 1 with better prose. Everything worth saying about rounds 1 to 3 is already on disk with a hash over it; the only thing missing was reading it out. It also cost nothing to generalize — a project created in this browser gets the same history once its rounds are behind it |
+| 163 | **The demo's clock is a control, and it says it is one.** `lims.py release` and `Registry.release_run` mark a held run reported, writing `released_by` and `released_at` beside the status and touching nothing else; `wb_driver.release_run` calls it and logs it like every other command; the session shows it as *Have the lab report now* with **simulated** beside it and the reason in the tooltip. Because a released run is no longer running and not yet pulled, the round view gains a state it never had — `reported`, rendered *results ready* — and the rail, the home card, the landing route and the suggested asks all learned it. Asking twice still releases a round (130 is untouched); this is the same release with something on the screen to press | *Not yet, expected the 27th* is what made the laboratory believable, and it is also what made the demo stop. The rule that the next ask releases it was a schedule nobody could see, so the honest fix was a device that names itself rather than a shorter timeout that lies quietly. The `reported` state is the part that had to exist anyway: before the control, the same ask released the round and imported it in one call, so the moment between the lab finishing and anyone pulling it lasted no time and had no name. With the control it is a place a person can stand, and it is where the model's new tool is most useful |
+| 164 | **The seat can ask the registry itself.** A fourth tool, `check_lab_results`, on the diagnose and ask turns: it is `check_run_status`, and, when the run has reported, the pull, the import and the scoring that follow — steps 5 to 8 of the skill's own table, run through the same scripts every other surface runs. It refuses a round that was never submitted and a round already imported, and the refusal goes back to the model as an error result rather than ending the turn, exactly as the writer's does. Each round's `lab` line is now in `agent_context`, read with a peek that does not release anything, so the model knows where a round stands before it decides to ask. It still cannot select, submit or rule | The model was refusing to answer a question its own prompt told it it could answer, which is worse than a missing feature: it reads as the layer being thinner than it claims. This is the one tool that writes, and what it writes is a round the laboratory reported — no number in it is the model's, `import_round.py` and `evaluate_prior.py` compute every one, and non-negotiable 7 is untouched. The alternative, a status-only read, would have left the model saying *the results are in, ask someone else to fetch them*, which is the same gap one step further along |
+
+`check.py` goes from 188 to 195. The new seven: the history of rounds 1 to 3 is the
+expected steps out of six artifacts each and a round awaiting approval has none; every
+figure in it either names a `core/` function that resolves or names none at all; releasing
+a held run changes only the status keys and the rows pull the same; the release is not on
+the registry's tool list and releasing twice is a no-op; a round released by hand lands in
+*results ready* with the right landing route and the right card; the model's tool runs four
+commands and brings round 5 back flagged at **−0.818 pKD**, the number the product path
+already gets; and it refuses a round already imported and a round never submitted.
+
+Two figures had been naming functions that do not exist — `core.diagnostics.anomaly_check`
+and `core.reconcile.estimate_offset`, where the real ones are `core.reconcile.anomaly_flag`
+and `core.reconcile.offset_from_bridge`. Every briefing since the redesign had carried
+them, and clicking one opened the Notebook tab on *no such function*, which is decision
+107's claim failing quietly. Fixed, and check 212 now requires every source a history
+figure names to resolve.
+
+Verified in a browser against the dev server, and then live with the key. Rounds 1, 2 and
+3 read back as campaigns rather than blanks — round 2's ends with its seven hypotheses and
+d.webster's ruling, which were always on disk and never on screen. Round 4 approved, asked
+(*expected 28 Sep*, the pull refused and shown), released by the control, asked again,
+imported and flagged; ruled from the replayed record; round 5 selected, approved, sent.
+Then the seat, on Sonnet 5: *"Has round 5 come back from the lab yet? Check for yourself
+rather than reading it off the project files."* — it called `check_lab_results`, got
+*running, expected 2026-09-28*, and said so. The lab released by hand, asked again, and it
+pulled, imported, reconciled and read round 5 in one turn: 41 fresh designs a mean −0.818
+pKD below prediction at z −8.11, 46% outside an 80% interval, the bridge estimate −1.097
+against the −1.014 carried from round 4's ruling, *"the opposite pattern from round 4,
+where the bridge only explained about half the gap"*, and the loop stopped where the skill
+says to stop — flagged, unruled, no refit. Four calls, $0.23.

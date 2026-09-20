@@ -38,6 +38,14 @@ every CLI path uses -- the record written is byte for byte the one this file
 has always written, so no existing store, no existing round and no existing
 campaign changes. The release schedule is a demo device and it reads as one
 here, which is the right place for it to be obvious.
+
+``release_run`` is the other half of that device: it says the assay has
+finished, now, so that a person being shown this does not have to guess that
+asking twice is what moves the clock. It writes ``released_by`` beside the
+status and changes nothing else -- the values were measured at submission
+either way. It is deliberately absent from ``TOOLS``, because a registry does
+not have a button that finishes an assay, and that tool list is the answer to
+"does this replace the LIMS".
 """
 
 import argparse
@@ -303,6 +311,42 @@ class Registry:
                 "n_samples": rec["n_samples"], "released_now": released,
                 "checks": asks}
 
+    def release_run(self, round_id, reason="demo control"):
+        """Say the assay has finished, now. The demo device, named as one.
+
+        ``check_run_status`` releases a held round on the ask after the first,
+        which is the schedule ``submit_batch`` wrote and which is fine for a
+        harness. In front of a person it is a rule nobody can see: the first
+        ask names a date eight days out, and there is nothing on the screen
+        that says time can be moved. This is the other way to the same place,
+        and it is not a schedule -- it is the laboratory reporting, triggered
+        by hand, because the laboratory here is simulated and the only clock
+        it has is this one.
+
+        It changes when the rows are handed over and nothing about what they
+        are: the values were measured at submission, by the oracle, before
+        anyone asked. A round that is not being held is left exactly as it is.
+        It is deliberately not in ``TOOLS`` -- a registry does not have a
+        button that finishes an assay, and putting one on the connector's list
+        would widen the claim this file exists to make.
+        """
+        key, rec = self._round(round_id)
+        if rec.get("status") != "running":
+            return {"round_id": key, "status": rec.get("status", "complete"),
+                    "released_now": False, "assay_version": rec["assay_version"],
+                    "submitted": rec["submitted"], "n_rows": rec["n_rows"],
+                    "n_samples": rec["n_samples"],
+                    "note": "the run was not being held"}
+        rec["status"] = "complete"
+        rec["released_by"] = reason
+        rec["released_at"] = _now()
+        self.save()
+        return {"round_id": key, "status": "complete", "released_now": True,
+                "assay_version": rec["assay_version"], "submitted": rec["submitted"],
+                "expected": rec.get("expected"), "n_rows": rec["n_rows"],
+                "n_samples": rec["n_samples"], "released_by": reason,
+                "note": "simulated: the assay reported early because someone said so"}
+
     def pull_assay_results(self, round_id):
         """Rows keyed by sample id. No design id, no sequence, no ground truth."""
         key, rec = self._round(round_id)
@@ -485,6 +529,12 @@ def run_status(round_id, project_root=None, store=None):
     return reg.check_run_status(round_id)
 
 
+def release_run(round_id, project_root=None, store=None, reason="demo control"):
+    """Have the simulated laboratory report a held run now. A demo device."""
+    reg = Registry(store_path_for(project_root or "", store))
+    return reg.release_run(round_id, reason)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -514,6 +564,12 @@ def main(argv=None):
     st.add_argument("--round", required=True)
     st.add_argument("--project", default=None)
     st.add_argument("--store", default=None)
+
+    rl = sub.add_parser("release", help="simulated: have the lab report a held run now")
+    rl.add_argument("--round", required=True)
+    rl.add_argument("--project", default=None)
+    rl.add_argument("--store", default=None)
+    rl.add_argument("--reason", default="demo control")
 
     t = sub.add_parser("tools", help="print the tool list, which is the boundary claim")
     t.add_argument("--store", default=None)
@@ -573,6 +629,27 @@ def main(argv=None):
             print("expected    %s -- nothing to pull yet" % (res["expected"] or "?")[:10])
         else:
             print("rows        %d across %d samples" % (res["n_rows"], res["n_samples"]))
+        return 0
+
+    if args.cmd == "release":
+        if not (args.store or args.project):
+            print("release needs --store or --project", file=sys.stderr)
+            return 2
+        try:
+            res = release_run(args.round, args.project, args.store, args.reason)
+        except KeyError as exc:
+            print(str(exc), file=sys.stderr)
+            return 2
+        print("round       %s" % res["round_id"])
+        if res["released_now"]:
+            print("status      complete -- the assay reported (simulated, by %s)"
+                  % res["released_by"])
+            print("expected    %s, which is when it would have"
+                  % (res.get("expected") or "?")[:10])
+        else:
+            print("status      %s -- %s" % (res["status"], res["note"]))
+        print("rows        %d across %d samples, measured at submission either way"
+              % (res["n_rows"], res["n_samples"]))
         return 0
 
     if args.cmd == "pull":

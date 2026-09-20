@@ -91,6 +91,12 @@ async function* sse(body) {
 }
 
 // --- tools, as the driver runs them ----------------------------------------
+//
+// Each one is a `wb_driver` call the buttons already make, so a tool the
+// model chose and a control a person pressed leave the same entry in the
+// same log. `check_lab_results` is four commands rather than one -- a status,
+// a pull, an import and a scoring -- and the chip the stream shows is the
+// last of them, with the rest in the log where the column renders them.
 
 /** The arguments a test takes and nothing else, so the log reads as the CLI. */
 export function diagnosticArgs(input) {
@@ -121,6 +127,23 @@ export function runTool({ name, input }, { call, project, round, session, verify
       verified: out.verified,
       stdout: out.stdout,
     };
+  }
+  if (name === "check_lab_results") {
+    const target = Number.isInteger(input && input.round) ? input.round : round;
+    try {
+      const out = call("check_results", { round_id: target, project, session });
+      // One call, up to four commands -- the status, the pull, the import and
+      // the scoring -- so the turn shows all of them. What goes back to the
+      // model is what the registry said and what the round turned out to be,
+      // without the commands, which it did not write.
+      const { ran, ...answer } = out;
+      return { entries: ran || [], content: JSON.stringify(answer) };
+    } catch (err) {
+      // A round that was never submitted, or one that is already imported.
+      // The refusal is the boundary working, so it goes back as a result the
+      // model can read rather than ending the turn.
+      return { content: String(err.message || err), is_error: true, refused: true };
+    }
   }
   if (name === "propose_decision") {
     const payload = {
@@ -295,12 +318,13 @@ export async function runLive({
     let proposed = false;
     for (const c of calls) {
       const out = runTool(c, { call, project, round: toolRound, session });
-      if (out.entry) {
-        // The entry rides on the step while the turn streams, so the chip can
-        // render before the page re-reads the log; the stored copy drops it
-        // and finds the entry by its number.
-        push({ type: "tool", name: c.name, n: out.entry.n, input: summarize(c.name, c.input),
-               verified: out.verified || null, entry: out.entry });
+      // The entry rides on the step while the turn streams, so the chip can
+      // render before the page re-reads the log; the stored copy drops it and
+      // finds the entry by its number. A tool that ran several commands
+      // pushes a step for each, in the order they ran.
+      for (const e of out.entries || (out.entry ? [out.entry] : [])) {
+        push({ type: "tool", name: c.name, n: e.n, input: summarize(c.name, c.input),
+               verified: out.verified || null, entry: e });
       }
       if (out.decision) {
         proposed = true;
@@ -334,6 +358,7 @@ export async function runLive({
 function summarize(name, input) {
   if (name === "run_diagnostic") return diagnosticArgs(input || {});
   if (name === "execute_analysis") return { question: (input || {}).question };
+  if (name === "check_lab_results") return { round: (input || {}).round };
   if (name === "propose_decision") {
     const p = input || {};
     return { hypotheses: (p.hypotheses || []).length,

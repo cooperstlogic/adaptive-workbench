@@ -70,7 +70,12 @@ off by default and `run_rounds.py` does not pass it:
 ```bash
 .venv/bin/python lims.py export --project projects/demo-trastuzumab --round R4     --out /tmp/order.csv        # the order the lab receives: no value column
 .venv/bin/python lims.py status --project projects/demo-trastuzumab --round R4
+.venv/bin/python lims.py release --project projects/demo-trastuzumab --round R4   # simulated: the assay reports now
 ```
+
+`release` is the one command here that is a demo device rather than a registry tool, and
+it is the only thing in the repository that moves the laboratory's clock. It marks a held
+run reported and writes who said so; the values were measured at submission either way.
 
 `run_rounds.py` is a deliberately dumb scheduler over the five pipeline scripts. It prints
 every command it runs and **stops** the moment a round is flagged, because that is where
@@ -415,6 +420,7 @@ diagnostics itself and refuses any payload that arrives carrying its own numbers
 | 7 | The agent in the session: tool-call stream, the tools, push-back round trip, budget cap, verified replay | **Done — decisions 137 to 152.** A model in the centre seat behind one stateless function, driven by `SKILL.md` as its system prompt; the same stream component steps the committed record without a key, every test re-run and hash-compared; the round-4 record is two-pass, its second pass written by a third headless gate; `check.py` drives the whole loop through a scripted upstream and went from 160 checks to 179 (181 since decisions 155 and 156, 184 since 157: the session is the conversation, 186 since 158: the asks go to the model, when there is one to make, 188 since 160 and 161: the coded link and the reservation) |
 | 7b | The stream as a chat: your asks and rulings as bubbles on the right, the speaker names gone, the mode badge the only label | **Done — decision 153.** Same driver, same stored sessions, same function; `Turn.jsx`, `Session.jsx`'s turn placement and the stylesheet. Each ask put to the laboratory sits where it happened, with the calls it made under it |
 | 8 | Committed demo project at round 3, Vercel deploy, public README | **Deployed — decision 159.** https://adaptive-workbench-iota.vercel.app. The host is Vercel, not Netlify: Sonnet 5 streams at about 84 tokens a second through the function and the proposal turn carries 5 700 to 7 100 tokens, so it runs 70 to 110 s against Netlify's hard 60. The function moved to `web/function/`, its budget store to Upstash Redis, and nothing in it changed shape. On the live URL the probe reports `live`, `store: upstash-redis`; Pyodide boots from the site's own origin; approve, the lab round trip, the flag and the verified replay (8 of 8, 3 of 3) all ran in a browser there, and then the live diagnosis: eight calls, $0.30, the proposal turn streamed to its end in 32 s at 90 tokens a second — under Netlify's sixty as it happens, with the reasoning for staying on the 300-second ceiling in decision 159. The public README is not written |
+| 8b | The rounds behind you, the clock in front of you, and the registry the seat could not reach | **Done — decisions 162 to 164.** A round that ran before this browser opened reads back out of its own artifacts instead of opening blank; a control marked **simulated** makes the held assay report, and the state between reporting and pulling — *results ready* — is now a place the interface has; and the model in the seat has a fourth tool, `check_lab_results`, which is the registry check and the pull, import and scoring that follow it. `check.py` 188 → 195 |
 | 9 | Demo script and rehearsal | Not started |
 
 ### Phase 1 results
@@ -932,8 +938,8 @@ says which happened. Nothing in `core/` moved and no published number changed.
 | --- | --- |
 | The seat | `claude-sonnet-5` by default since decision 154 (the phase-7 runs below were on `claude-opus-5`), adaptive thinking, effort `low`, behind one stateless function; two models the picker can choose and the function accepts |
 | Its prompt | `SKILL.md`, verbatim, behind a preamble that maps the skill's scripts onto three tools — the same file Claude Code and Claude Science load |
-| Its tools | `run_diagnostic` (the five tests, strict enum), `execute_analysis` (read-only numpy in the visitor's sandbox), `propose_decision` (`record_decision.py --propose`, which refuses any number in the payload) |
-| Its context | About 92 KB read from artifacts by `wb_driver.agent_context` — objectives, the round graph, 48 scored wells, every decision record — and computed by nothing; cached as the last system block |
+| Its tools | `run_diagnostic` (the five tests, strict enum), `execute_analysis` (read-only numpy in the visitor's sandbox), `check_lab_results` (the registry check and the pull, import and scoring that follow it — decision 164), `propose_decision` (`record_decision.py --propose`, which refuses any number in the payload) |
+| Its context | About 92 KB read from artifacts by `wb_driver.agent_context` — objectives, the round graph with each round's line at the laboratory, 48 scored wells, every decision record — and computed by nothing; cached as the last system block |
 | Replay | The record's claims stepped through the same component; **8 of 8 results match, 3 of 3 cuts reproduce** on pass 1, **5 of 5 and 2 of 2** on pass 2, counted by the driver on the Python side of the JSON boundary |
 | The push-back | Live, the ruling continues the session's signed transcript — from the last question asked, if one was; replayed, the recorded pass 2 answers the recorded request, which the ruling form locks to |
 | The function | Accepts only transcripts it signed (HMAC), a tool result only for a call the model made, a model only from the allowlist; reserves each call's maximum against a daily cap and a per-address counter before it is made and settles to its own usage after; opens the live seat only to a page carrying the link's access code; sends `fallbacks: "default"` on every request and turns a refusal into a badge |
@@ -979,6 +985,32 @@ under Vercel's 300-second limit; that the Redis store is reachable from the func
 them is replay. The first of those is why the host is Vercel and not Netlify — decision
 159 has the numbers.
 
+### Phase 8b results — three empty rooms
+
+Decisions 162 to 164. A walk through the demo found three places where the interface was
+telling the truth and saying nothing, and all three were one thing: state that existed on
+disk and had no way onto the screen.
+
+| | |
+| --- | --- |
+| A past round's session | **Read back out of its artifacts.** Rounds 1 and 3 opened blank, because the centre column renders *this browser's* command log and theirs is six weeks old on another machine. `round_history` assembles the batch it was selected into, who signed it, what the registry minted, what came back, whether it flagged, where the frame moved and what the fit chose — no command chip, because nothing ran here, and the files named underneath |
+| The laboratory's clock | **A control, marked *simulated*.** The first ask is still refused with the date; *Have the lab report now* is what a person presses instead of guessing that asking twice moves time. `lims.py release` writes `released_by` beside the status and touches nothing else |
+| *Results ready* | **A state the round view did not have.** Before the control, the ask that released a run also imported it, so the moment between the lab finishing and anyone pulling lasted no time. Now the rail, the home card, the landing route and the suggested asks all know it |
+| The seat's reach | **`check_lab_results`.** Asked whether a round had finished, the model used to answer that it could not check — while holding a system prompt that describes `check_run_status` as step 5. The tool is that step plus the pull, the import and the scoring; it refuses a round never submitted and a round already imported, and the refusal comes back to it as a result |
+| Two broken traces | `core.diagnostics.anomaly_check` and `core.reconcile.estimate_offset` do not exist; the functions are `core.reconcile.anomaly_flag` and `core.reconcile.offset_from_bridge`. Every briefing since the redesign named the wrong ones, so clicking one of those figures opened the Notebook tab on *no such function* |
+| `check.py` | **188 → 195**, no existing check relaxed |
+
+**The beat, walked live.** Round 4 approved; asked, refused, *expected 28 Sep*; released by
+the control; asked again and imported; flagged at −2.046 pKD (synthetic); the recorded
+diagnosis replayed and accepted; round 5 selected, approved and sent. Then the seat, on
+Sonnet 5, asked whether round 5 was back: it called `check_lab_results`, got *running,
+expected 2026-09-28*, and said so — the caveat that prompted this is gone. The lab released
+by hand, asked again, and it pulled, imported and read the round in one turn: 41 fresh
+designs a mean **−0.818 pKD** (synthetic) below prediction at z −8.11, 46% outside an 80%
+interval, the bridge at −1.097 against the −1.014 carried from round 4 — *"the opposite
+pattern from round 4, where the bridge only explained about half the gap"* — and it stopped
+where the skill says to stop. Four calls, $0.23.
+
 ## Repo map
 
 | Path | Contents |
@@ -1018,6 +1050,7 @@ them is replay. The first of those is why the host is Vercel and not Netlify —
 | `web/vercel.json` | The deploy: Vite, `dist/`, and the function's 300-second ceiling |
 | `web/src/agent.js` | The loop: `runLive` owns `while stop_reason == "tool_use"`; `runReplay` steps the record through the same emitter. Takes `call` as an argument, so the harness drives it too |
 | `web/src/AgentStream.jsx` | One component, two sources: text, chips, the proposal card, and the badge that says which |
+| `web/src/History.jsx` | What a round did, for a round that did it somewhere else: `wb_driver.round_history`'s steps, laid out. A record and not a transcript — no command chip, and the artifacts named underneath |
 | `web/src/` | The shell. React, a 60-line hash router, no state library, no charting library |
 | `web/src/router.js` | Seven routes, parsed into plain objects. Also where a project opens, given what is pending in it |
 | `web/src/blank.js` | Blank projects: `localStorage` only, never Python. The control arm for decision 108 |
@@ -1057,6 +1090,7 @@ them is replay. The first of those is why the host is Vercel and not Netlify —
 | The proof chart | **Real, and the evaluator's.** Twenty simulated campaigns per arm, drawn as the template's Validation on the Objectives tab and the New project screen — never on a project's own Progress chart, which draws only what that project measured (decision 135) |
 | The working model picker | **Wired, and both entries run.** Two ids the function accepts — Sonnet 5 by default and Haiku 4.5 — and it refuses any other. Haiku's request omits `thinking` and `output_config.effort`, which that model rejects by name; everything else about it is identical |
 | The lab round trip | **Staged, deliberately, and the staging is in the source.** Approving submits the batch and writes the order file; `check_run_status` is what releases the run, and it releases on the second ask rather than on a clock. `lims.py`'s `submit_batch` takes `--stagger`, off by default, so every CLI path writes byte-for-byte what it always did. The refusal a pull gets while a run is going is real, and it is run and shown rather than described |
+| The lab reporting on demand | **A demo device, labelled *simulated* where it sits.** *Have the lab report now* calls `lims.py release`, which marks a held run reported and writes `released_by` beside its status. It moves the clock and nothing else: the values were measured by the oracle at submission either way, and the round still has to be pulled by someone asking for it. It is not on the registry's tool list, because a registry does not have a button that finishes an assay |
 | Blank projects | **Real, and deliberately empty.** They live in `localStorage`, never touch Python, and open on a chat — because nothing has declared what they mean. With a live seat that chat is a real one: the same model, no tools, no context, and a one-paragraph prompt that says nothing has been declared. That is the control arm for decision 108, not a gap |
 | Projects created in the browser | **Real, and checked against the CLI.** `init_project.py` and round 1's two scripts run in Pyodide; `check.py` requires five of six files to match a project the CLI instantiates from the same template with the same pinned timestamp |
 | The assay platform and plate format on the configuration screen | **Mock, and labelled so on the row.** Every other locked row on that screen is read out of `template.json` |
