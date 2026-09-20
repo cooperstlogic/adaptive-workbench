@@ -55,6 +55,7 @@ export default defineConfig(({ mode }) => {
   // none of these are.
   const env = loadEnv(mode, process.cwd(), "");
   for (const key of ["ANTHROPIC_API_KEY", "WORKBENCH_DAILY_CAP_USD", "WORKBENCH_IP_CAP",
+                     "WORKBENCH_IN_FLIGHT_CAP", "WORKBENCH_ACCESS_CODE",
                      "WORKBENCH_SIGNING_SECRET", "UPSTASH_REDIS_REST_URL",
                      "UPSTASH_REDIS_REST_TOKEN", "KV_REST_API_URL", "KV_REST_API_TOKEN"]) {
     if (env[key] && !process.env[key]) process.env[key] = env[key];

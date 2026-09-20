@@ -36,7 +36,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { createHmac, createHash, timingSafeEqual } from "node:crypto";
-import { account, check, costOf } from "./lib/budget.mjs";
+import { check, costOf, maxCostOf, release, reserve, settle } from "./lib/budget.mjs";
 import { SKILL_MD, SKILL_PATH, SKILL_SHA256 } from "./lib/skill.mjs";
 
 export const MODELS = ["claude-sonnet-5", "claude-haiku-4-5-20251001"];
@@ -388,13 +388,34 @@ function ipOf(request, context) {
 // the live flag is, so nothing that runs on it can be mistaken for a model.
 const scripted = () => process.env.WORKBENCH_UPSTREAM === "scripted";
 
+// The access code. With WORKBENCH_ACCESS_CODE set, the live seat is open only
+// to a visitor whose page carries the code -- it arrives in the link, the page
+// keeps it, and sends it on every call as x-workbench-code. Without it the
+// site is what it is without a key: replay, and the probe says why. Decision
+// 160, amending 12: the audience for a live seat on a public URL is the
+// handful of people the link was sent to, and a code in the link costs them
+// nothing. The comparison is constant-time and the code is never echoed.
+export const CODE_HEADER = "x-workbench-code";
+
+function codeReason(request) {
+  const wanted = process.env.WORKBENCH_ACCESS_CODE;
+  if (!wanted) return null;
+  const given = request.headers.get(CODE_HEADER);
+  if (!given) return "no access code";
+  const a = Buffer.from(String(given), "utf8");
+  const b = Buffer.from(wanted, "utf8");
+  return a.length === b.length && timingSafeEqual(a, b) ? null : "access code not recognised";
+}
+
 export async function probe(request, context) {
   const key = process.env.ANTHROPIC_API_KEY;
   const ip = ipOf(request, context);
   const b = await check(ip);
-  const reason = !key && !scripted() ? "no key configured" : b.reason;
+  const code = codeReason(request);
+  const reason = code || (!key && !scripted() ? "no key configured" : b.reason);
   return json(200, {
-    live: (!!key || scripted()) && b.ok, reason, store: b.store, budget: b.budget,
+    live: (!!key || scripted()) && !code && b.ok, reason, store: b.store, budget: b.budget,
+    code_required: !!process.env.WORKBENCH_ACCESS_CODE,
     upstream: scripted() ? "scripted" : "anthropic",
     models: MODELS, default_model: DEFAULT_MODEL, effort: EFFORT,
     skill: { path: SKILL_PATH, sha256: SKILL_SHA256 },
@@ -419,18 +440,31 @@ export default async function handler(request, context) {
     throw err;
   }
 
+  // 401 and not 403: the page treats a 403 as a transcript the function
+  // refused and starts the turn over, which is not what a missing code is.
+  const code = codeReason(request);
+  if (code) return json(401, { error: code, live: false, reason: code });
+
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key && !scripted()) {
     return json(503, { error: "no key configured", live: false, reason: "no key configured" });
   }
+
+  const params = buildRequest(turn);
+  // Reserve the most this call could cost before it is made: every byte of
+  // the request as input, written to cache, and the kind's whole output cap.
   const ip = ipOf(request, context);
-  const b = await check(ip);
-  if (!b.ok) return json(429, { error: b.reason, live: false, reason: b.reason, budget: b.budget });
+  const ticket = await reserve(ip, maxCostOf({
+    model: params.model, max_tokens: params.max_tokens,
+    input_tokens: Math.ceil(Buffer.byteLength(JSON.stringify(params), "utf8") / 3),
+  }));
+  if (!ticket.ok) {
+    return json(429, { error: ticket.reason, live: false, reason: ticket.reason, budget: ticket.budget });
+  }
 
   const client = scripted()
     ? (await import("./lib/scripted.mjs")).scriptedClient()
     : new Anthropic({ apiKey: key, maxRetries: 2 });
-  const params = buildRequest(turn);
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
@@ -458,7 +492,7 @@ export default async function handler(request, context) {
         }
         const usage = message.usage;
         const cost = costOf(usage, message.model);
-        const budget = await account(ip, cost);
+        const budget = await settle(ticket.ticket, cost);
         const messages = [...turn.messages, { role: "assistant", content: message.content }];
         const refusal = message.stop_reason === "refusal"
           ? { category: message.stop_details && message.stop_details.category,
@@ -477,6 +511,10 @@ export default async function handler(request, context) {
         });
       } catch (err) {
         const status = err instanceof Anthropic.APIError ? err.status : 502;
+        // A request the API rejected outright spent nothing and gives its
+        // reservation back; anything else settles at the reservation.
+        const sent = !(err instanceof Anthropic.APIError && err.status < 500);
+        try { await (sent ? settle(ticket.ticket, ticket.ticket.reserved) : release(ticket.ticket)); } catch { /* the counter, not the answer */ }
         emit("error", { error: String(err.message || err), status });
       } finally {
         controller.close();

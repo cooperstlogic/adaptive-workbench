@@ -1306,3 +1306,35 @@ that would be wanted back. The GitHub connection was refused — the repository
 is private and Vercel's GitHub app is not authorized on the organization — so the deploy
 is `vercel deploy --prod` from `web/`, and push-to-deploy is one dashboard authorization
 away if it is ever wanted.
+
+---
+
+## The link carries a code, and the cap is reserved before the call — decisions 160 and 161
+
+The site was up for an hour with a key behind it before the question was asked: what
+stops a bot from finding the URL and spending through it? The design's answer was the
+daily cap, and it was mostly right — a crawler cannot reach spend, because a `POST` has
+to carry a project and a permitted-tests list that match the library or it is a 400
+before a token, and the probe spends nothing. Spend needs a person reading the page's
+JavaScript. Two things were still wrong with the answer. The cap was soft: `check()` read
+the day, the turn ran for five to thirty seconds, `account()` wrote — and every request
+arriving in between passed on the same stale read, a hundred at once being a hundred
+times a call's maximum before the store heard about any of them. `budget.mjs` called
+this "two requests can race past the cap by one call", which is true of polite traffic.
+And the seat was open to anyone, when the audience for a live seat on a pitch's URL is a
+handful of named people.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 160 | **The live seat opens only to a page carrying the link's access code.** `WORKBENCH_ACCESS_CODE` on the site; the link is `?code=…` before the hash; `agent.adoptCode()` keeps it in localStorage and takes it off the address bar before anything renders; every probe and every call sends it as `x-workbench-code`; the function compares in constant time, answers the probe with *no access code* or *access code not recognised*, and refuses a call with 401 — not 403, which the page reads as a transcript it must restart. Without the code the site is what it is without a key: replay, the composer saying why. Amends 12's *anyone can use it* to *anyone with the link* | A code in the link costs the people it is sent to nothing and makes a stranger's spend zero rather than capped. The alternatives were a bot-management product in front of the whole site, which challenges browsers it does not like and can only be tested by being wrong in front of someone, or leaving the cap to do the work, which the next row says it was not doing. The dev server has no code unless one is set, so local work is unchanged; `robots.txt`, a `noindex` meta and an `X-Robots-Tag` header keep the URL out of indexes, because being findable is most of being found |
+| 161 | **A call reserves its maximum from the day before it is made, atomically, and settles to its cost after.** `reserve()` increments the in-flight count, the day's spend by the call's maximum (every request byte as input written to cache, the kind's whole output cap), and the address's count, each increment's returned value being the check and each overshoot rolled back; `settle()` replaces the reservation with `costOf(usage)` and frees the seat; `release()` gives everything back when the API rejected the request outright, and anything else settles at the reservation, which over-counts and never under-counts. Six Redis primitives, `INCRBYFLOAT`, `INCRBY`, `HINCRBY`, `GET`, `HGET`, `EXPIRE`; the memory store keeps the same six on a Map. The in-flight count is a throttle with a ten-minute expiry, not a cap. Supersedes 144 on how the counter is kept | Increment-then-check is atomic where read-then-write is not, and Redis made it a small change — the reason the store is Redis at all (159). The in-flight count is there because reservations alone let a burst spend the whole day in a second and hand the demo a replay; four at once is more than a demo needs and less than a burst wants; its expiry is what a function killed mid-turn needs so as not to lock the seat. `check.py` fires eight reservations at once against a $1 cap and gets exactly three, settles them, seats two of five under an in-flight cap of two, and releases clean — the logic, in one process; Redis's atomicity is Redis's to keep |
+
+Set on the site the same day: the code; `WORKBENCH_DAILY_CAP_USD=25` and
+`WORKBENCH_IP_CAP=100`, so several people can work it over a few days without meeting a
+limit (a diagnosis is about $0.30 and eight calls; a day is eighty diagnoses); the
+in-flight cap at its default of four. Verified on the live URL: the probe answers *no
+access code*, *access code not recognised*, and `live: true` with the code; a `POST`
+without it is a 401; `robots.txt` disallows everything and the header and the meta both
+say `noindex`; and in a browser, the coded link opens the seat, the code is kept, and
+the address bar comes up clean. The $0.30 spent before the store's keys changed shape sits
+under the old key until it expires; today's counters start at zero.

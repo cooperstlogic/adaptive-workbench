@@ -38,7 +38,7 @@ in `core/` has heard of it.
 ```bash
 python3.12 -m venv .venv
 .venv/bin/pip install numpy matplotlib mcp
-.venv/bin/python check.py      # 186 invariant checks, all should pass
+.venv/bin/python check.py      # 188 invariant checks, all should pass
 ```
 
 `.venv/` is gitignored. Everything else needed — including the generated landscape — is
@@ -127,9 +127,12 @@ node scripts/ask-check.mjs                           # what the function refuses
 node scripts/pyodide-check.mjs                       # replay, push-back, and the loop, scripted
 ```
 
-`WORKBENCH_DAILY_CAP_USD` and `WORKBENCH_IP_CAP` bound the spend; the function's probe
-reports where the day stands. `WORKBENCH_UPSTREAM=scripted` swaps the model for the
-harness's test double, which the probe and every turn's badge report as such.
+`WORKBENCH_DAILY_CAP_USD`, `WORKBENCH_IP_CAP` and `WORKBENCH_IN_FLIGHT_CAP` bound the
+spend, reserved before each call rather than counted after it; the function's probe
+reports where the day stands. `WORKBENCH_ACCESS_CODE`, when set, closes the live seat to
+any page that did not get the code from its link (`?code=…` before the hash; the page
+keeps it and takes it off the address bar). `WORKBENCH_UPSTREAM=scripted` swaps the model
+for the harness's test double, which the probe and every turn's badge report as such.
 
 Installing the same skill and connectors elsewhere uses the host's own distribution
 mechanism, described in the host's own words — *"Save any pipeline as a reusable skill,
@@ -229,7 +232,7 @@ live git tree, and it splits the project directory in two, which is the one thin
 beat 5 cannot survive — the batch hashes only mean something if both surfaces read the
 same state.
 
-`check.py` runs 186 checks in about forty seconds and is the handoff contract. Every
+`check.py` runs 188 checks in about forty seconds and is the handoff contract. Every
 check in it corresponds to a rule in `CLAUDE.md` or a number recorded in `DECISIONS.md`,
 so a failure means the state has drifted from what is documented.
 
@@ -409,7 +412,7 @@ diagnostics itself and refuses any payload that arrives carrying its own numbers
 | 6 | Web app: Pyodide boot, the Claude Science-shaped shell, artifact tabs, approve loop | **Done** — the round loop runs in the browser on the repository's own modules, approve in 1.5 s and advance in 2.7 s, and the browser and the CLI write byte-identical artifacts |
 | 6b | Redesign: two shells, the project boundary, the session model, project creation in the browser, the lab round trip | **Done — decisions 122 to 133.** Home is its own shell; the rail belongs to the project; a session is a unit of work and an ad-hoc one answers *where are we?* from artifacts on disk; projects are created here from a locked configuration screen or blank; and approving a batch sends it to a laboratory that has to be waited on |
 | 6c | Show, don't tell: the page's commentary on itself removed, empty sessions reduced to a title and a composer, the benchmark moved to the template surfaces, Fraunces / Public Sans / IBM Plex Mono | **Done — decisions 134 to 136.** No footnotes, no captions under tool calls, no rail essays, no synthetic paragraph; the one-word tag and the staged table carry the claim. The Progress tab draws only the project's own line; the twenty-seed benchmark is the template's Validation |
-| 7 | The agent in the session: tool-call stream, the tools, push-back round trip, budget cap, verified replay | **Done — decisions 137 to 152.** A model in the centre seat behind one stateless function, driven by `SKILL.md` as its system prompt; the same stream component steps the committed record without a key, every test re-run and hash-compared; the round-4 record is two-pass, its second pass written by a third headless gate; `check.py` drives the whole loop through a scripted upstream and went from 160 checks to 179 (181 since decisions 155 and 156, 184 since 157: the session is the conversation, 186 since 158: the asks go to the model, when there is one to make) |
+| 7 | The agent in the session: tool-call stream, the tools, push-back round trip, budget cap, verified replay | **Done — decisions 137 to 152.** A model in the centre seat behind one stateless function, driven by `SKILL.md` as its system prompt; the same stream component steps the committed record without a key, every test re-run and hash-compared; the round-4 record is two-pass, its second pass written by a third headless gate; `check.py` drives the whole loop through a scripted upstream and went from 160 checks to 179 (181 since decisions 155 and 156, 184 since 157: the session is the conversation, 186 since 158: the asks go to the model, when there is one to make, 188 since 160 and 161: the coded link and the reservation) |
 | 7b | The stream as a chat: your asks and rulings as bubbles on the right, the speaker names gone, the mode badge the only label | **Done — decision 153.** Same driver, same stored sessions, same function; `Turn.jsx`, `Session.jsx`'s turn placement and the stylesheet. Each ask put to the laboratory sits where it happened, with the calls it made under it |
 | 8 | Committed demo project at round 3, Vercel deploy, public README | **Deployed — decision 159.** https://adaptive-workbench-iota.vercel.app. The host is Vercel, not Netlify: Sonnet 5 streams at about 84 tokens a second through the function and the proposal turn carries 5 700 to 7 100 tokens, so it runs 70 to 110 s against Netlify's hard 60. The function moved to `web/function/`, its budget store to Upstash Redis, and nothing in it changed shape. On the live URL the probe reports `live`, `store: upstash-redis`; Pyodide boots from the site's own origin; approve, the lab round trip, the flag and the verified replay (8 of 8, 3 of 3) all ran in a browser there, and then the live diagnosis: eight calls, $0.30, the proposal turn streamed to its end in 32 s at 90 tokens a second — under Netlify's sixty as it happens, with the reasoning for staying on the 300-second ceiling in decision 159. The public README is not written |
 | 9 | Demo script and rehearsal | Not started |
@@ -933,7 +936,7 @@ says which happened. Nothing in `core/` moved and no published number changed.
 | Its context | About 92 KB read from artifacts by `wb_driver.agent_context` — objectives, the round graph, 48 scored wells, every decision record — and computed by nothing; cached as the last system block |
 | Replay | The record's claims stepped through the same component; **8 of 8 results match, 3 of 3 cuts reproduce** on pass 1, **5 of 5 and 2 of 2** on pass 2, counted by the driver on the Python side of the JSON boundary |
 | The push-back | Live, the ruling continues the session's signed transcript — from the last question asked, if one was; replayed, the recorded pass 2 answers the recorded request, which the ruling form locks to |
-| The function | Accepts only transcripts it signed (HMAC), a tool result only for a call the model made, a model only from the allowlist; prices each call from its own usage against a daily cap and a per-address counter; sends `fallbacks: "default"` on every request and turns a refusal into a badge |
+| The function | Accepts only transcripts it signed (HMAC), a tool result only for a call the model made, a model only from the allowlist; reserves each call's maximum against a daily cap and a per-address counter before it is made and settles to its own usage after; opens the live seat only to a page carrying the link's access code; sends `fallbacks: "default"` on every request and turns a refusal into a badge |
 | In `check.py` | 19 new invariants: the replay's counts, the loop round-tripping through a scripted upstream with no key, seven refusals and the request the function would build, and the shape of the two-pass record |
 
 **The round-4 record is two-pass, and a third gate wrote the second pass.** The hour-5
@@ -1010,7 +1013,7 @@ them is replay. The first of those is why the host is Vercel and not Netlify —
 | `web/bundle.py` | Copies the repository into the browser's bundle, derives the demo state, and proves the derivation by replaying round 4 |
 | `web/py/wb_driver.py` | The browser's hands: calls each script's `main(argv)` and computes nothing. Since phase 7 also the context the model is handed, the ad hoc guard, and the replay's verification |
 | `web/function/ask.mjs` | The one function: a stateless model turn. Builds every request itself from the skill, signs every transcript it returns, and refuses what it did not sign. Host-agnostic: a web-standard Request in, a streamed Response out |
-| `web/function/lib/` | `skill.mjs` (SKILL.md as a string, generated), `budget.mjs` (the daily cap, in Upstash Redis on the site and in memory elsewhere), `scripted.mjs` (the harness's test double) |
+| `web/function/lib/` | `skill.mjs` (SKILL.md as a string, generated), `budget.mjs` (the daily cap, reserved before each call; Upstash Redis on the site, memory elsewhere), `scripted.mjs` (the harness's test double) |
 | `web/api/ask.mjs` | The Vercel entry: two re-exports, so that `api/` holds nothing the host would build into a second function |
 | `web/vercel.json` | The deploy: Vite, `dist/`, and the function's 300-second ceiling |
 | `web/src/agent.js` | The loop: `runLive` owns `while stop_reason == "tool_use"`; `runReplay` steps the record through the same emitter. Takes `call` as an argument, so the harness drives it too |
@@ -1026,7 +1029,7 @@ them is replay. The first of those is why the host is Vercel and not Netlify —
 | `gates/render_transcript.py` | Renders a headless Claude Code transcript as the gate's markdown, mechanically |
 | `plot_campaign.py` | Renders the proof chart from `campaign.json`. matplotlib lives here, never in `core/` |
 | `gates/` | The three agent gates: the transcripts, and the script that re-runs them |
-| `check.py` | Invariant verification, 186 checks. Run it after any phase |
+| `check.py` | Invariant verification, 188 checks. Run it after any phase |
 
 ## What is real and what is staged
 
@@ -1047,7 +1050,7 @@ them is replay. The first of those is why the host is Vercel and not Netlify —
 | Structure prediction | **Stubbed.** `predict_structures` returns nulls and a note saying it predicted nothing. It invents no confidence score, and nothing downstream reads it |
 | The agent's reasoning in the browser | **Real when a live seat is available, replayed otherwise, and the badge over the turn says which.** Live: `claude-opus-5` behind the site's one function, with `SKILL.md` as its system prompt, choosing tests from the template's list, running short numpy cuts read-only in the visitor's sandbox, and handing a proposal to `record_decision.py`, which recomputes every number before it writes. Replayed: the committed record's claims stepped through the same component, every test re-run and hash-compared, every cut re-executed — *8 of 8 results match · 3 of 3 cuts reproduce* is a count the driver made. Over the daily cap, without a key, or on a refusal the whole chain declined, the page stays in replay and the badge says why |
 | The composer's free text | **Real when a live seat is available, and a follow-up is a follow-up.** Free text goes to the model with the project's state as context and the two read tools, on the session's signed transcript — the diagnosis, every question since, the ruling — so it can refer to what was said; the transcript lives in page memory and a reload starts a fresh one from the record, which is re-read into the context on every turn. The suggested asks appear over it only when the project's state gives a reason — a round at the lab, a flagged round nobody has ruled on, a round that came back quiet — presented as a choice headed by that reason, each option showing the prompt it sends, then *Let the agent decide*; they go to the same seat, and reappear when the state changes what there is to suggest. The results check is the one that is a call to the registry instead, and it says so. Without a seat the box says so in a phrase and the asks are answered from artifacts on disk by the briefing, with nothing over the answer |
-| The function behind the seat | **Real, stateless, and not a proxy.** It builds every request itself, accepts only transcripts it signed, prices each call from the response's own usage against a daily cap and a per-address counter, and sends `fallbacks: "default"` on every request. `check.py` drives it without a key: seven refusals, a signed round trip, and the request it would build |
+| The function behind the seat | **Real, stateless, and not a proxy.** It builds every request itself, accepts only transcripts it signed, reserves each call's maximum against a daily cap and a per-address counter before it is made and settles to the response's own usage after, opens the live seat only to a page carrying the link's access code, and sends `fallbacks: "default"` on every request. `check.py` drives it without a key: seven refusals, a signed round trip, the request it would build, the closed seat, the reservation under a burst |
 | The scripted upstream | **A test double, labelled in three places.** On only under an environment variable the site never sets; reported by the probe and on every turn's badge as *scripted · harness*. It lets `check.py` prove the live loop round-trips without spending anything, and every number it leads to is still computed in Pyodide, because the script names tests and carries none |
 | The ad hoc sandbox | **A guard, not a sandbox, and labelled so in the source.** `execute_analysis` runs model-written numpy read-only against the project directory and the round's results export, behind a read-only `open`, an import denylist, a token check and a line budget. The oracle ships in the bundle because the simulated laboratory runs client-side, and anyone can read it by URL; the claim is that `core/` never does and that ad hoc output never enters a code path, which `record_decision.py` enforces on its own |
 | The web app's chrome | **A wireframe.** It renders the layer the phase-5b audit found missing, in the host's own grammar; the panels, the Python, the state and the hashes inside it are real and are running in your tab. The rail's host-only items are drawn and inert, with a tooltip saying so. **Decision 125 removed the on-page banner, so this row is where the claim lives**, and decision 134 removed the rest of the page's commentary on itself: the interface shows and does not tell |

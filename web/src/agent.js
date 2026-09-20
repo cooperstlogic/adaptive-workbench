@@ -26,11 +26,39 @@
 
 export const ENDPOINT = "/api/ask";
 
+// --- the access code --------------------------------------------------------
+//
+// The live seat on the public URL is open to whoever was sent the link, and
+// the link carries the code: `?code=…` before the hash. The page keeps it in
+// localStorage, takes it off the address bar, and sends it on every call.
+// Without it the function answers its probe with the reason and the page is
+// in replay, which is the same page a visitor without a key gets.
+
+const CODE_KEY = "workbench-code";
+const CODE_HEADER = "x-workbench-code";
+
+export function adoptCode(loc = globalThis.location, storage = globalThis.localStorage) {
+  try {
+    const url = new URL(loc.href);
+    const code = url.searchParams.get("code");
+    if (!code) return;
+    storage.setItem(CODE_KEY, code);
+    url.searchParams.delete("code");
+    history.replaceState(null, "", url.pathname + url.search + url.hash);
+  } catch { /* a private window, or no window at all */ }
+}
+
+function headers(extra = {}) {
+  let code = null;
+  try { code = localStorage.getItem(CODE_KEY); } catch { /* private window */ }
+  return code ? { ...extra, [CODE_HEADER]: code } : extra;
+}
+
 // --- the probe --------------------------------------------------------------
 
 export async function probe(fetchImpl = globalThis.fetch, base = "") {
   try {
-    const res = await fetchImpl(`${base}${ENDPOINT}`, { method: "GET" });
+    const res = await fetchImpl(`${base}${ENDPOINT}`, { method: "GET", headers: headers() });
     if (!res.ok) return { live: false, reason: `probe returned ${res.status}` };
     return await res.json();
   } catch (err) {
@@ -164,7 +192,7 @@ export async function runLive({
   for (let i = 0; i < MAX_TURNS; i++) {
     const res = await fetchImpl(`${base}${ENDPOINT}`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: headers({ "content-type": "application/json" }),
       body: JSON.stringify({ kind, model, context, transcript: signed, turn: nextTurn }),
     });
     if (!res.ok) {

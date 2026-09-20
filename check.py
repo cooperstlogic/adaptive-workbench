@@ -1598,6 +1598,34 @@ def main():
                            "rb").read()).hexdigest(),
                   "SKILL.md sha256 %s, as the function carries it -- one file drives Claude "
                   "Code, Claude Science and the browser" % fnr["probe"]["skill_sha256"][:12])
+            ac = fnr["access_code"]
+            check("with an access code configured, the live seat is closed to a call that "
+                  "does not carry it, and the probe says so",
+                  ac["probe_without"]["live"] is False
+                  and ac["probe_without"]["reason"] == "no access code"
+                  and ac["probe_without"]["code_required"] is True
+                  and ac["probe_wrong"]["reason"] == "access code not recognised"
+                  and ac["probe_right"]["reason"] == "no key configured"
+                  and ac["call_without"] == 401 and ac["call_wrong"] == 401
+                  and ac["call_right"] == 503,
+                  "401 without it, 401 with the wrong one, 503 with the right one -- the "
+                  "code is checked before anything else, and the right one goes as far as "
+                  "the key")
+            rv = fnr["reservation"]
+            check("a call reserves its maximum before it is made, so a burst cannot pass "
+                  "the cap on a stale read",
+                  rv["burst_admitted"] == 3 and rv["burst_refused"] == 5
+                  and rv["burst_reason"] == "daily budget spent"
+                  and abs(rv["spent_after_settle"] - 0.15) < 1e-6
+                  and rv["in_flight_after_settle"] == 0
+                  and rv["crowd_seated"] == 2
+                  and rv["crowd_reason"] == "the seat is busy; try again in a moment"
+                  and abs(rv["spent_after_release"] - 0.15) < 1e-6
+                  and rv["in_flight_after_release"] == 0
+                  and rv["calls_after_release"] == 3,
+                  "8 at once against $1: 3 admitted at $0.30 and 5 refused; settled to "
+                  "$%.2f; 2 of 5 seated under an in-flight cap of 2; released clean"
+                  % rv["spent_after_settle"])
 
     print("\nPhase 7: the committed record is two-pass, and the second pass is a gate's")
     p1, p2 = dec4["passes"][0], (dec4["passes"][1] if dec4["n_passes"] > 1 else None)
