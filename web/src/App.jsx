@@ -13,6 +13,7 @@
 // the same way.
 
 import { useCallback, useEffect, useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import BlankProject from "./BlankProject.jsx";
 import Home from "./Home.jsx";
 import NewProject from "./NewProject.jsx";
@@ -104,15 +105,35 @@ export default function App() {
   // #/new is the dialog over the home screen, as in Claude Science; the
   // template library is a page, because choosing a template means reading
   // what each one declares.
-  if (route.kind === "templates") return <NewProject {...shared} />;
+  if (route.kind === "templates") return (
+    <>
+      <NewProject {...shared} />
+      <Analytics />
+    </>
+  );
 
   if (route.kind === "project" || route.kind === "session" || route.kind === "rounds") {
     // A blank project has no Python state at all, so it gets its own shell
     // rather than a templated shell with everything in it disabled.
     const asBlank = blank.all().find((p) => p.id === route.project);
-    if (asBlank) return <BlankProject route={route} project={asBlank} {...shared} />;
-    return <Project key={route.project} route={route} {...shared} />;
+    if (asBlank) return (
+      <>
+        <BlankProject route={route} project={asBlank} {...shared} />
+        <Analytics />
+      </>
+    );
+    return (
+      <>
+        <Project key={route.project} route={route} {...shared} />
+        <Analytics />
+      </>
+    );
   }
 
-  return <Home {...shared} dialog={route.kind === "new"} />;
+  return (
+    <>
+      <Home {...shared} dialog={route.kind === "new"} />
+      <Analytics />
+    </>
+  );
 }
