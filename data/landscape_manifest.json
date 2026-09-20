@@ -1,0 +1,41 @@
+{
+  "build_hash": "sha256:c9b2566abc75f0dba893f4c6628c9bb1213dd2921fa4317b8751be03d2ce3318",
+  "derived": {
+    "beta": 0.552696,
+    "cliff_parent_residue": "F",
+    "cliff_position": 103,
+    "cliff_residues": "DEKPR",
+    "cliff_window_index": 4,
+    "detection_limit_pkd": 6.860511,
+    "landscape_max_pkd": 11.674734,
+    "landscape_median_pkd": 8.865057,
+    "landscape_min_pkd": 4.961059,
+    "parent_pkd": 9.0,
+    "realized_linear_r2": 0.600764,
+    "threshold_pkd": 10.76156
+  },
+  "editable_region": [
+    99,
+    107
+  ],
+  "n_candidates": 10261,
+  "params": {
+    "additive_sigma": 0.45,
+    "assay_noise_sigma": 0.15,
+    "cliff_depth": -1.5,
+    "cliff_residues": "PDEKR",
+    "construct_failure_rate": 0.03,
+    "detection_limit_percentile": 2.0,
+    "parent_pkd": 9.0,
+    "plate_offset_sigma": 0.05,
+    "reads_per_design": 2,
+    "round4_version_shift": -0.8,
+    "round_offset_sigma": 0.1,
+    "seed": 20260918,
+    "target_linear_r2": 0.6,
+    "threshold_percentile": 99.0
+  },
+  "parent": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAMDYWGQGTLVTVSS",
+  "schema_version": 1,
+  "unit": "pKD"
+}

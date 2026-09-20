@@ -1,0 +1,12 @@
+{
+  "id": "enzyme-thermostability",
+  "version": "0.0.0",
+  "title": "Enzyme thermostability",
+  "status": "stub",
+  "description": "Design-test-learn rounds over an enzyme scaffold, optimizing measured melting temperature under activity constraints. Not built in this prototype.",
+  "objectives": [],
+  "constraints": {},
+  "batch": {},
+  "model_recipes": [],
+  "panels": []
+}

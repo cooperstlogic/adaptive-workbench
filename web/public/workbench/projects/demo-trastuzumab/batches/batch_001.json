@@ -1,0 +1,968 @@
+{
+  "approval": {
+    "at": "2026-09-19T17:53:00+00:00",
+    "by": "d.webster",
+    "note": "",
+    "status": "approved"
+  },
+  "approved": [
+    "8b8998709aa9",
+    "033db628211f",
+    "861d7b164749",
+    "78cfce74484f",
+    "4879e53244a7",
+    "87dc3b08adb4",
+    "1e9b122824ae",
+    "455e284fdf1e",
+    "b916813591de",
+    "fd8f76aa5818",
+    "5592b6553294",
+    "79c67a7ef092",
+    "76cdf6433ac8",
+    "8ea8b1e9fd16",
+    "88435c51d137",
+    "2cf79e4408c6",
+    "5f3a1b5068c6",
+    "5fc55d2d2274",
+    "845e5cd48da9",
+    "5013add1f694",
+    "24beed7cdca2",
+    "0a81836724cc",
+    "574b2ebe0c3b",
+    "0c7892d8d3cf",
+    "e31f780d3901",
+    "e2158f90500c",
+    "4925b930af23",
+    "ea525ee66108",
+    "f7069713339a",
+    "1ca966c765ee",
+    "32ce7c2ebebb",
+    "8d6f54b3f822",
+    "1093e5e99ad7",
+    "22071e74814a",
+    "cf009e89f84e",
+    "075714d6f435",
+    "1f44a7f98160",
+    "0cbc658a1a74",
+    "bb230ac6cc93",
+    "74322de16a37",
+    "2c9dccfa92fa",
+    "f88e6ed6f766",
+    "4b6e69c90313",
+    "058ed95bd61f",
+    "de7943c5dd73",
+    "cf77042dceed",
+    "45964f402b4a",
+    "eebe140702e7"
+  ],
+  "approved_sequences": [
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWAGDGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGADGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGKGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDAFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGAYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFAAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYDMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAADYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWKGDGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGDDGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDDFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGDYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFDAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYKMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYADDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWSGDGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKDGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGWGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDKFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGKYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFKAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYSMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAKDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWWGDGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGSDGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGEGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDSFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGSYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFSAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYLMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYASDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWEGDGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGWDGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGGGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDWFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGLYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFWAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYWMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYALDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWHGDGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGEDGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGHGFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDEFYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGWYAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFEAMDYWGQGTLVTVSS",
+    "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYEMDYWGQGTLVTVSS"
+  ],
+  "bridge": [],
+  "composition": {
+    "control": 0,
+    "exploration": 0,
+    "pick": 48,
+    "replicate": 0
+  },
+  "diversity_weight": null,
+  "extrapolation_cut_sd": null,
+  "fresh": [
+    "8b8998709aa9",
+    "033db628211f",
+    "861d7b164749",
+    "78cfce74484f",
+    "4879e53244a7",
+    "87dc3b08adb4",
+    "1e9b122824ae",
+    "455e284fdf1e",
+    "b916813591de",
+    "fd8f76aa5818",
+    "5592b6553294",
+    "79c67a7ef092",
+    "76cdf6433ac8",
+    "8ea8b1e9fd16",
+    "88435c51d137",
+    "2cf79e4408c6",
+    "5f3a1b5068c6",
+    "5fc55d2d2274",
+    "845e5cd48da9",
+    "5013add1f694",
+    "24beed7cdca2",
+    "0a81836724cc",
+    "574b2ebe0c3b",
+    "0c7892d8d3cf",
+    "e31f780d3901",
+    "e2158f90500c",
+    "4925b930af23",
+    "ea525ee66108",
+    "f7069713339a",
+    "1ca966c765ee",
+    "32ce7c2ebebb",
+    "8d6f54b3f822",
+    "1093e5e99ad7",
+    "22071e74814a",
+    "cf009e89f84e",
+    "075714d6f435",
+    "1f44a7f98160",
+    "0cbc658a1a74",
+    "bb230ac6cc93",
+    "74322de16a37",
+    "2c9dccfa92fa",
+    "f88e6ed6f766",
+    "4b6e69c90313",
+    "058ed95bd61f",
+    "de7943c5dd73",
+    "cf77042dceed",
+    "45964f402b4a",
+    "eebe140702e7"
+  ],
+  "hash": "sha256:91b9f49ca3fb43f65da808cb269fa8a77741c721ba770225d22b5cf7a50f8bd3",
+  "incumbent": null,
+  "inputs": {
+    "designs": "sha256:c91f43949beefd7b7ef9fb4bae0d31f2e27485af418d4f305a003228d3382997",
+    "model_run": null,
+    "objectives": "sha256:e459b8c9eb21e34feda142cc7cae4c4695eaa5d915d42ea0907b095d87ac92c3",
+    "pool": "sha256:7348d6fa875fe65659fe7a514fdf96e2b42281d1005db4503806de9f34898547"
+  },
+  "min_pairwise_distance": 1.0,
+  "mode": "seed",
+  "model_run": null,
+  "model_winner": null,
+  "n_observed": 0,
+  "overrides": [],
+  "policy": {
+    "controls": 2,
+    "exploration_slots": 2,
+    "replicates": 2,
+    "round1_policy": "single_mutant_scan",
+    "round1_policy_note": "Round 1 is a single-mutant scan: every editable position, six substitutions each, chosen round-robin so the surrogate sees every position before it has to reason about combinations. The scan residues span chemistry -- A small, D acidic, K basic, S polar, L aliphatic, W aromatic -- which is how a protein engineer lays out a CDR scan. Restricting round 1 to singles also makes it structurally incapable of reaching the threshold, since no single mutant in the pool can.",
+    "round1_scan_residues": "ADKSLW",
+    "size": 48
+  },
+  "re_measured": [],
+  "recommended": [
+    "8b8998709aa9",
+    "033db628211f",
+    "861d7b164749",
+    "78cfce74484f",
+    "4879e53244a7",
+    "87dc3b08adb4",
+    "1e9b122824ae",
+    "455e284fdf1e",
+    "b916813591de",
+    "fd8f76aa5818",
+    "5592b6553294",
+    "79c67a7ef092",
+    "76cdf6433ac8",
+    "8ea8b1e9fd16",
+    "88435c51d137",
+    "2cf79e4408c6",
+    "5f3a1b5068c6",
+    "5fc55d2d2274",
+    "845e5cd48da9",
+    "5013add1f694",
+    "24beed7cdca2",
+    "0a81836724cc",
+    "574b2ebe0c3b",
+    "0c7892d8d3cf",
+    "e31f780d3901",
+    "e2158f90500c",
+    "4925b930af23",
+    "ea525ee66108",
+    "f7069713339a",
+    "1ca966c765ee",
+    "32ce7c2ebebb",
+    "8d6f54b3f822",
+    "1093e5e99ad7",
+    "22071e74814a",
+    "cf009e89f84e",
+    "075714d6f435",
+    "1f44a7f98160",
+    "0cbc658a1a74",
+    "bb230ac6cc93",
+    "74322de16a37",
+    "2c9dccfa92fa",
+    "f88e6ed6f766",
+    "4b6e69c90313",
+    "058ed95bd61f",
+    "de7943c5dd73",
+    "cf77042dceed",
+    "45964f402b4a",
+    "eebe140702e7"
+  ],
+  "round": 1,
+  "round1_draw_size": 119,
+  "round1_policy": "single_mutant_scan",
+  "schema_version": 1,
+  "slots": [
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.506944,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "8b8998709aa9",
+      "n_mutations": 0,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.5375,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "033db628211f",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWAGDGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.5375,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "861d7b164749",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGADGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": 1
+      },
+      "design_id": "78cfce74484f",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGKGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.5375,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "4879e53244a7",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDAFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.493056,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "87dc3b08adb4",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGAYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.55,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "1e9b122824ae",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFAAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.433333,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "455e284fdf1e",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYDMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.505556,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "b916813591de",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAADYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.458333,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "fd8f76aa5818",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWKGDGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "5592b6553294",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGDDGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.544444,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "79c67a7ef092",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGSGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "76cdf6433ac8",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDDFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.419444,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "8ea8b1e9fd16",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGDYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.476389,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "88435c51d137",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFDAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.427778,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "2cf79e4408c6",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYKMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.431944,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "5f3a1b5068c6",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYADDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "5fc55d2d2274",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWSGDGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.458333,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "845e5cd48da9",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGKDGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.543056,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "5013add1f694",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGWGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.458333,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "24beed7cdca2",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDKFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.413889,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "0a81836724cc",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGKYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.470833,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "574b2ebe0c3b",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFKAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.470833,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "0c7892d8d3cf",
+      "n_mutations": 1,
+      "plate_planned": "R1P1",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYSMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.426389,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "e31f780d3901",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAKDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.5,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "e2158f90500c",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWWGDGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "4925b930af23",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGSDGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.506944,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "ea525ee66108",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGEGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.501389,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "f7069713339a",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDSFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.456944,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "1ca966c765ee",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGSYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.513889,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "32ce7c2ebebb",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFSAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.534722,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "8d6f54b3f822",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYLMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.469444,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "1093e5e99ad7",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYASDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "22071e74814a",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWEGDGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.5,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "cf009e89f84e",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGWDGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.55,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "075714d6f435",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGGGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.5,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "1f44a7f98160",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDWFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.520833,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "0cbc658a1a74",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGLYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.5125,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "bb230ac6cc93",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFWAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.469444,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "74322de16a37",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYWMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.533333,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "2c9dccfa92fa",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYALDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.468056,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "f88e6ed6f766",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWHGDGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "4b6e69c90313",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGEDGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.511111,
+        "liability_count": 0,
+        "net_charge": 0
+      },
+      "design_id": "058ed95bd61f",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGHGFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.463889,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "de7943c5dd73",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDEFYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.455556,
+        "liability_count": 0,
+        "net_charge": -1
+      },
+      "design_id": "cf77042dceed",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGWYAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.476389,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "45964f402b4a",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFEAMDYWGQGTLVTVSS",
+      "slot": "pick"
+    },
+    {
+      "bridge": false,
+      "computed": {
+        "hydrophobicity": 0.433333,
+        "liability_count": 0,
+        "net_charge": -2
+      },
+      "design_id": "eebe140702e7",
+      "n_mutations": 1,
+      "plate_planned": "R1P2",
+      "previously_measured": false,
+      "rationale": "round-1 single_mutant_scan over 119 of 7294 feasible candidates; no model run exists yet, so there is nothing to exploit",
+      "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYEMDYWGQGTLVTVSS",
+      "slot": "pick"
+    }
+  ],
+  "unit": "pKD"
+}

@@ -1,0 +1,254 @@
+{
+  "code": [
+    {
+      "path": "core/__init__.py",
+      "sha256": "7c47d1a56093d5ed6bb11181b48626e367a9bf9d216f66401550a0f94fba249c",
+      "verbatim": true
+    },
+    {
+      "path": "core/schema.py",
+      "sha256": "4a06f42c7721a304454d06a91a6bc758aa7e6a2337b1ffcb8209ccc20001fda6",
+      "verbatim": true
+    },
+    {
+      "path": "core/encode.py",
+      "sha256": "1c9072ea432218bafc32594ac179081145dc6ca946ef8fecd64c31de946653fd",
+      "verbatim": true
+    },
+    {
+      "path": "core/scoring.py",
+      "sha256": "0e7dbc008b6bc8b728546e7ac6fcd82e76a3b348c0637c764c4b0b615e06712f",
+      "verbatim": true
+    },
+    {
+      "path": "core/candidates.py",
+      "sha256": "7dad7a6afb084e3c9f0212903fe5fba9058f2bd058e6bb235ce8d3e61cfc0e25",
+      "verbatim": true
+    },
+    {
+      "path": "core/surrogate.py",
+      "sha256": "5e6ac170456df87dae5522835ac458313bd6bc12223dac285939bc272b3dee8d",
+      "verbatim": true
+    },
+    {
+      "path": "core/acquisition.py",
+      "sha256": "d0a6a9bd3cdd738c3e3121116f4f506909456d9d6aaf528ff87e32fb339895ac",
+      "verbatim": true
+    },
+    {
+      "path": "core/reconcile.py",
+      "sha256": "bfa3e2f28920e1183ee6b96bbaa9a575d972f3c681d8a036a78efd28067d923f",
+      "verbatim": true
+    },
+    {
+      "path": "core/diagnostics.py",
+      "sha256": "49aef42d3de62597787700e0d41823ca6ed9701fe732ca19530e0d6d7bc3b665",
+      "verbatim": true
+    },
+    {
+      "path": "core/project.py",
+      "sha256": "a776a037a52437a2fd495208364fd1a485e23e1fb39888f62c0e11411e7861e0",
+      "verbatim": true
+    },
+    {
+      "path": "data/__init__.py",
+      "sha256": "826f85f5e6dfc4ea98fd6824c9eebe8b57a43cdc67c5f7b89113b9b19cc9e73d",
+      "verbatim": true
+    },
+    {
+      "path": "data/synthetic.py",
+      "sha256": "ada94e20ecbd8316bc03a64209e3e19197b2818f4a7fd35a590e8fe1ea4e299f",
+      "verbatim": true
+    },
+    {
+      "path": "data/oracle.py",
+      "sha256": "8d94eb73ed919b2f0c11c01926c7f166bb4852a4c3c8b05ea21a92f5872b8510",
+      "verbatim": true
+    },
+    {
+      "path": "data/landscape_manifest.json",
+      "sha256": "ac1aabd1b8e1baf50b1f900dd24fb5abd6ab8cc45d1314f345abf74b4bd4b8ff",
+      "verbatim": true
+    },
+    {
+      "path": "lims.py",
+      "sha256": "efad21a9706c52cdafdee27af333c79e83b5870dca13a7cea8ce0b4f8e84c137",
+      "verbatim": true
+    },
+    {
+      "path": "init_project.py",
+      "sha256": "ed6c4e89ca5bc9daa88d24dab6b66b83b2ad82f0fd7ef127db0525d7f5da7921",
+      "verbatim": true
+    },
+    {
+      "path": "skills/adaptive-optimization/scripts/generate_candidates.py",
+      "sha256": "8ec27b085400f6ab46a861b94ea829ead15128fde1e5bcc09ed766ad06d81d90",
+      "verbatim": true
+    },
+    {
+      "path": "skills/adaptive-optimization/scripts/select_batch.py",
+      "sha256": "3698035d42a64af7f3f4540a1cdc76b32c902f341520ff7ddf6813bfeed8018c",
+      "verbatim": true
+    },
+    {
+      "path": "skills/adaptive-optimization/scripts/import_round.py",
+      "sha256": "26f5159a4e374b7ed3be857f42bc5d4bbcb74aa36e1f49dc888e2bd3eb921bb1",
+      "verbatim": true
+    },
+    {
+      "path": "skills/adaptive-optimization/scripts/evaluate_prior.py",
+      "sha256": "913cc7cc6e47e193b201138a62daf4adde9c8b6dc26a8b2b527beb5e5a4bd3c1",
+      "verbatim": true
+    },
+    {
+      "path": "skills/adaptive-optimization/scripts/fit_surrogates.py",
+      "sha256": "53b5c27547842a99d016f11b56bcd36dd6265b563f6a46cf6fb9e5fdb9588a5b",
+      "verbatim": true
+    },
+    {
+      "path": "skills/adaptive-optimization/scripts/run_diagnostic.py",
+      "sha256": "0514a34dd401926f61caa08f87cdad8d6136b2846f2f40e1e9f84d7f18901258",
+      "verbatim": true
+    },
+    {
+      "path": "skills/adaptive-optimization/scripts/record_decision.py",
+      "sha256": "84d7daf5f427440c9df306c952002b6f47b0ce861abf98a0b243fb2953ecb7cf",
+      "verbatim": true
+    },
+    {
+      "path": "templates/antibody-affinity-maturation/template.json",
+      "sha256": "1ab165d8f804c84525a8655d807e9b6c4255bde1835e36c0f230eb8bfa130b86",
+      "verbatim": true
+    },
+    {
+      "path": "templates/enzyme-thermostability/template.json",
+      "sha256": "10752eaafa7397ebbad25d18a8cffdf007e112655e713d6da8f9d24ff42e4572",
+      "verbatim": true
+    },
+    {
+      "path": "wb_driver.py",
+      "sha256": "58818179a5425f90ccc893be68571ff63af423f11866aac0739088b58c075608",
+      "source": "web/py/wb_driver.py",
+      "verbatim": false
+    }
+  ],
+  "commit": "91912b79169403bb60c9140299d99016e36e9553",
+  "hash": "sha256:0b44b1f857925ec2977868e069e50efb496871730ac40e478e1fd1fa2b7ad68d",
+  "kind": "browser_bundle",
+  "mount": "/workbench",
+  "note": "code is copied byte for byte from the repository and laid out in the same shape, so Pyodide imports the same modules the CLI imports. state is the committed project rewound to before round 4 was submitted. reference is read for replay and never executed",
+  "project": "demo-trastuzumab",
+  "reference": [
+    {
+      "path": "reference/decision_002.json",
+      "sha256": "c0b89438b79085eefa44ff29d2b6c802ada89396d5d5f26294ea01cf8ecf0691"
+    },
+    {
+      "path": "reference/decision_004.json",
+      "sha256": "4cd7cf9c3b44c649197e31d524aabbc0cd1eda5108af465330c514d9f03c2ea2"
+    },
+    {
+      "path": "reference/decision_004.proposal.json",
+      "sha256": "3240d4e5edf438b39aebe508fbc101d87b90566504a2d0c572a7333459e53d6d"
+    },
+    {
+      "path": "reference/requirements.json",
+      "sha256": "cf0a510c21bd942ed5388befb2726c6e797b60b220cc9fb390e9e2a38747c410"
+    }
+  ],
+  "schema_version": 1,
+  "state": [
+    {
+      "path": "lims_store/demo-trastuzumab.json",
+      "sha256": "e06bb70c64d8bdecd4a13a87f184ff2d1997dfbfc0a4d145da1dced4ef3d7dea"
+    },
+    {
+      "path": "projects/demo-trastuzumab/batches/batch_001.eval.json",
+      "sha256": "c643838e0e39a7998da44a76ba7ffda45645d83fb9f6e10a68bc8602362f1db4"
+    },
+    {
+      "path": "projects/demo-trastuzumab/batches/batch_001.json",
+      "sha256": "67f324ec86952c5e125f52e8b12bc14008a3bc04bc1e00df2fa2201d0a708958"
+    },
+    {
+      "path": "projects/demo-trastuzumab/batches/batch_002.eval.json",
+      "sha256": "1152382306cfb58ebf0058e7f075c5eb6e92894abec5549bcaad6ee465206ea9"
+    },
+    {
+      "path": "projects/demo-trastuzumab/batches/batch_002.json",
+      "sha256": "681354c9e9463fa0fa5597b37569dccfdbfec45ebec5ec2cb01f18aa00e13bf9"
+    },
+    {
+      "path": "projects/demo-trastuzumab/batches/batch_003.eval.json",
+      "sha256": "29290a0d21964a8ba52479d0df869ac0b65f2c8ccd67f25af4e50d49640ef8f7"
+    },
+    {
+      "path": "projects/demo-trastuzumab/batches/batch_003.json",
+      "sha256": "6dcd48d032ea021aba5ea74cefce043c3e807d5a50e60c0f7b0e4062503ba116"
+    },
+    {
+      "path": "projects/demo-trastuzumab/batches/batch_004.json",
+      "sha256": "31feedec6380a2c214a91ddebdfd32aee3c40f0ffce78f190654c5d83e8f5638"
+    },
+    {
+      "path": "projects/demo-trastuzumab/candidates/pool_001.json",
+      "sha256": "990cc3e09b9d2f525fe36af5b87a5a678554216b438b59099f6e9f9ff74d63ad"
+    },
+    {
+      "path": "projects/demo-trastuzumab/candidates/pool_002.json",
+      "sha256": "4dd08bfdd07b9f09c561ae3960b4edeb21fa858cd787a245e177918fb82f5128"
+    },
+    {
+      "path": "projects/demo-trastuzumab/candidates/pool_003.json",
+      "sha256": "8a81c18f837702e4996afe24bc25ce02b15c356a691b2812ade97085229439d5"
+    },
+    {
+      "path": "projects/demo-trastuzumab/candidates/pool_004.json",
+      "sha256": "84aec5866208fac2314630c845e726f8cc0605e27c8650279c20eef8a3becdb3"
+    },
+    {
+      "path": "projects/demo-trastuzumab/decisions/decision_002.json",
+      "sha256": "c0b89438b79085eefa44ff29d2b6c802ada89396d5d5f26294ea01cf8ecf0691"
+    },
+    {
+      "path": "projects/demo-trastuzumab/designs.json",
+      "sha256": "5d976e1aeaf8fea9d02defe34f1da1ce00532e24e77cf8ca599467a2fddfe5c6"
+    },
+    {
+      "path": "projects/demo-trastuzumab/evidence/snapshot_001.json",
+      "sha256": "b6b0b4f516a6bec2da593ee4d3d2c1150e8f6bf4bf0bb2f4660e49b79afde08f"
+    },
+    {
+      "path": "projects/demo-trastuzumab/evidence/snapshot_002.json",
+      "sha256": "139e22a0df12508141fb89c0cf3fc3392b0227c94a5b9f56048bccd419ecad37"
+    },
+    {
+      "path": "projects/demo-trastuzumab/evidence/snapshot_003.json",
+      "sha256": "7926a75fa0c48385e8bcc63cda5773f4f6e1eda7b62044ef305fa80822250d1e"
+    },
+    {
+      "path": "projects/demo-trastuzumab/models/run_001.json",
+      "sha256": "52cddeb6d8efbec1836e74baa2c9157f2c4c3df6f306c251a2874c8fa1f18e8f"
+    },
+    {
+      "path": "projects/demo-trastuzumab/models/run_002.json",
+      "sha256": "53e6a085f2b2f8b0d30ec45cce663b17afa8fbdf1dacc715d50cbaa89649b2a1"
+    },
+    {
+      "path": "projects/demo-trastuzumab/models/run_003.json",
+      "sha256": "6deb315335c45bc383817c4b83799a045bc2a76ec2cc64c05e1017532629de17"
+    },
+    {
+      "path": "projects/demo-trastuzumab/objectives.json",
+      "sha256": "ed9fc5f419fdcff37fb71e9b5b01451f39e815b31c30fad5817d4ba15e3b208d"
+    },
+    {
+      "path": "projects/demo-trastuzumab/project.json",
+      "sha256": "afdc180b8f40b1884a8885571c857e5a17c639c8ffd55bfd50d3ab2230d025a1"
+    },
+    {
+      "path": "projects/demo-trastuzumab/rounds.json",
+      "sha256": "9b88737a0edbef32330669d92244a5ad3dce9f536e5fad6dad50c712714aa13d"
+    }
+  ]
+}

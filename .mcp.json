@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "registry": {
+      "type": "stdio",
+      "command": "./.venv/bin/python",
+      "args": ["connectors/registry_server.py"],
+      "env": {}
+    },
+    "bioprovider": {
+      "type": "stdio",
+      "command": "./.venv/bin/python",
+      "args": ["connectors/bioprovider_server.py"],
+      "env": {}
+    }
+  }
+}

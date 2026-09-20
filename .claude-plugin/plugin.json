@@ -1,0 +1,26 @@
+{
+  "name": "adaptive-optimization",
+  "description": "Run design-test-learn rounds on an antibody or protein lead optimization project: select the next batch under enforced developability constraints, reconcile assay results against the registry, and diagnose a round that came back wrong. Bundles the skill, the diagnostic library and both connectors.",
+  "version": "1.0.0",
+  "mcpServers": {
+    "registry": {
+      "type": "stdio",
+      "command": "${CLAUDE_PLUGIN_ROOT}/.venv/bin/python",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/connectors/registry_server.py"
+      ],
+      "env": {}
+    },
+    "bioprovider": {
+      "type": "stdio",
+      "command": "${CLAUDE_PLUGIN_ROOT}/.venv/bin/python",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/connectors/bioprovider_server.py"
+      ],
+      "env": {}
+    }
+  },
+  "author": {
+    "name": "Dylan Webster"
+  }
+}

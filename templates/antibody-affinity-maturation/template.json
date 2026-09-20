@@ -1,0 +1,94 @@
+{
+  "id": "antibody-affinity-maturation",
+  "version": "1.1.0",
+  "title": "Antibody affinity maturation",
+  "description": "Design-test-learn rounds over a CDR window, optimizing measured binding affinity under enforced developability constraints.",
+  "lead": {
+    "name": "trastuzumab",
+    "chain": "VH",
+    "sequence": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAMDYWGQGTLVTVSS",
+    "cdr_h3": [
+      98,
+      109
+    ],
+    "editable_region": [
+      99,
+      107
+    ],
+    "editable_region_note": "Half-open [start, end). CDR-H3 is WGGDGFYAMDY at VH index 98; the editable window is the 8 residues GGDGFYAM, excluding the conserved W and the terminal DY.",
+    "known_liabilities": [
+      "DG isomerization motif present in the parent CDR-H3"
+    ]
+  },
+  "objectives": [
+    {
+      "name": "affinity",
+      "direction": "maximize",
+      "unit": "pKD",
+      "source": "measured"
+    },
+    {
+      "name": "hydrophobicity",
+      "direction": "minimize",
+      "threshold": 0.55,
+      "source": "computed",
+      "note": "Normalized Kyte-Doolittle over the editable window. Threshold sits marginally above the parent at 0.507: the lead is an approved therapeutic, so the design rule is not to become more aggregation-prone than the molecule that already works."
+    },
+    {
+      "name": "liability_count",
+      "direction": "minimize",
+      "threshold": 0,
+      "source": "computed",
+      "note": "Counts motifs the variant introduces relative to the parent. The parent's own DG is inherited, not introduced."
+    }
+  ],
+  "constraints": {
+    "max_mutations": 2,
+    "forbidden_motifs": [
+      "NG",
+      "DG",
+      "C"
+    ]
+  },
+  "batch": {
+    "size": 48,
+    "controls": 2,
+    "replicates": 2,
+    "exploration_slots": 2,
+    "round1_policy": "single_mutant_scan",
+    "round1_policy_note": "Round 1 is a single-mutant scan: every editable position, six substitutions each, chosen round-robin so the surrogate sees every position before it has to reason about combinations. The scan residues span chemistry -- A small, D acidic, K basic, S polar, L aliphatic, W aromatic -- which is how a protein engineer lays out a CDR scan. Restricting round 1 to singles also makes it structurally incapable of reaching the threshold, since no single mutant in the pool can.",
+    "round1_scan_residues": "ADKSLW"
+  },
+  "model_recipes": [
+    "ridge_onehot",
+    "gp_pca64"
+  ],
+  "diagnostics": [
+    "offset_from_controls",
+    "residual_by_plate",
+    "residual_by_mutation_class",
+    "replicate_concordance",
+    "calibration_by_region"
+  ],
+  "diagnostics_policy": {
+    "interval": 0.8,
+    "bridge_concordance_k": 2.0,
+    "replicate_outlier_k": 3.0,
+    "calibration_bins": 4,
+    "note": "Tolerances for the diagnostic library, declared by the template rather than chosen while reading a round. The bridge is the same molecules measured twice, so its members should differ only by read noise: a spread wider than 2.0 x the round's own read-noise scale means they are telling different stories and there is no single number to correct by. 3.0 x that scale flags a construct whose two reads disagree, which over a batch of 48 expects about one false flag every eight rounds. Coverage is split into 4 bins and not deciles because a coverage estimate needs enough designs per bin to tell 0.8 from 0.5: at a batch of 48, quartiles give about twelve designs each, while deciles give five and quantize coverage to multiples of 0.2."
+  },
+  "anomaly_flag": {
+    "statistic": "mean_signed_residual",
+    "scope": "fresh_designs",
+    "trigger_abs_pkd": 0.5,
+    "min_designs": 8,
+    "interval": 0.8,
+    "expected_outside": 0.2,
+    "note": "A round is flagged when its fresh designs sit on average more than 0.5 pKD from where the model put them. 0.5 pKD is a three-fold change in apparent KD and 3.3 times the assay's noise sigma, so it is a discrepancy a scientist would stop for. Signed and not two-sided-scattered: a batch chosen by expected improvement always lands where the model is least certain, so an interval miss rate fires on every round and carries no information. A run offset and a real activity cliff trip this statistic identically, which is the point -- the flag says a round needs deciding, never which explanation wins."
+  },
+  "panels": [
+    "setup",
+    "batch_review",
+    "progress"
+  ]
+}

@@ -1,0 +1,11 @@
+# What the CLI does not upload. The build regenerates dist/ and public/pyodide/
+# (scripts/stage-pyodide.mjs), and the key file never leaves this machine.
+.env*
+dist
+public/pyodide
+node_modules
+.netlify
+.playwright-cli
+__pycache__
+*.png
+*.yaml
