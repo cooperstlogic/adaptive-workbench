@@ -154,7 +154,7 @@ export default function BlankProject({ route, project, bump, live, reprobe, mode
                     <span className="sess-dot adhoc" />
                     <span className="ellipsis">{s.title || "New session"}</span>
                   </span>
-                  <span className="s">{elapsed(s.created)}</span>
+                  <span className="s">{elapsed(s.updated)}</span>
                 </a>
               ))}
             </div>

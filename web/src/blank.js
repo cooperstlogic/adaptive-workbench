@@ -38,7 +38,13 @@ function write(doc) {
 }
 
 export function list() {
-  return read().projects.map((p) => ({ ...p, kind: "blank" }));
+  // A session's `updated` moves with every turn, and it is what the home list
+  // and the rail date and sort by. Sessions saved before it was kept have
+  // only `created`, so it is filled in on the way out rather than left missing.
+  return read().projects.map((p) => ({
+    ...p, kind: "blank",
+    sessions: (p.sessions || []).map((s) => ({ ...s, updated: s.updated || s.created })),
+  }));
 }
 
 export function get(id) {
@@ -62,14 +68,19 @@ export function remove(id) {
   return write(doc);
 }
 
-/** A session inside a blank project. It holds what was typed and nothing else. */
+/** A session inside a blank project. It holds what was typed and nothing else.
+ *  An empty one is reused rather than added to, the same rule as the driver's
+ *  `new_session`: clicking New twice is one intention, not two. */
 export function newSession(projectId) {
   const doc = read();
   const p = doc.projects.find((x) => x.id === projectId);
   if (!p) return null;
+  const spare = p.sessions.find((s) => !s.turns.length);
+  if (spare) return spare;
   const id = `s${p.sessions.length + 1}`;
-  p.sessions.unshift({ id, title: null, created: new Date().toISOString(), turns: [] });
-  p.updated = new Date().toISOString();
+  const now = new Date().toISOString();
+  p.sessions.unshift({ id, title: null, created: now, updated: now, turns: [] });
+  p.updated = now;
   write(doc);
   return p.sessions[0];
 }
@@ -79,9 +90,11 @@ export function addTurn(projectId, sessionId, text) {
   const p = doc.projects.find((x) => x.id === projectId);
   const s = p && p.sessions.find((x) => x.id === sessionId);
   if (!s) return null;
-  s.turns.push({ text, at: new Date().toISOString() });
+  const now = new Date().toISOString();
+  s.turns.push({ text, at: now });
   if (!s.title) s.title = text.slice(0, 48);
-  p.updated = new Date().toISOString();
+  s.updated = now;
+  p.updated = now;
   write(doc);
   return s;
 }
