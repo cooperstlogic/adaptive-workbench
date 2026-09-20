@@ -6,31 +6,53 @@
 // Everything that only *reads* state — where are we, why did this flag,
 // whether the lab has reported — belongs in here.
 //
-// Two kinds of ask sit under it. The suggested ones are answered
-// deterministically by a briefing assembled in `wb_driver` from artifacts on
-// disk, no model involved. Free text, and the one suggestion marked `live`,
-// go to the model in the centre seat — when there is one. When there is not,
-// the box says so in a phrase and the suggested asks keep working; that is
-// the default a cold visit to the public URL gets once the daily budget is
-// spent, and live is the upgrade.
+// Everything in it goes to the model in the centre seat when one is seated:
+// free text as typed, and the suggested asks above the box as the prompt
+// each one shows -- decision 158. The one suggestion that is a call to the
+// laboratory's registry rather than a question about state is marked as such
+// and stays one. When there is no seat, the box says so in a phrase and the
+// suggested asks are answered from artifacts on disk by the briefing
+// `wb_driver` assembles, with nothing over the answer; that is the default a
+// cold visit to the public URL gets once the daily budget is spent, and live
+// is the upgrade.
 //
+// The suggestions are presented as the host presents a choice -- `Choices`
+// -- until the session's first ask or a skip, and a toggle brings them back.
 // The model picker is wired: the function accepts exactly these two ids.
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import Choices from "./Choices.jsx";
 import { MODELS } from "./lib.jsx";
 
 export default function Composer({
-  suggestions = [], onAsk, onSend, busy, placeholder, live, model, setModel,
+  suggestions = [], onAsk, onSend, busy, placeholder, live, model, setModel, asked = 0,
 }) {
   const [text, setText] = useState("");
   const [picking, setPicking] = useState(false);
+  // Open while nothing has been asked in this session, and again whenever the
+  // project's state changes what there is to suggest -- a round comes back,
+  // a round flags -- because that is a new reason rather than the old one
+  // repeated. Closed by hand until then.
+  const signature = suggestions.map((s) => `${s.key}:${s.round ?? ""}`).join(",");
+  const [shown, setShown] = useState(null);
+  const at = useRef(signature);
+  if (at.current !== signature) {
+    at.current = signature;
+    setShown(signature ? true : null);
+  }
   const canSend = !!(live && live.live && onSend);
-  const shown = suggestions.filter((s) => s.key !== "live" || canSend);
+  const open = shown === null ? asked === 0 : shown;
 
   const send = () => {
     if (!text.trim() || !canSend) return;
     onSend(text.trim(), model);
     setText("");
+  };
+
+  const pick = (o) => {
+    setShown(false);
+    if (o.registry || !canSend) onAsk && onAsk(o.key, o.round);
+    else onSend(o.question, model, o.title || o.text);
   };
 
   const hint = canSend
@@ -39,19 +61,12 @@ export default function Composer({
 
   return (
     <div className="composer-wrap">
-      {shown.length > 0 && (
-        <div className="asks">
-          {shown.map((s) => (
-            <button key={`${s.key}:${s.round ?? ""}`} className={`ask${s.key === "live" ? " live" : ""}`}
-                    disabled={busy}
-                    onClick={() => (s.key === "live"
-                      ? onSend && onSend(s.question, model, s.text)
-                      : onAsk && onAsk(s.key, s.round))}>
-              {s.text}
-            </button>
-          ))}
-        </div>
-      )}
+      {suggestions.length > 0 && (open
+        ? <Choices options={suggestions} canSend={canSend} busy={busy} onPick={pick}
+                   onSkip={() => setShown(false)} />
+        : <div className="asks">
+            <button className="ask" onClick={() => setShown(true)}>Suggested asks ▸</button>
+          </div>)}
       <div className="composer">
         <textarea
           className="field" rows={2} value={text}

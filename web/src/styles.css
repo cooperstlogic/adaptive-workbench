@@ -424,6 +424,38 @@ a.rail-item { text-decoration: none; }
 .ask:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
 .ask:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* The suggested asks as a choice: numbered rows, the agent's row, the
+   invitation to type. Each row is one button, the prompt it sends beneath
+   its title, so what is clicked is what is read. */
+.choices {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 16px 18px 10px; margin-bottom: 12px;
+}
+.choices-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.choices-title { margin: 0 0 6px; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+.choice {
+  display: flex; gap: 14px; align-items: flex-start; width: 100%; text-align: left;
+  border: 0; border-top: 1px solid var(--line-soft); background: none; color: inherit;
+  padding: 13px 0; font: inherit; cursor: pointer;
+}
+.choices-head + .choice { border-top: 0; }
+.choice:disabled { opacity: 0.5; cursor: not-allowed; }
+.choice:hover:not(:disabled) .choice-head { color: var(--accent); }
+.choice-n {
+  flex: 0 0 auto; width: 30px; height: 30px; border-radius: 8px; margin-top: 1px;
+  background: var(--bubble); border: 1px solid var(--line); color: var(--ink);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600;
+}
+.choice-n.glyphic { font-weight: 400; color: var(--muted); }
+.choice-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.choice-head { font-size: 15px; font-weight: 600; }
+.choice-q { font-size: 13.5px; color: var(--muted); line-height: 1.45; }
+.choice-pro, .choice-con { font-size: 13px; line-height: 1.4; }
+.choice-pro { color: var(--good); }
+.choice-con { color: var(--flag); }
+
+
 .composer-bar { display: flex; align-items: center; justify-content: space-between;
   margin-top: 6px; }
 .composer-left, .composer-right { display: flex; align-items: center; gap: 4px; }

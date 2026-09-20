@@ -153,7 +153,30 @@ say(`opening state     ${opening.rounds.length} rounds, round ${opening.pending_
   + `${opening.rounds.at(-1).batch.approval.status}, batch `
   + `${report.opening.batch_hash.slice(7, 19)}`);
 
+// What the composer offers, at each state the opening screen can be in. The
+// card appears when the project's state earns it and not otherwise: round 4
+// is awaiting approval and offers nothing, round 2 is flagged and ruled and
+// offers nothing, a quiet round offers the one ask decision 66 is about.
+const keysOf = (r) => call("suggested_asks", { round_id: r }).map((a) => a.key);
+report.suggested = { awaiting_approval: keysOf(4), settled: keysOf(2), quiet: keysOf(3),
+                     adhoc: keysOf(null) };
+
 bringBackRound4(call, timing, report);
+
+// The same question with round 4 back and flagged. Now there is something to
+// suggest, every entry carries the prompt it sends, and the briefing still
+// answers each keyed one for a visitor with no seat.
+const asks = call("suggested_asks", { round_id: 4 });
+report.suggested.flagged = asks.map((a) => a.key);
+report.suggested.lead = asks.length ? asks[0].lead : null;
+report.suggested.prompts = asks.filter((a) => !a.registry).every((a) =>
+  typeof a.question === "string" && a.question.length > 20 && typeof a.title === "string");
+report.suggested.agent_last = asks.length > 0 && asks[asks.length - 1].agent === true;
+report.suggested.briefed = asks.filter((a) => !a.agent && !a.registry).every((a) => {
+  try { return !!call("ask", { key: a.key, round_id: a.round }).kind; } catch { return false; }
+});
+say(`suggested asks    nothing on round 4 awaiting approval, on round 2 settled or in an `
+  + `ad-hoc session; [${report.suggested.flagged}] once it flags`);
 
 // --- replay: the committed record stepped, every number recomputed ---------
 

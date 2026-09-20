@@ -958,10 +958,21 @@ def _figure(value, source, artifact_path, label, unit=None, synthetic=False, arg
 
 
 def suggested_asks(project=None, round_id=None):
-    """What to offer under the composer, given where this project actually is.
+    """What to offer over the composer, when the project's state gives a reason to.
 
-    Contextual rather than fixed: a round at the lab offers the results check,
-    a flagged round offers why it flagged, a settled project offers status.
+    Offered only when there is something to suggest: a round at the lab, a
+    flagged round nobody has ruled on, a round that came back quiet. A new
+    session with nothing pending gets nothing over the composer -- *where are
+    we?* and *what does this template declare?* are questions a person types,
+    not ones the workbench presses (decision 158).
+
+    Each entry is a prompt for the model in the centre seat -- ``title`` is
+    what the card shows and the bubble repeats, ``question`` is the text that
+    is sent, ``lead`` on the first is the state that earned the card -- except
+    the one marked ``registry``, which is a call to the laboratory's registry
+    and not a question about state; the model cannot reach the registry, and
+    asking is what moves a staggered round (decision 130). Without a live seat
+    the page answers every keyed entry from the briefing ``ask`` assembles.
     """
     pid = project or DEMO
     if not os.path.isfile(os.path.join(_root(pid), "project.json")):
@@ -971,46 +982,68 @@ def suggested_asks(project=None, round_id=None):
     rounds = [_round_view(v_state, e, pid) for e in entries]
     at_lab = next((r for r in rounds if r["at_lab"]), None)
     flagged = next((r for r in rounds if r["status"] == "flagged, ruling pending"), None)
-    pending = next((r for r in rounds if r["status"] == "awaiting approval"), None)
     focus = None
     if round_id is not None:
         focus = next((r for r in rounds if r["round"] == int(round_id)), None)
 
     out = []
-    if focus is not None and focus["at_lab"]:
-        out.append({"key": "results_back", "round": focus["round"],
-                    "text": "Have round %d's results come back?" % focus["round"]})
-    elif at_lab:
-        out.append({"key": "results_back", "round": at_lab["round"],
-                    "text": "Have round %d's results come back?" % at_lab["round"]})
-    if focus is not None and focus["flagged"]:
-        out.append({"key": "why_flagged", "round": focus["round"],
-                    "text": "Why did round %d flag?" % focus["round"]})
-    elif flagged:
-        out.append({"key": "why_flagged", "round": flagged["round"],
-                    "text": "Why did round %d flag?" % flagged["round"]})
+    lab = focus if (focus is not None and focus["at_lab"]) else at_lab
+    if lab is not None:
+        out.append({"key": "results_back", "round": lab["round"], "registry": True,
+                    "lead": "Round %d is at the lab." % lab["round"],
+                    "text": "Have round %d's results come back?" % lab["round"],
+                    "title": "Have round %d's results come back?" % lab["round"],
+                    "question": ("Ask the registry. It refuses with the date it expects "
+                                 "until the laboratory has reported, and imports and "
+                                 "evaluates the round once it has."),
+                    "cons": "A call to the registry, not a question for the model"})
+    flag = (focus if (focus is not None and focus["status"] == "flagged, ruling pending")
+            else flagged)
+    if flag is not None:
+        out.append({"key": "why_flagged", "round": flag["round"],
+                    "lead": "Round %d flagged, and nobody has ruled on it." % flag["round"],
+                    "text": "Why did round %d flag?" % flag["round"],
+                    "title": "Why did round %d flag?" % flag["round"],
+                    "question": ("Why did round %d flag? Read the anomaly against its "
+                                 "calibration and the bridge, and say what the flag does "
+                                 "and does not establish on its own." % flag["round"]),
+                    "pros": "Reads the flag against its calibration and bridge without running anything",
+                    "cons": "Nothing is proposed and nothing is written"})
     # Decision 66: the agent speaks on quiet rounds too. Here that is an ask
     # rather than an alarm -- a live question the person can put to the model
     # about a round that did not flag. The page offers it only when a live
     # session is available, because nothing on disk answers it.
-    if focus is not None and focus["status"] == "imported" and focus["flagged"] is False:
+    if focus is not None and focus["flagged"] is False:
         out.append({"key": "live", "round": focus["round"],
+                    "lead": "Round %d came back and did not flag." % focus["round"],
                     "text": "Anything to decide in round %d?" % focus["round"],
+                    "title": "Anything to decide in round %d?" % focus["round"],
                     "question": ("Round %d came back and did not flag. In one or two "
                                  "sentences, from its calibration and its bridge: is there "
-                                 "anything here to decide before fitting and moving on?"
-                                 % focus["round"])})
-    out.append({"key": "where_are_we", "round": None, "text": "Where are we?"})
-    if flagged or pending:
-        out.append({"key": "whats_waiting", "round": None, "text": "What's waiting on me?"})
-    out.append({"key": "what_is_this", "round": None,
-                "text": "What does this template actually declare?"})
+                                 "anything in it to decide, or was it as quiet as the flag "
+                                 "says?" % focus["round"])})
+    if out and (at_lab or flagged):
+        out.append({"key": "whats_waiting", "round": None,
+                    "text": "What's waiting on me?", "title": "What's waiting on me?",
+                    "question": ("What's waiting on me? Every open item — a flagged round "
+                                 "without a ruling, a batch awaiting approval, a round at "
+                                 "the lab — and what each one needs from me.")})
     seen, unique = set(), []
     for a in out:
         if a["key"] not in seen:
             seen.add(a["key"])
             unique.append(a)
-    return unique[:4]
+    if not unique:
+        return []
+    # The option under the numbered ones. It is not a read of anything in
+    # particular, so it has no briefing to fall back on and the page offers
+    # it only when a model is seated.
+    return unique + [{
+        "key": "agent", "round": None, "agent": True,
+        "text": "Let the agent decide", "title": "Let the agent decide",
+        "question": ("Look at where this project is and decide what most needs attention "
+                     "now; then answer that yourself, from the context and the read tools."),
+    }]
 
 
 QUESTIONS = {
@@ -1462,7 +1495,7 @@ def agent_turn_save(session_id, turn, project=None, at=None):
         rec["turns"][slot] = turn
     rec["updated"] = at or rec.get("updated") or ""
     if not rec.get("title") and not _is_round(session_id) and turn.get("question"):
-        rec["title"] = turn["question"][:80]
+        rec["title"] = (turn.get("label") or turn["question"])[:80]
     _adhoc_write(pid, doc)
     return turn
 

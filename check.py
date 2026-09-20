@@ -1454,6 +1454,20 @@ def main():
                   ("asked for %s; pass 2 answers it, %d of %d results match"
                    % (pb["requested"], pb["verified"]["diagnostics"],
                       pb["verified"]["of_diagnostics"])) if pb else "no recorded push-back")
+            sg = browser.get("suggested") or {}
+            check("the composer suggests nothing until the project's state earns it, and "
+                  "a flagged round earns it (decision 158)",
+                  sg.get("awaiting_approval") == [] and sg.get("settled") == []
+                  and sg.get("adhoc") == [] and sg.get("quiet") == ["live", "agent"]
+                  and sg.get("flagged") == ["why_flagged", "whats_waiting", "agent"],
+                  ("nothing on a batch awaiting approval, a settled round or an ad-hoc "
+                   "session; [%s] once round 4 flags, led by %r"
+                   % (", ".join(sg.get("flagged", [])), sg.get("lead"))) if sg else "none")
+            check("and every suggested ask is a prompt for the model, the agent's option "
+                  "last, with the briefing still answering each keyed one without a seat",
+                  sg.get("prompts") is True and sg.get("agent_last") is True
+                  and sg.get("briefed") is True,
+                  "each carries the text it sends; the no-key path still answers them")
             check("the context the model is handed is read from artifacts and fits the "
                   "cached prefix",
                   browser["context"]["rows"] == 48 and browser["context"]["decisions"] >= 2

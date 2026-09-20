@@ -56,7 +56,7 @@ const DIAGNOSTICS = [
 function AskTurn({ turn, log, live, ctx }) {
   return (
     <>
-      <Turn who="you"><p>{turn.label || turn.question}</p></Turn>
+      <Turn who="you"><p title={turn.label ? turn.question : undefined}>{turn.label || turn.question}</p></Turn>
       <Turn who="claude" badge={agentBadge(turn)}>
         <AgentStream turn={turn} log={log} live={live} ctx={ctx} />
       </Turn>
@@ -557,7 +557,8 @@ export default function Session({ ctx, stored, suggestions }) {
             )
         ))}
 
-        <Composer suggestions={suggestions} busy={busy}
+        <Composer key={sessionId} suggestions={suggestions} busy={busy}
+                  asked={storedTurns.filter((t) => t.kind !== "agent" || t.task !== "diagnose").length}
                   live={live} model={model} setModel={setModel}
                   placeholder={`Ask about round ${round}…`}
                   onAsk={(key, forRound) => onAsk(key, forRound, sessionId)}

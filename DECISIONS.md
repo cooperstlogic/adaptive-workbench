@@ -1213,3 +1213,31 @@ partially supported, `apply_offset_correction`, with the bridge offset and the c
 figures quoted from the tool results it had been handed and *synthetic* beside them. The
 second asked only *repeat the hypothesis id you named in your previous answer* and got
 `h1` back for $0.05, which is the cached prefix doing what decision 139 said it would.
+
+---
+
+## The suggested asks go to the model, when there is one to make — decision 158
+
+The chips under the composer — *Where are we?*, *What's waiting on me?*, *What does this
+template actually declare?* — were answered by a deterministic briefing assembled from
+artifacts on disk, no model involved, and the person who built the thing clicked one
+expecting it to go to the seat. It did not, and the answer that came back carried no
+badge, which is exactly what the page does for a briefing and exactly what reads as the
+model ignoring you. A chip that looks like a prompt and is not one is decision 60's
+failure mode in a smaller coat.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 158 | **Every suggested ask is a prompt for the model, the asks are presented as the host presents a choice, and they are offered only when the project's state gives a reason to suggest something.** `wb_driver.suggested_asks` returns entries only for a round at the lab, a flagged round nobody has ruled on, or a round that came back quiet; a batch awaiting approval, a settled round and a new ad-hoc session return nothing, and the composer stands alone. Each entry carries a `title` (what the card shows and the bubble repeats), a `question` (the text that is sent, shown under the title so what is clicked is what is read), optional `pros` and `cons`, a `lead` on the first — the state that earned the card, which is the card's heading — and `registry` on the one that is a call to the laboratory. `Choices.jsx` renders them as rows under that heading, with Skip beside it, then *Let the agent decide* — its own prompt, offered only when a model is seated. Options are numbered only when there is more than one; a lone option loses the number and the gutter it sat in, because a "1" over a list of one is a list pretending to be longer than it is. There is no *type your own* row: the composer is directly beneath and already says so, and a row that only focuses the box is a control that does nothing. It shows until the session's first ask or a skip, and reopens by itself when the set of suggestions changes, because a round coming back flagged is a new reason rather than the old one repeated; a *Suggested asks* toggle brings it back otherwise. With a seat, a pick goes through `onAskLive` exactly as typed text does, on the session's transcript; the registry entry goes to `wb_driver.ask` regardless, because the model cannot reach the registry and asking is what moves a staggered round (130). Without a seat every keyed entry is still answered by the briefing, with nothing over it, and the agent's row is not offered. `check.py` asserts the card is empty in the three settled states and carries `why_flagged` once round 4 comes back, every non-registry entry carrying the prompt it sends, the agent's last, the briefing still answering each keyed one — checks 185 and 186. Amends 66 and the composer's rule in CLAUDE.md | Two complaints, one decision. The briefing was built to make a point — the same *where are we?* in a chat product summarises the transcript, because there is no state to read — and it made it to the builder and to nobody who clicked the chip: a chip that looks like a prompt and is not one is decision 60's failure mode in a smaller coat. And the generic three sat under every composer in every session including an empty one, which is the interface asking a question it has no reason to ask; *where are we?* and *what does this template declare?* are things a person types when they want them, and a card that appears unprompted should be earning its place with something the state actually knows. What is left is contextual in the way decision 66 meant: the agent speaks when the round gives it something to say. The briefing stays because it is the no-key path a cold visit gets when the daily cap is spent, and because its figures resolve to `core/` functions in the Notebook tab, which a model's prose does not — its keys all still answer, they are simply no longer pressed on anyone. The prompt is shown under the title rather than hidden behind it because a card that sends more than it shows is a hidden prompt, and the bubble carries the full text as its tooltip for the same reason. Pros and cons are filled in only where there is a real one to state — a reading of the flag proposes nothing; the registry call is not a question — and left empty otherwise, because a card that invents a trade-off for every row is telling |
+
+Verified on the day, against the dev server with the key, by walking the demo's own
+path. Round 4 awaiting approval: no card, the approve button the only thing to do.
+Approved: the card appears, headed *Round 4 is at the lab.*, offering the registry call
+and *What's waiting on me?*. Asked the registry, refused with the date: the card
+collapses, because nothing changed. Asked again and the round came back flagged: the
+card reopens by itself, headed *Round 4 flagged, and nobody has ruled on it.*, offering
+*Why did round 4 flag?*. Clicked it, and Sonnet 5 answered on the badge — the −2.046 pKD
+mean surprise against the 0.5 trigger, the three-design bridge at −1.014, coverage
+collapsed from 0.816 to 0.065, and the v1.2 → v1.3 assay change with no characterized
+offset — saying which of those the flag does and does not establish, and proposing
+nothing, which is what it was asked for. *Synthetic* beside the numbers throughout.

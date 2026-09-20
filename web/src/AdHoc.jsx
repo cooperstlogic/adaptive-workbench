@@ -11,14 +11,16 @@
 //   question in a chat product gets a summary of the transcript, because
 //   there is no state to read.
 //
-// The suggested asks are answered by a briefing assembled in `wb_driver`;
-// free text goes to the model in the centre seat when one is available, with
-// the same two read-only tools the diagnosis has and the project's state as
-// its context. Both kinds of answer are stored in the session; a model's
-// carries the mode badge and a briefing carries nothing.
+// The suggested asks and the free text both go to the model in the centre
+// seat when one is available, with the same two read-only tools the diagnosis
+// has and the project's state as its context -- decision 158; the asks are
+// presented as the host presents a choice, each showing the prompt it sends.
+// Without a seat the asks are answered by a briefing assembled in `wb_driver`
+// from artifacts on disk. Both kinds of answer are stored in the session; a
+// model's carries the mode badge and a briefing carries nothing.
 //
-// An empty one is a title and a composer. Nothing on the page says any of
-// the above; the asks under the composer are the whole invitation.
+// An empty one is a title, the choice and a composer. Nothing on the page
+// says any of the above; the asks over the composer are the whole invitation.
 
 import AgentStream, { agentBadge } from "./AgentStream.jsx";
 import Briefing from "./Briefing.jsx";
@@ -46,7 +48,7 @@ export default function AdHoc({ ctx, stored, suggestions }) {
         {turns.map((t, i) => (
           t.kind === "agent" ? (
             <div key={t.id || i}>
-              <Turn who="you"><p>{t.label || t.question}</p></Turn>
+              <Turn who="you"><p title={t.label ? t.question : undefined}>{t.label || t.question}</p></Turn>
               <Turn who="claude" badge={agentBadge(t)}>
                 <AgentStream turn={t} log={log}
                              live={!!(agentTurn && agentTurn.id === t.id)} ctx={ctx} />
@@ -65,7 +67,7 @@ export default function AdHoc({ ctx, stored, suggestions }) {
             the project…</p></Turn>
         )}
 
-        <Composer suggestions={suggestions} busy={busy}
+        <Composer key={sessionId} suggestions={suggestions} busy={busy} asked={turns.length}
                   live={live} model={model} setModel={setModel}
                   onAsk={(key, round) => onAsk(key, round, sessionId)}
                   onSend={(text, chosen, label) => onAskLive(text, chosen, label)} />
