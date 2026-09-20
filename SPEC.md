@@ -55,7 +55,7 @@ One core module tree, three surfaces over it.
 | templates/ | antibody-affinity-maturation/, plus a stub second template |
 | data/ | build\_oracle.py, build\_features.py, synthetic.py |
 | web/ | Vite app: the Claude Science-shaped shell, its artifact tabs, and public/assets/ for the precomputed matrices |
-| netlify/functions/ | ask.ts — the single stateless model proxy |
+| function/ | ask.mjs — the single stateless model proxy, and its lib/; api/ask.mjs is Vercel's two-line entry to it |
 | projects/demo-trastuzumab/ | A completed six-round project, committed to the repo |
 | simulate\_campaign.py | Headless N-round run that emits the proof chart |
 | DECISIONS.md | Every choice the spec left open, plus the pre-registered landscape parameters |
@@ -375,7 +375,7 @@ In the prototype, ship one working template and one stub. The stub exists in the
 
 ## Web app
 
-Vite plus React, static output, deployed to a default Netlify URL. A hash router, no state library, no backend beyond a single stateless function.
+Vite plus React, static output, deployed to a default Vercel URL. A hash router, no state library, no backend beyond a single stateless function.
 
 > **Amended by the redesign — decisions 122 to 133.** Where this section and the four bullets below it disagree, the bullets govern; the rest of the section is accurate and is what they were built on top of.
 >
@@ -444,7 +444,7 @@ The centre column is where the agentic claim is made or lost, so nothing in it i
 
 **Context.** The session receives the whole decision state, not just the current batch: the decision record, the diagnostic outputs, `rounds.json`, `objectives.json`, the active model run, the previous batch's eval, and a summarized batch table rather than all 48 rows with full rationale. That lands near 20k tokens, cached as a stable prefix with the visitor's question placed after the breakpoint.
 
-**The tool loop lives in the browser.** Pyodide is where the data and the sandbox already are, and the key cannot go client-side, so `netlify/functions/ask.ts` is a stateless single-turn proxy over `messages.create` and React owns the `while stop_reason == "tool_use"` loop. Each function invocation is one short model turn, which keeps every request inside Netlify's synchronous window. On the CLI path there is no function at all: Claude Code is the loop and Bash is the sandbox.
+**The tool loop lives in the browser.** Pyodide is where the data and the sandbox already are, and the key cannot go client-side, so `function/ask.mjs` is a stateless single-turn proxy over `messages.create` and React owns the `while stop_reason == "tool_use"` loop. Each function invocation is one model turn — and the proposal turn is not short: it carries the record, runs 70 to 110 seconds, and is why the host is Vercel, whose functions stream for 300, and not Netlify, whose stream ends at a hard 60 (decision 159). On the CLI path there is no function at all: Claude Code is the loop and Bash is the sandbox.
 
 **The function is not a proxy for the Claude API.** It builds the request itself from a fixed system prompt, the project state it loads server-side, and the visitor's question as a length-capped string. It must never accept a client-supplied `messages` array — that would publish a free Opus endpoint under your key. This is the single most important line in this section.
 
@@ -458,7 +458,7 @@ The centre column is where the agentic claim is made or lost, so nothing in it i
 
 None of this is a reason to change models. It is a reason the browser path's default has to be replay and its live mode an upgrade, which is what the paragraph below already says — the refusal is simply one more way the upgrade can fail to apply.
 
-**Anyone can use it, until the budget says otherwise.** The key lives in a Netlify environment variable, so visitors supply nothing. A global daily spend cap and a per-IP counter live in Netlify Blobs. Under the cap the session runs live. Over it, the site returns to replay — and the fallback is not a degraded mode, it is the default that live calls temporarily upgrade. The badge reads *live*, or *replayed · evidence recomputed · 5 of 5 values match*, and the page always says which mode it is in.
+**Anyone can use it, until the budget says otherwise.** The key lives in a Vercel environment variable, so visitors supply nothing. A global daily spend cap and a per-IP counter live in Upstash Redis, provisioned from the Vercel marketplace. Under the cap the session runs live. Over it, the site returns to replay — and the fallback is not a degraded mode, it is the default that live calls temporarily upgrade. The badge reads *live*, or *replayed · evidence recomputed · 5 of 5 values match*, and the page always says which mode it is in.
 
 ## Build order
 
@@ -480,7 +480,7 @@ There is a second gate at hour 5, and the simulated-only decision gives it teeth
 | 5b | The plugin installed into Claude Science, the same gate re-run there, and the gap audit written | The skill and both connectors load in the host, the agent diagnoses round 4 there, and `DECISIONS.md` records which claimed gaps survived contact with the product and which were struck |
 | 6 | Web app: Pyodide boot, the shell, the artifact tabs, the approve loop | Approving a batch advances the round in-browser in under five seconds, and round 4 opens its session instead of advancing |
 | 7 | The agent in the session: the tool-call stream, the tools, the push-back round trip, budget cap, verified replay | Runs the diagnosis live with a key and steps the recorded one without, through the same component. **Done — decisions 137 to 152**; the loop round-trips in `check.py` through a scripted upstream, and the replay's badge is a count the driver made |
-| 8 | Committed demo project at round 3, Netlify deploy, README with the staged table | The public URL runs a round and a ruling from a cold visit with no key |
+| 8 | Committed demo project at round 3, Vercel deploy, README with the staged table | The public URL runs a round and a ruling from a cold visit with no key |
 | 9 | Demo script, five-minute rehearsal, cut anything broken | You can run it start to finish without apologising |
 
 ## After the demo works
@@ -570,7 +570,7 @@ This audience will ask. Put this table in the README and be able to recite it, b
 | The composer's free text | **Real when a live seat is available, and a follow-up is a follow-up.** Free text goes to the model with the project's state as context and the two read tools, on the session's signed transcript, so it can refer to what was said earlier in the session; the transcript lives in page memory and a reload starts a fresh one from the record. The suggested asks appear over it only when the project's state gives a reason — a round at the lab, a flagged round nobody has ruled on, a round that came back quiet — presented as a choice headed by that reason, each option showing the prompt it sends, then *Let the agent decide*; they go to the same seat, and reappear when the state changes what there is to suggest. The results check is the one that is a call to the registry instead, and it says so. Without a seat the box says so in a phrase and the asks are answered from artifacts on disk by the briefing, with nothing over the answer |
 | The working model picker | **Wired, and both entries run.** Two ids the function accepts — Sonnet 5 by default and Haiku 4.5 — and it refuses any other. Haiku's request omits `thinking` and `output_config.effort`, which that model rejects by name; everything else about it is identical |
 | The function behind the composer | **Real, stateless, and not a proxy.** It builds every request itself, accepts only transcripts it signed, prices each call from the response's own usage against a daily cap and a per-address counter, and sends `fallbacks: "default"` on every request. `check.py` drives it without a key: seven refusals, a signed round trip, the request it would build |
-| The scripted upstream | **A test double, labelled in three places.** On only under an environment variable Netlify never sets, reported by the probe and on every turn's badge as *scripted · harness*. It lets `check.py` prove the live loop round-trips without spending anything; every number it leads to is still computed in Pyodide |
+| The scripted upstream | **A test double, labelled in three places.** On only under an environment variable the site never sets, reported by the probe and on every turn's badge as *scripted · harness*. It lets `check.py` prove the live loop round-trips without spending anything; every number it leads to is still computed in Pyodide |
 | The assay platform and plate format on the configuration screen | **Mock, and labelled so on the row.** Every other locked row on that screen is read out of `template.json` |
 | Blank projects | **Real, and deliberately empty.** They live in `localStorage`, never touch Python, and open on a chat — because nothing has declared what they mean. That is the control arm, not a gap |
 | Round dates in the shipped campaign | **Display-level.** `bundle.py` re-dates the shipped round graph's `updated` stamps to span about six weeks, the field `check.py` already excludes from byte-identity. No simulated date is written into any project artifact, and no measurement moves |

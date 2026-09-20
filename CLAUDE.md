@@ -15,9 +15,11 @@ function behind the composer, `SKILL.md` as its system prompt, three tools, a si
 transcript, a daily cap, and the same stream component stepping the committed record
 without a key with every number recomputed and checked. The round-4 record is two-pass,
 its second pass written by a third headless gate. **Phase 8 is next: the committed demo
-project's opening state, the Netlify deploy, and the public README** — and the first
-thing to verify there is the function under a real key: streaming limits on a proposal
-turn, the Blobs store, and `ANTHROPIC_API_KEY` set. Full status, results and commands are
+project's opening state, the Vercel deploy, and the public README** — and the first
+thing to verify there is the function under a real key: a proposal turn streamed to its
+end, the Redis store, and `ANTHROPIC_API_KEY` set. The host is Vercel, not Netlify —
+decision 159: the proposal turn runs 70 to 110 seconds and Netlify's streaming limit is
+a hard 60. Full status, results and commands are
 in `README.md`; every settled choice and its reasoning is in `DECISIONS.md`. Read both
 before writing code, and read `skills/adaptive-optimization/SKILL.md` before touching
 anything in the round loop.

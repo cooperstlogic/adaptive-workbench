@@ -112,13 +112,13 @@ node scripts/pyodide-check.mjs          # run the browser's Python path without 
 `npm run sync` is two steps. `python ../web/bundle.py` copies `core/`, `data/`, `lims.py`
 and the seven skill scripts into `web/public/workbench/` byte for byte, in the repo's own
 directory shape, with a sha256 per file; `check.py` fails if any of them drifts. It also
-writes `SKILL.md` into `web/netlify/functions/lib/skill.mjs`, which is the model's system
+writes `SKILL.md` into `web/function/lib/skill.mjs`, which is the model's system
 prompt, and `check.py` fails if that string is not the file. `scripts/stage-pyodide.mjs`
 puts the Python runtime and the numpy wheel on this site's own origin, checking the wheel
 against pyodide's lock file before writing it.
 
 And the model in the centre seat, which is a live seat only when the site's one function
-has a key. The dev server mounts the function at the path Netlify serves it from:
+has a key. The dev server mounts the function at the path Vercel serves it from, `/api/ask`:
 
 ```bash
 cd web && ANTHROPIC_API_KEY=sk-ant-... npm run dev   # live: Sonnet 5 diagnoses in the session
@@ -411,7 +411,7 @@ diagnostics itself and refuses any payload that arrives carrying its own numbers
 | 6c | Show, don't tell: the page's commentary on itself removed, empty sessions reduced to a title and a composer, the benchmark moved to the template surfaces, Fraunces / Public Sans / IBM Plex Mono | **Done — decisions 134 to 136.** No footnotes, no captions under tool calls, no rail essays, no synthetic paragraph; the one-word tag and the staged table carry the claim. The Progress tab draws only the project's own line; the twenty-seed benchmark is the template's Validation |
 | 7 | The agent in the session: tool-call stream, the tools, push-back round trip, budget cap, verified replay | **Done — decisions 137 to 152.** A model in the centre seat behind one stateless function, driven by `SKILL.md` as its system prompt; the same stream component steps the committed record without a key, every test re-run and hash-compared; the round-4 record is two-pass, its second pass written by a third headless gate; `check.py` drives the whole loop through a scripted upstream and went from 160 checks to 179 (181 since decisions 155 and 156, 184 since 157: the session is the conversation, 186 since 158: the asks go to the model, when there is one to make) |
 | 7b | The stream as a chat: your asks and rulings as bubbles on the right, the speaker names gone, the mode badge the only label | **Done — decision 153.** Same driver, same stored sessions, same function; `Turn.jsx`, `Session.jsx`'s turn placement and the stylesheet. Each ask put to the laboratory sits where it happened, with the calls it made under it |
-| 8 | Committed demo project at round 3, Netlify deploy, public README | Not started |
+| 8 | Committed demo project at round 3, Vercel deploy, public README | **In progress — decision 159.** The host is Vercel, not Netlify: Sonnet 5 streams at about 84 tokens a second through the function and the proposal turn carries 5 700 to 7 100 tokens, so it runs 70 to 110 s against Netlify's hard 60. The function moved to `web/function/`, its budget store to Upstash Redis, and nothing in it changed shape |
 | 9 | Demo script and rehearsal | Not started |
 
 ### Phase 1 results
@@ -970,10 +970,11 @@ path, no record exists for it, and only a live seat can read it. Without a key t
 offers the five tests by hand and says nothing more. That is the unscripted beat, and it
 is not in the harness on purpose.
 
-**What phase 8 has to verify on the deployed site.** Netlify's streaming-function limits
-under a proposal turn that can run a minute; that the Blobs store is reachable from the
-function; that `ANTHROPIC_API_KEY` is set. The probe reports all three, and the page's
-default without them is replay.
+**What phase 8 has to verify on the deployed site.** A proposal turn streamed to its end
+under Vercel's 300-second limit; that the Redis store is reachable from the function; that
+`ANTHROPIC_API_KEY` is set. The probe reports all three, and the page's default without
+them is replay. The first of those is why the host is Vercel and not Netlify — decision
+159 has the numbers.
 
 ## Repo map
 
@@ -1008,8 +1009,10 @@ default without them is replay.
 | `web/public/assets/campaign.json` | The proof chart's data, written by the evaluator |
 | `web/bundle.py` | Copies the repository into the browser's bundle, derives the demo state, and proves the derivation by replaying round 4 |
 | `web/py/wb_driver.py` | The browser's hands: calls each script's `main(argv)` and computes nothing. Since phase 7 also the context the model is handed, the ad hoc guard, and the replay's verification |
-| `web/netlify/functions/ask.mjs` | The one function: a stateless model turn. Builds every request itself from the skill, signs every transcript it returns, and refuses what it did not sign |
-| `web/netlify/functions/lib/` | `skill.mjs` (SKILL.md as a string, generated), `budget.mjs` (the daily cap), `scripted.mjs` (the harness's test double) |
+| `web/function/ask.mjs` | The one function: a stateless model turn. Builds every request itself from the skill, signs every transcript it returns, and refuses what it did not sign. Host-agnostic: a web-standard Request in, a streamed Response out |
+| `web/function/lib/` | `skill.mjs` (SKILL.md as a string, generated), `budget.mjs` (the daily cap, in Upstash Redis on the site and in memory elsewhere), `scripted.mjs` (the harness's test double) |
+| `web/api/ask.mjs` | The Vercel entry: two re-exports, so that `api/` holds nothing the host would build into a second function |
+| `web/vercel.json` | The deploy: Vite, `dist/`, and the function's 300-second ceiling |
 | `web/src/agent.js` | The loop: `runLive` owns `while stop_reason == "tool_use"`; `runReplay` steps the record through the same emitter. Takes `call` as an argument, so the harness drives it too |
 | `web/src/AgentStream.jsx` | One component, two sources: text, chips, the proposal card, and the badge that says which |
 | `web/src/` | The shell. React, a 60-line hash router, no state library, no charting library |
@@ -1045,7 +1048,7 @@ default without them is replay.
 | The agent's reasoning in the browser | **Real when a live seat is available, replayed otherwise, and the badge over the turn says which.** Live: `claude-opus-5` behind the site's one function, with `SKILL.md` as its system prompt, choosing tests from the template's list, running short numpy cuts read-only in the visitor's sandbox, and handing a proposal to `record_decision.py`, which recomputes every number before it writes. Replayed: the committed record's claims stepped through the same component, every test re-run and hash-compared, every cut re-executed — *8 of 8 results match · 3 of 3 cuts reproduce* is a count the driver made. Over the daily cap, without a key, or on a refusal the whole chain declined, the page stays in replay and the badge says why |
 | The composer's free text | **Real when a live seat is available, and a follow-up is a follow-up.** Free text goes to the model with the project's state as context and the two read tools, on the session's signed transcript — the diagnosis, every question since, the ruling — so it can refer to what was said; the transcript lives in page memory and a reload starts a fresh one from the record, which is re-read into the context on every turn. The suggested asks appear over it only when the project's state gives a reason — a round at the lab, a flagged round nobody has ruled on, a round that came back quiet — presented as a choice headed by that reason, each option showing the prompt it sends, then *Let the agent decide*; they go to the same seat, and reappear when the state changes what there is to suggest. The results check is the one that is a call to the registry instead, and it says so. Without a seat the box says so in a phrase and the asks are answered from artifacts on disk by the briefing, with nothing over the answer |
 | The function behind the seat | **Real, stateless, and not a proxy.** It builds every request itself, accepts only transcripts it signed, prices each call from the response's own usage against a daily cap and a per-address counter, and sends `fallbacks: "default"` on every request. `check.py` drives it without a key: seven refusals, a signed round trip, and the request it would build |
-| The scripted upstream | **A test double, labelled in three places.** On only under an environment variable Netlify never sets; reported by the probe and on every turn's badge as *scripted · harness*. It lets `check.py` prove the live loop round-trips without spending anything, and every number it leads to is still computed in Pyodide, because the script names tests and carries none |
+| The scripted upstream | **A test double, labelled in three places.** On only under an environment variable the site never sets; reported by the probe and on every turn's badge as *scripted · harness*. It lets `check.py` prove the live loop round-trips without spending anything, and every number it leads to is still computed in Pyodide, because the script names tests and carries none |
 | The ad hoc sandbox | **A guard, not a sandbox, and labelled so in the source.** `execute_analysis` runs model-written numpy read-only against the project directory and the round's results export, behind a read-only `open`, an import denylist, a token check and a line budget. The oracle ships in the bundle because the simulated laboratory runs client-side, and anyone can read it by URL; the claim is that `core/` never does and that ad hoc output never enters a code path, which `record_decision.py` enforces on its own |
 | The web app's chrome | **A wireframe.** It renders the layer the phase-5b audit found missing, in the host's own grammar; the panels, the Python, the state and the hashes inside it are real and are running in your tab. The rail's host-only items are drawn and inert, with a tooltip saying so. **Decision 125 removed the on-page banner, so this row is where the claim lives**, and decision 134 removed the rest of the page's commentary on itself: the interface shows and does not tell |
 | The proof chart | **Real, and the evaluator's.** Twenty simulated campaigns per arm, drawn as the template's Validation on the Objectives tab and the New project screen — never on a project's own Progress chart, which draws only what that project measured (decision 135) |

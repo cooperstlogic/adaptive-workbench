@@ -24,7 +24,7 @@
 // is passed in, so `web/scripts/pyodide-check.mjs` drives the same code in
 // node and hands the artifacts to check.py.
 
-export const ENDPOINT = "/.netlify/functions/ask";
+export const ENDPOINT = "/api/ask";
 
 // --- the probe --------------------------------------------------------------
 

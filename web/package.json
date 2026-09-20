@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",
-    "@netlify/blobs": "^11.1.0",
+    "@upstash/redis": "^1.35.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
@@ -19,5 +19,8 @@
     "@vitejs/plugin-react": "^5.1.1",
     "pyodide": "314.0.7",
     "vite": "^8.3.0"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }

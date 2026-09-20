@@ -19,6 +19,10 @@ web/*.yaml
 
 # The key for the site's one function, for local development only. It is read
 # by vite.config.js into the dev server's process and never reaches the page;
-# on Netlify it is a site environment variable and no file exists.
+# on Vercel it is a project environment variable and no file exists.
 web/.env
 web/.env.*
+
+# The Vercel CLI's working directory: the linked project's ids and the local
+# build output. Regenerable.
+web/.vercel/

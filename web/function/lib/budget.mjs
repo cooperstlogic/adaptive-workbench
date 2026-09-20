@@ -1,15 +1,19 @@
 // The daily spend cap and the per-address counter.
 //
-// SPEC.md: a global daily spend cap and a per-IP counter live in Netlify Blobs.
-// Under the cap the session runs live; over it the site returns to replay,
-// which is the default that live calls temporarily upgrade. Nothing here is
-// precise to the cent -- two requests can race past the cap by one call --
-// and it does not need to be: the cap exists so a public URL cannot run up a
-// bill, not to meter anyone.
+// SPEC.md: a global daily spend cap and a per-IP counter live in a store the
+// host provides. Under the cap the session runs live; over it the site
+// returns to replay, which is the default that live calls temporarily
+// upgrade. Nothing here is precise to the cent -- two requests can race past
+// the cap by one call -- and it does not need to be: the cap exists so a
+// public URL cannot run up a bill, not to meter anyone.
 //
-// Off Netlify (the Vite dev server, check.py's harness) there is no blob
-// store, so the counter lives in memory and resets with the process. That is
-// the honest local behaviour and it is labelled in the probe as `store`.
+// The store is Upstash Redis, reached over its REST API, which is what the
+// Vercel marketplace provisions and what a function that may be running in
+// several instances at once needs: one key per day, read before a call and
+// written after it, that every instance sees (decision 159). Anywhere the
+// store's two variables are not set (the Vite dev server, check.py's harness)
+// the counter lives in memory and resets with the process. That is the honest
+// local behaviour and it is labelled in the probe as `store`.
 
 import { createHash } from "node:crypto";
 
@@ -40,21 +44,26 @@ export const hashIp = (ip) =>
 
 const memory = new Map();
 
+// A day's record is kept for three days and then expires, so the store holds
+// nothing older than the cap it enforces.
+const KEEP_SECONDS = 3 * 86400;
+
 async function store() {
-  // Netlify Blobs needs the site context the platform injects; anywhere else
-  // getStore throws before it is used, and the counter is process memory.
-  if (process.env.NETLIFY || process.env.NETLIFY_BLOBS_CONTEXT) {
-    try {
-      const { getStore } = await import("@netlify/blobs");
-      const blobs = getStore({ name: "workbench-budget", consistency: "strong" });
-      return {
-        kind: "netlify-blobs",
-        get: async (key) => (await blobs.get(key, { type: "json" })) || null,
-        set: async (key, value) => blobs.setJSON(key, value),
-      };
-    } catch {
-      /* fall through to memory */
-    }
+  // The marketplace integration names the two variables KV_REST_API_*; the
+  // same database provisioned by hand names them UPSTASH_REDIS_REST_*. Both
+  // are read, and with neither set the counter is process memory.
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+  if (url && token) {
+    const { Redis } = await import("@upstash/redis");
+    const redis = new Redis({ url, token });
+    return {
+      kind: "upstash-redis",
+      get: async (key) => (await redis.get(`workbench-budget:${key}`)) || null,
+      set: async (key, value) => {
+        await redis.set(`workbench-budget:${key}`, value, { ex: KEEP_SECONDS });
+      },
+    };
   }
   return {
     kind: "memory",

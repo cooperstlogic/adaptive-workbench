@@ -20,9 +20,9 @@ const WEB = dirname(HERE);
 const json = process.argv.includes("--json");
 const say = (...a) => { if (!json) console.log(...a); };
 
-const fn = await import(pathToFileURL(join(WEB, "netlify", "functions", "ask.mjs")));
+const fn = await import(pathToFileURL(join(WEB, "function", "ask.mjs")));
 const { default: handler, validate, buildRequest, sign } = fn;
-const post = (body) => handler(new Request("http://harness/.netlify/functions/ask", {
+const post = (body) => handler(new Request("http://harness/api/ask", {
   method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
 }), { ip: "harness" });
 
@@ -34,7 +34,7 @@ const ctx = {
 };
 
 const report = {};
-const probe = await (await handler(new Request("http://harness/.netlify/functions/ask"),
+const probe = await (await handler(new Request("http://harness/api/ask"),
                                    { ip: "harness" })).json();
 report.probe = { live: probe.live, reason: probe.reason, upstream: probe.upstream,
                  skill_sha256: probe.skill.sha256, models: probe.models, effort: probe.effort };

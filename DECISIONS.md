@@ -1241,3 +1241,37 @@ mean surprise against the 0.5 trigger, the three-design bridge at −1.014, cove
 collapsed from 0.816 to 0.065, and the v1.2 → v1.3 assay change with no characterized
 offset — saying which of those the flag does and does not establish, and proposing
 nothing, which is what it was asked for. *Synthetic* beside the numbers throughout.
+
+---
+
+## The host is Vercel, because the proposal turn is not short — decision 159
+
+Phase 7 left one line for phase 8 to verify: *Netlify's streaming-function limits under a
+proposal turn that can run a minute.* It was verified before a site existed, and it
+failed. Netlify's limit for a streaming function is a hard 60 seconds, not configurable,
+the same as its synchronous limit; its background functions run fifteen minutes but do
+not stream and cap a request at 256 KB, under the function's 400 KB context; its edge
+functions have no wall-clock limit on a streamed body but 50 ms of CPU per request, which
+a two-minute relay of SDK events would have to be rewritten as a raw passthrough to fit,
+and could only be tested on the deployed site. SPEC.md had assumed *each function
+invocation is one short model turn, which keeps every request inside Netlify's synchronous
+window*. Every turn is one model turn; the proposal turn is not short.
+
+The numbers. One $0.02 chat turn through the function, timed on the dev server: Sonnet 5
+streams at 84 output tokens a second after a two-second first byte. The two proposal
+passes in the committed `decision_004.json` carry 5 700 and 7 100 tokens of tool input by
+a chars-over-four estimate, before thinking, and JSON with code in it tokenizes denser
+than that. So a proposal turn runs 70 to 110 seconds, and the page would have shown *the
+stream ended without a message* a minute into the beat the demo exists for. Shortening
+the proposal to fit a host is bending the record to the platform; decision 146 is
+explicit that the proposal carries the record.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 159 | **The site deploys to Vercel, Hobby plan; the function is unchanged in shape and moved to `web/function/`; its budget store is Upstash Redis.** Vercel's Node functions stream for 300 seconds on the free plan, and `ask.mjs`'s web-standard Request-in, Response-out handler runs there as it is, re-exported as `GET` and `POST` by a two-line `web/api/ask.mjs`; `api/` holds nothing else, because the host builds every file under it into a function. The store keeps `budget.mjs`'s `get`/`set`-a-day-record interface with Upstash's REST client behind it and the same memory fallback, and the probe names it `upstash-redis`. `vercel.json` sets the function's ceiling to the plan's maximum. Supersedes 12 and 144 on where the key and the counter live, and the host named in 10, 13 and 100 | Vercel was the smallest change: the handler already had the shape its Node runtime wants, so the port is one directory move, one store, and one path. Cloudflare Workers would have done it on the paid plan — the free tier's 10 ms of CPU cannot relay a two-minute stream — at the cost of a larger port; Netlify Edge would have kept the host at the cost of rewriting the function for Deno against a CPU ceiling that fails mid-stream and can only be measured in production. The Hobby plan is non-commercial, which a pitch artifact is. The store is Redis rather than Vercel Blob because a cap read through a CDN with a sixty-second minimum cache is not a cap |
+
+Verified before the deploy: `check.py` at 186 of 186 with the function at its new path;
+the dev server answering the probe at `/api/ask`; `ask-check.mjs` refusing everything it
+refused before. What the deployed site still has to show is the same three things phase
+7 listed, with the first one now expected to pass rather than hoped: a proposal turn
+streamed to its end, the probe reporting `store: upstash-redis`, and `live: true`.

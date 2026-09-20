@@ -6,19 +6,19 @@ import react from "@vitejs/plugin-react";
 // scripts/stage-pyodide.mjs and loaded at runtime by URL, so nothing in them
 // should be bundled, pre-transformed or hashed.
 //
-// The one function the site has -- netlify/functions/ask.mjs, the stateless
-// model proxy -- is mounted into the dev server at the path Netlify serves it
-// from, so `npm run dev` with ANTHROPIC_API_KEY in the environment is the
-// whole local story. Without the key the function answers its probe with
-// `live: false` and the page stays in replay, which is what a cold visit to
-// the public URL gets when the daily budget is spent.
+// The one function the site has -- function/ask.mjs, the stateless model
+// proxy -- is mounted into the dev server at the path Vercel serves it from
+// (api/ask.mjs re-exports it there), so `npm run dev` with ANTHROPIC_API_KEY
+// in the environment is the whole local story. Without the key the function
+// answers its probe with `live: false` and the page stays in replay, which is
+// what a cold visit to the public URL gets when the daily budget is spent.
 function askFunction() {
   return {
     name: "workbench-ask-function",
     configureServer(server) {
-      server.middlewares.use("/.netlify/functions/ask", async (req, res) => {
+      server.middlewares.use("/api/ask", async (req, res) => {
         try {
-          const { default: handler } = await server.ssrLoadModule("./netlify/functions/ask.mjs");
+          const { default: handler } = await server.ssrLoadModule("./function/ask.mjs");
           const chunks = [];
           for await (const chunk of req) chunks.push(chunk);
           const url = new URL(req.url || "/", "http://localhost");
@@ -55,7 +55,8 @@ export default defineConfig(({ mode }) => {
   // none of these are.
   const env = loadEnv(mode, process.cwd(), "");
   for (const key of ["ANTHROPIC_API_KEY", "WORKBENCH_DAILY_CAP_USD", "WORKBENCH_IP_CAP",
-                     "WORKBENCH_SIGNING_SECRET"]) {
+                     "WORKBENCH_SIGNING_SECRET", "UPSTASH_REDIS_REST_URL",
+                     "UPSTASH_REDIS_REST_TOKEN", "KV_REST_API_URL", "KV_REST_API_TOKEN"]) {
     if (env[key] && !process.env[key]) process.env[key] = env[key];
   }
   return {

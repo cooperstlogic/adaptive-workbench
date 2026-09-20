@@ -45,7 +45,7 @@ model-written numpy, run read-only against the mounted arrays behind a guard
 that is labelled a guard. ``replay_plan`` and ``verify_diagnostic`` are the
 other source for the same stream component: the committed record's claims,
 each test re-run here and hash-compared against what the record holds. The
-model itself lives behind ``netlify/functions/ask.mjs`` and never touches
+model itself lives behind ``web/function/ask.mjs`` and never touches
 this filesystem; every tool call it makes lands in the log like everything
 else, and the one thing it writes -- a proposal -- goes through ``propose``
 and so through ``record_decision.py``, which recomputes every number in it.

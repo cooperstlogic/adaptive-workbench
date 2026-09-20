@@ -325,7 +325,7 @@ process.env.WORKBENCH_UPSTREAM = "scripted";
 process.env.WORKBENCH_SCRIPT_FILE = join(BUNDLE, "reference", "decision_004.proposal.json");
 delete process.env.ANTHROPIC_API_KEY;
 const { default: handler } = await import(
-  pathToFileURL(join(WEB, "netlify", "functions", "ask.mjs")));
+  pathToFileURL(join(WEB, "function", "ask.mjs")));
 const fetchImpl = (url, init) => handler(new Request(`http://harness${url}`, init),
                                          { ip: "harness" });
 const live = { timing: {} };

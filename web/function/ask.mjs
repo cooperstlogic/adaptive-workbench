@@ -372,15 +372,19 @@ const json = (status, body) => new Response(JSON.stringify(body), {
   status, headers: { "content-type": "application/json", "cache-control": "no-store" },
 });
 
+// The address the per-IP counter keys on. Vercel writes the connecting
+// client's address into x-real-ip and overwrites x-forwarded-for with it, so
+// neither can be supplied by the visitor; the dev server passes the socket's
+// address in the context, and the harness passes nothing.
 function ipOf(request, context) {
   return (context && context.ip)
-    || request.headers.get("x-nf-client-connection-ip")
-    || request.headers.get("x-forwarded-for")
+    || request.headers.get("x-real-ip")
+    || (request.headers.get("x-forwarded-for") || "").split(",")[0].trim()
     || "local";
 }
 
 // The harness's scripted upstream -- lib/scripted.mjs -- is on only when the
-// environment says so, which Netlify's never does. It is reported wherever
+// environment says so, which the site's never does. It is reported wherever
 // the live flag is, so nothing that runs on it can be mistaken for a model.
 const scripted = () => process.env.WORKBENCH_UPSTREAM === "scripted";
 
@@ -486,3 +490,10 @@ export default async function handler(request, context) {
                "x-accel-buffering": "no" },
   });
 }
+
+// Vercel's Node runtime takes a function as one named export per HTTP method,
+// each a web-standard Request in and Response out; web/api/ask.mjs re-exports
+// these two. The handler above is what both of them are, and what the dev
+// server and the harness call directly.
+export const GET = (request) => handler(request, {});
+export const POST = (request) => handler(request, {});
