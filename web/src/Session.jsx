@@ -175,15 +175,15 @@ export default function Session({ ctx, stored, suggestions }) {
     setNote("");
     if (!rec || rec.status !== "awaiting_evidence") return;
     // The push-back: the work goes back to whichever source made the pass. A
-    // live pass continues its own transcript when the page still holds it.
+    // live one continues the session's transcript when the page still holds it.
     const prior = lastDiagnosis;
     const ruling = { verdict: "more_evidence_requested", by, note, requested: req };
     if (canLive && (!prior || prior.mode === "live" || !hasReplay)) {
-      onPushbackLive(ruling, prior && prior.mode === "live" ? prior.id : null);
+      onPushbackLive(ruling);
     } else if (hasReplay) {
       const next = (proposal.passes || []).find((p) => p.pass === rec.n_passes + 1);
       if (next && next.answering === req) onReplay(next.pass);
-      else if (canLive) onPushbackLive(ruling, null);
+      else if (canLive) onPushbackLive(ruling);
     }
   };
 
@@ -468,8 +468,7 @@ export default function Session({ ctx, stored, suggestions }) {
                           verdict: "more_evidence_requested", by: decision.ruling.by,
                           note: decision.ruling.note,
                           requested: decision.ruling.requested.diagnostic,
-                        }, lastDiagnosis && lastDiagnosis.mode === "live" ? lastDiagnosis.id
-                          : null)}>
+                        })}>
                   Answer it live
                 </button>
               )}

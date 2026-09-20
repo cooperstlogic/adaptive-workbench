@@ -31,9 +31,15 @@ export function agentBadge(turn) {
     return { kind: "stop", text: `stopped · ${turn.stop.reason}`,
              title: turn.upstream === "scripted" ? "scripted upstream" : undefined };
   }
-  const text = turn.upstream === "scripted" ? "scripted · harness" : `live · ${model}`;
-  return { kind: "live", text: turn.status === "running" ? `${text} · working` : text,
-           title: turn.fallback ? `served by ${turn.fallback} after a refusal` : undefined };
+  const parts = [turn.upstream === "scripted" ? "scripted · harness" : `live · ${model}`];
+  // The conversation the session held was not continued: the function
+  // refused it before spending anything, and this turn began again from
+  // the record. The reason is the tooltip.
+  if (turn.restarted) parts.push("restarted");
+  if (turn.status === "running") parts.push("working");
+  const title = turn.fallback ? `served by ${turn.fallback} after a refusal`
+    : turn.restarted ? `the conversation started over: ${turn.restarted}` : undefined;
+  return { kind: "live", text: parts.join(" · "), title };
 }
 
 export default function AgentStream({ turn, log, live, ctx }) {

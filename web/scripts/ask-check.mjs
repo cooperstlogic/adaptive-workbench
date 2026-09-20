@@ -83,6 +83,27 @@ report.wrong_tool_id_status = r.status;
 say(`signed transcript ${report.signed_accepted_status} with the right tool id, `
   + `${report.wrong_tool_id_status} with the wrong one`);
 
+// A proposal is the one call a transcript may end on unanswered, and the
+// session's next turn -- a question here, or the ruling -- answers it in the
+// same message before its own text. Without the result it is refused; with
+// it, the request is accepted up to the key, and the message it builds has
+// the tool_result first.
+const proposed = [{ role: "user", content: [{ type: "text", text: "q" }] },
+                  { role: "assistant", content: [{ type: "tool_use", id: "toolu_2",
+                    name: "propose_decision", input: {} }] }];
+const onProposal = (turn) => ({ kind: "ask", context: ctx,
+  transcript: { messages: proposed, signature: sign(proposed) }, turn });
+r = await post(onProposal({ type: "question", text: "why that and not the plate?" }));
+const withResult = onProposal({ type: "question", text: "why that and not the plate?",
+  pending_results: [{ tool_use_id: "toolu_2", content: "recorded decision_004 pass 1" }] });
+report.question_on_proposal = {
+  without_result: r.status, with_result: (await post(withResult)).status,
+  shape: validate(withResult).messages.at(-1).content.map((b) => b.type),
+  messages: validate(withResult).messages.length,
+};
+say(`question on a proposal ${report.question_on_proposal.without_result} without its result, `
+  + `${report.question_on_proposal.with_result} with it, as [${report.question_on_proposal.shape}]`);
+
 // The request the function would build, inspected.
 const req = buildRequest(validate({ kind: "diagnose", context: ctx, turn: { type: "diagnose" } }));
 const ask = buildRequest(validate({ kind: "ask", context: ctx,

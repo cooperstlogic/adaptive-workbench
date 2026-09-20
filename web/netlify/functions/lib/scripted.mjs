@@ -96,6 +96,25 @@ export function scriptedClient() {
   const record = plan();
   return {
     beta: { messages: { stream(params) {
+      const offered = new Set((params.tools || []).map((t) => t.name));
+      if (!offered.has("propose_decision")) {
+        // An ask or a chat. The script has no answer to give, so it says
+        // what it was handed -- which is what the harness checks: that the
+        // question arrived on the session's transcript, not a fresh one.
+        const prior = params.messages.filter((m) => m.role === "assistant").length;
+        const text = `(scripted upstream) answering from a transcript with ${prior} earlier assistant turns`;
+        const content = [{ type: "text", text }];
+        const message = {
+          id: `msg_scripted_ask_${prior}`, type: "message", role: "assistant",
+          model: MODEL, content, stop_details: null, stop_reason: "end_turn",
+          usage: { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0,
+                   cache_read_input_tokens: 0 },
+        };
+        return {
+          async *[Symbol.asyncIterator]() { for (const e of events(content)) yield e; },
+          async finalMessage() { return message; },
+        };
+      }
       const { passIndex, k } = position(params.messages);
       const pass = record.passes[Math.min(passIndex, record.passes.length - 1)];
       const turns = turnsFor(pass, record.round);
@@ -114,8 +133,7 @@ export function scriptedClient() {
         };
       }
       // A tool the request did not offer is not called: the turn ends in
-      // text instead, which is what an ask or a chat gets from a real model.
-      const offered = new Set((params.tools || []).map((t) => t.name));
+      // text instead.
       const content = offered.has(step.tool.name)
         ? [{ type: "text", text: step.text },
            { type: "tool_use", id, name: step.tool.name, input }]

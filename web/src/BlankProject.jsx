@@ -40,6 +40,9 @@ export default function BlankProject({ route, project, bump, live, reprobe, mode
   // what has not been declared when asked.
   const [streaming, setStreaming] = useState(null);
   const inFlight = useRef(null);
+  // One signed transcript per session, in page memory, so a follow-up here
+  // is a follow-up -- the same rule as a templated project's sessions.
+  const transcripts = useRef(new Map());
   const pid = project.id;
   const sessionId = route.kind === "session" ? route.id : null;
 
@@ -84,9 +87,12 @@ export default function BlankProject({ route, project, bump, live, reprobe, mode
       router.go({ kind: "session", project: target, id: sid });
     }
     if (!(live && live.live)) return;
+    const thread = `${target}/${sid}`;
     const keep = (t) => {
       const reply = { text: t.steps.filter((x) => x.type === "text").map((x) => x.text).join("\n\n"),
-                      model: t.model, status: t.status, stop: t.stop, upstream: t.upstream };
+                      model: t.model, status: t.status, stop: t.stop, upstream: t.upstream,
+                      restarted: t.restarted };
+      if (t.transcript) transcripts.current.set(thread, t.transcript);
       inFlight.current = { ...t, index };
       setStreaming({ ...t, index });
       blank.answer(target, sid, index, reply);
@@ -94,6 +100,7 @@ export default function BlankProject({ route, project, bump, live, reprobe, mode
     try {
       await agent.runLive({
         kind: "chat", question: text, model: chosenModel || model, call: () => null,
+        transcript: transcripts.current.get(thread) || null,
         emit: () => { if (inFlight.current) setStreaming({ ...inFlight.current }); },
         save: keep,
       });
@@ -107,8 +114,11 @@ export default function BlankProject({ route, project, bump, live, reprobe, mode
 
   const badgeFor = (a) => (a.status === "stopped" && a.stop
     ? { kind: "stop", text: `stopped · ${a.stop.reason}` }
-    : { kind: "live", text: a.upstream === "scripted" ? "scripted · harness"
-        : `live · ${MODEL_LABEL[a.model] || a.model || "model"}` });
+    : { kind: "live",
+        text: (a.upstream === "scripted" ? "scripted · harness"
+          : `live · ${MODEL_LABEL[a.model] || a.model || "model"}`)
+          + (a.restarted ? " · restarted" : ""),
+        title: a.restarted ? `the conversation started over: ${a.restarted}` : undefined });
 
   return (
     <div className="shell">

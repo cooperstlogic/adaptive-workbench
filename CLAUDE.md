@@ -23,7 +23,7 @@ before writing code, and read `skills/adaptive-optimization/SKILL.md` before tou
 anything in the round loop.
 
 - Use `.venv/bin/python`, never `python3` — the system interpreter has no numpy.
-- Run `.venv/bin/python check.py` before and after any phase. It verifies 181 invariants
+- Run `.venv/bin/python check.py` before and after any phase. It verifies 184 invariants
   that correspond to rules here and numbers in `DECISIONS.md`; a failure means the state
   drifted from what is documented. It takes about forty seconds, because it runs two full
   six-round campaigns through the CLI, checks them against the evaluator, drives both
@@ -104,9 +104,14 @@ deliberately not in the harness.
 numbers, still**: its three tools are two reads and `record_decision.py --propose`, and
 the writer's refusal goes back to it as an error result. **The function is not a proxy**:
 it builds every request itself and accepts only transcripts it signed — never loosen
-`validate()` to take a `messages` array. **Transcripts are not state**: they live in page
-memory; the decision record is what persists, and a push-back after a reload starts from
-it. **Claude speaks only when a model or the record's author wrote the words**, with a
+`validate()` to take a `messages` array. **The session is the conversation, and
+transcripts are still not state** — decision 157, amending 149: a session holds one
+signed transcript in page memory, and the diagnosis, every question asked after it and
+the ruling that sends it back all continue it, so a follow-up can refer to what was
+said. The decision record is what persists and is re-read into the context on every
+turn; after a reload the next turn starts a fresh transcript from it, and a transcript
+the function refuses starts over with *restarted* on the badge rather than ending the
+turn. **Claude speaks only when a model or the record's author wrote the words**, with a
 mode badge over every such turn — and the badge is the only label in the stream. The
 column is a chat: your asks and rulings are bubbles on the right, the workbench's prose
 is the column itself with nothing over it, and no turn names a speaker — decision 153.

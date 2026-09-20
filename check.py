@@ -1486,8 +1486,27 @@ def main():
             check("an edited transcript is refused before a token is spent",
                   lv["forged"]["status"] == 403,
                   "%d: %s" % (lv["forged"]["status"], lv["forged"]["error"]))
-            check("a push-back continues the same signed transcript and writes pass 2",
+            ak = lv.get("ask")
+            check("a question asked in the session continues the diagnosis's signed "
+                  "transcript, answering its proposal first (decision 157)",
+                  ak is not None and ak["status"] == "done" and not ak["restarted"]
+                  and ak["continued"] and ak["answered_proposal"]
+                  and ak["prior_turns_seen"] == ak["prior_turns"]
+                  == lv["pass1"]["tool_steps"] + 1,
+                  ("the model saw all %d earlier turns; the proposal's tool_result and the "
+                   "question share one message; %d messages now"
+                   % (ak["prior_turns"], ak["transcript_messages"])) if ak else "no ask")
+            rs = lv.get("restart")
+            check("a transcript the function will not accept starts the conversation over "
+                  "rather than ending the turn, and the turn says why",
+                  rs is not None and rs["status"] == "done" and rs["restarted"]
+                  and rs["transcript_messages"] == 2,
+                  ("done on a fresh 2-message transcript; restarted: %s" % rs["restarted"])
+                  if rs else "no restart")
+            check("a push-back continues the same signed transcript -- from the question, "
+                  "not around it -- and writes pass 2",
                   lv.get("pass2") is not None and lv["pass2"]["continued"]
+                  and lv["pass2"]["after_ask"]
                   and lv["pass2"]["record"]["n_passes"] == 2
                   and lv["pass2"]["record"]["answering"] == pb["requested"]
                   and lv["pass2"]["verified"]["matched"] == lv["pass2"]["verified"]["total"],
@@ -1524,6 +1543,12 @@ def main():
                   fnr["signed_accepted_status"] == 503
                   and ref["well_formed_but_no_key"]["status"] == 503,
                   "503 no key configured: validation passed, nothing was sent")
+            qp = fnr["question_on_proposal"]
+            check("a question that continues a proposal must carry the proposal's tool "
+                  "result, and then it is one message with the result first",
+                  qp["without_result"] == 400 and qp["with_result"] == 503
+                  and qp["shape"] == ["tool_result", "text"] and qp["messages"] == 3,
+                  "400 without it, 503 with it; the third message is [tool_result, text]")
             rq = fnr["request"]
             check("the request it builds is fixed: model allowlisted, effort low, adaptive "
                   "thinking, fallbacks on, the context block cached",

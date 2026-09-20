@@ -29,8 +29,11 @@
 // files are what check.py compares against the CLI. The second run boots a
 // fresh runtime and drives `runLive` through the real function with its
 // scripted upstream: the transcript is signed and verified, tool results
-// answer the calls the model made, the proposal reaches the writer, and the
-// push-back continues the transcript. No key is needed and nothing is spent.
+// answer the calls the model made, the proposal reaches the writer, a
+// question asked in the session continues the transcript and answers the
+// proposal, a transcript the function refuses starts over rather than
+// stopping, and the push-back continues from the question. No key is needed
+// and nothing is spent.
 
 import { readFile, readdir, stat } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
@@ -344,26 +347,75 @@ const forgedRes = await fetchImpl(agent.ENDPOINT, {
 live.forged = { status: forgedRes.status, error: (await forgedRes.json()).error };
 say(`forged transcript ${live.forged.status}: ${live.forged.error}`);
 
+// A question asked in the same session continues the diagnosis's
+// transcript: it answers the proposal's tool_use in the same message and
+// rides on everything pass 1 said. The scripted upstream answers an ask by
+// reporting how many assistant turns it was handed.
+const save = (x) => second.call("agent_turn_save", { session_id: "r4",
+  turn: { ...x, transcript: null, pending: null } });
+const priorTurns = turn1.transcript.messages.filter((m) => m.role === "assistant").length;
+const asked = await agent.runLive({
+  kind: "ask", project: "demo-trastuzumab", round: 4, session: "r4",
+  model: "claude-sonnet-5", call: second.call, fetchImpl, save,
+  question: "Why that recommendation, and not dropping the plate?",
+  transcript: turn1.transcript, pending: turn1.pending,
+});
+const answer = asked.steps.find((s) => s.type === "text");
+const seen = answer && answer.text.match(/with (\d+) earlier assistant turns/);
+const joined = asked.transcript && asked.transcript.messages[turn1.transcript.messages.length];
+live.ask = {
+  status: asked.status, restarted: asked.restarted,
+  transcript_messages: asked.transcript ? asked.transcript.messages.length : null,
+  continued: !!asked.transcript
+    && asked.transcript.messages.length === turn1.transcript.messages.length + 2,
+  answered_proposal: !!joined && joined.role === "user" && joined.content.some((b) =>
+    b.type === "tool_result" && b.tool_use_id === turn1.pending[0].tool_use_id),
+  prior_turns: priorTurns, prior_turns_seen: seen ? Number(seen[1]) : null,
+};
+say(`ask in session    ${asked.status}: the question answered the proposal and rode on `
+  + `${live.ask.prior_turns_seen} of ${priorTurns} earlier turns; `
+  + `${live.ask.transcript_messages} messages now`);
+
+// A transcript the function will not accept -- signed under another key, or
+// grown past the cap -- starts the conversation over instead of ending the
+// turn, and the turn carries the reason.
+const stale = await agent.runLive({
+  kind: "ask", project: "demo-trastuzumab", round: 4, session: "r4-stale",
+  model: "claude-sonnet-5", call: second.call, fetchImpl,
+  question: "Still there?", transcript: forged, pending: null,
+});
+live.restart = {
+  status: stale.status, restarted: stale.restarted,
+  transcript_messages: stale.transcript ? stale.transcript.messages.length : null,
+};
+say(`stale transcript  ${stale.status}, restarted: ${stale.restarted}; `
+  + `${live.restart.transcript_messages} messages`);
+
 if (pushback) {
   const ruled = second.call("rule", {
     round_id: 4, verdict: "more_evidence_requested", by: BY || "check.py",
     note: pushback.note, request: pushback.requested,
   });
+  // The ruling continues the session's transcript from where the ask left
+  // it; the proposal was answered there, so nothing is pending.
   t = Date.now();
   const turn2 = await agent.runLive({
     kind: "diagnose", project: "demo-trastuzumab", round: 4, session: "r4",
-    model: "claude-sonnet-5", call: second.call, fetchImpl,
+    model: "claude-sonnet-5", call: second.call, fetchImpl, save,
     ruling: { verdict: "more_evidence_requested", by: BY || "check.py", note: pushback.note,
-              requested: pushback.requested, pending: turn1.pending },
-    transcript: turn1.transcript,
-    save: (x) => second.call("agent_turn_save", { session_id: "r4",
-      turn: { ...x, transcript: null, pending: null } }),
+              requested: pushback.requested },
+    transcript: asked.transcript || turn1.transcript,
+    pending: asked.transcript ? asked.pending : turn1.pending,
   });
   live.timing.pushback_ms = Date.now() - t;
   const rec2 = second.call("artifact", { kind: "decision", round_id: 4 });
+  const before = (asked.transcript || turn1.transcript).messages.length;
   live.pass2 = {
     status: turn2.status, ruled_status: ruled.status,
-    continued: turn2.transcript.messages.length > turn1.transcript.messages.length,
+    continued: turn2.transcript.messages.length > before,
+    after_ask: !!asked.transcript && turn2.transcript.messages.length > before
+      && turn2.transcript.messages.slice(0, before).every((m, i) =>
+        JSON.stringify(m) === JSON.stringify(asked.transcript.messages[i])),
     transcript_messages: turn2.transcript.messages.length,
     record: { status: rec2.status, n_passes: rec2.n_passes,
               answering: rec2.passes[1] && rec2.passes[1].answering,

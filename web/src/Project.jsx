@@ -42,10 +42,13 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
   const [agentTurn, setAgentTurn] = useState(null);
   const [agentBusy, setAgentBusy] = useState(false);
   const inFlight = useRef(null);
-  // Signed transcripts live here and nowhere else. The decision record is the
-  // durable state; the conversation that produced it is not, and a transcript
-  // that went through the project's canonical JSON would no longer verify. A
-  // push-back after a reload starts a fresh transcript from the record.
+  // Signed transcripts live here and nowhere else, one per session: the
+  // diagnosis, every question asked after it and the ruling that sends it
+  // back continue the same conversation, so a follow-up can refer to what
+  // was said. The decision record is the durable state; the conversation
+  // that produced it is not, and a transcript that went through the
+  // project's canonical JSON would no longer verify. After a reload the next
+  // turn in a session starts a fresh transcript from the record.
   const transcripts = useRef(new Map());
   const [tab, setTab] = useState("Batch");
   const [busy, setBusy] = useState(false);
@@ -156,13 +159,18 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
      progresses so a reload shows what happened. */
   const persist = useCallback((sid, t) => {
     if (!sid) return;
-    if (t.transcript) transcripts.current.set(t.id, { transcript: t.transcript, pending: t.pending });
+    // A turn carries its transcript only once it is done, so a stopped turn
+    // leaves the session's conversation where the last finished one left it.
+    if (t.transcript) {
+      transcripts.current.set(sid, { transcript: t.transcript, pending: t.pending || null });
+    }
     const steps = t.steps.map((s) => (s.entry ? { ...s, entry: undefined } : s));
     try {
       rt.call("agent_turn_save", { session_id: sid, project: pid, at: t.at,
                                    turn: { ...t, steps, transcript: null, pending: null } });
     } catch { /* the stream still renders; the reload will not */ }
   }, [pid]);
+  const conversation = (sid) => transcripts.current.get(sid) || { transcript: null, pending: null };
 
   const drive = useCallback(async (fn) => {
     setAgentBusy(true);
@@ -197,11 +205,12 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     },
   }), [persist]);
 
-  const diagnose = useCallback((mode, { pass = 1, ruling = null, transcript = null } = {}) =>
+  const diagnose = useCallback((mode, { pass = 1, ruling = null } = {}) =>
     drive(async () => {
       const turn = mode === "live"
         ? await agent.runLive({ kind: "diagnose", project: pid, round, session: sessionId,
-                                model, ruling, transcript, call: rt.call, ...hooks(sessionId) })
+                                model, ruling, ...conversation(sessionId),
+                                call: rt.call, ...hooks(sessionId) })
         : await agent.runReplay({ project: pid, round, session: sessionId, plan: proposal,
                                   pass, call: rt.call, ...hooks(sessionId) });
       setTab("Decision");
@@ -211,7 +220,8 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
   const askLive = useCallback((question, chosenModel, label) =>
     drive(() => agent.runLive({
       kind: "ask", project: pid, round: round ?? null, session: sessionId, question,
-      model: chosenModel || model, call: rt.call, ...hooks(sessionId, label ? { label } : {}),
+      model: chosenModel || model, ...conversation(sessionId),
+      call: rt.call, ...hooks(sessionId, label ? { label } : {}),
     })), [drive, hooks, pid, round, sessionId, model]);
 
   const ctx = useMemo(() => ({
@@ -223,13 +233,7 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     proposal, live, model, setModel, agentTurn, agentBusy,
     onDiagnoseLive: () => diagnose("live"),
     onReplay: (pass = 1) => diagnose("replay", { pass }),
-    onPushbackLive: (ruling, priorId) => {
-      const kept = priorId ? transcripts.current.get(priorId) : null;
-      return diagnose("live", {
-        ruling: { ...ruling, pending: kept ? kept.pending : undefined },
-        transcript: kept ? kept.transcript : null, pass: 2,
-      });
-    },
+    onPushbackLive: (ruling) => diagnose("live", { ruling }),
     onAskLive: askLive,
     onApprove: (by) => act(() => {
       const r = rt.call("approve", { round_id: round, by, project: pid, session: sessionId,

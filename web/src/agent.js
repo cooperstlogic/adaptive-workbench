@@ -5,7 +5,12 @@
 // names runs here, in the visitor's Pyodide, through the same `wb_driver`
 // calls the buttons use, so each one lands in the command log with its exit
 // code and both output streams. The transcript comes back signed and goes
-// back verbatim; this file never edits it.
+// back verbatim; this file never edits it. It is the session's: a diagnosis,
+// the questions asked after it and the ruling that sends it back all
+// continue the one conversation, and the caller hands in where it got to.
+// When the function will not continue it -- signed under another key, or
+// grown past the cap -- the turn starts a fresh one from the record and
+// says so on itself, rather than ending.
 //
 // **Replay.** `runReplay` walks the committed record's claims through the
 // same emitter: for each hypothesis, the claim, then the test actually run
@@ -118,11 +123,14 @@ const MAX_TURNS = 24;
  * Drive one live agent turn to completion.
  *
  * kind: "diagnose" | "ask" | "chat". For diagnose, `ruling` continues a
- * record with a more_evidence_requested ruling. `emit` receives every step
- * as it happens; `save` receives the accumulated turn whenever it changes.
+ * record with a more_evidence_requested ruling. `transcript` is the
+ * session's signed conversation so far and `pending` the tool result
+ * answering the proposal it ended on, if it did; both come off the previous
+ * turn's `transcript` and `pending`. `emit` receives every step as it
+ * happens; `save` receives the accumulated turn whenever it changes.
  */
 export async function runLive({
-  kind, project, round, session, question, model, ruling, transcript = null,
+  kind, project, round, session, question, model, ruling, transcript = null, pending = null,
   call, emit = () => {}, save = () => {}, fetchImpl = globalThis.fetch, base = "",
   id = `live-${Date.now()}`, at = new Date().toISOString(),
 }) {
@@ -132,7 +140,7 @@ export async function runLive({
     id, mode: "live", task: kind, model, round: round ?? null, at, question: question || null,
     pass: ruling ? 2 : 1,
     steps: [], status: "running", stop: null, usage: { input: 0, output: 0, cost_usd: 0 },
-    verified: null, transcript: null,
+    verified: null, transcript: null, pending: null, restarted: null,
   };
   const push = (step) => { turn.steps.push(step); emit(step); save(turn); return step; };
 
@@ -145,12 +153,13 @@ export async function runLive({
   if (kind === "diagnose") {
     nextTurn = ruling
       ? { type: "ruling", verdict: ruling.verdict, by: ruling.by, note: ruling.note,
-          requested: ruling.requested, pending_results: ruling.pending || undefined }
+          requested: ruling.requested }
       : { type: "diagnose" };
   } else {
     nextTurn = { type: "question", text: question };
   }
   let signed = transcript;
+  if (signed && pending) nextTurn = { ...nextTurn, pending_results: pending };
 
   for (let i = 0; i < MAX_TURNS; i++) {
     const res = await fetchImpl(`${base}${ENDPOINT}`, {
@@ -164,6 +173,19 @@ export async function runLive({
         const body = await res.json();
         why = body.reason || body.error || why;
       } catch { /* keep the status */ }
+      if (signed && !turn.restarted && (res.status === 403
+          || (res.status === 400 && /transcript|tool results/.test(why)))) {
+        // The function will not continue the conversation it was handed: it
+        // was signed under another key, or it has outgrown the cap. Nothing
+        // was spent. The turn starts over from the record, which carries
+        // everything that was decided, and carries the reason on itself.
+        signed = null;
+        const { pending_results, ...fresh } = nextTurn;
+        nextTurn = fresh;
+        turn.restarted = why;
+        save(turn);
+        continue;
+      }
       turn.status = "stopped";
       turn.stop = { reason: why, kind: res.status === 429 ? "budget" : "error" };
       push({ type: "stop", reason: why });
@@ -208,8 +230,10 @@ export async function runLive({
       return turn;
     }
 
+    // The conversation only advances on the turn once the turn is done: a
+    // transcript cut off between a call and its result is not one the
+    // session continues from.
     signed = final.transcript;
-    turn.transcript = signed;
     turn.model = final.message.model || turn.model;
     turn.usage.input += (final.message.usage && final.message.usage.input_tokens) || 0;
     turn.usage.output += (final.message.usage && final.message.usage.output_tokens) || 0;
@@ -234,6 +258,7 @@ export async function runLive({
     const calls = final.message.content.filter((b) => b.type === "tool_use");
     if (!calls.length) {
       turn.status = "done";
+      turn.transcript = signed;
       save(turn);
       return turn;
     }
@@ -262,9 +287,11 @@ export async function runLive({
     }
     if (proposed) {
       // The proposal ends the turn. The tool_result answering it travels with
-      // the next ruling, if there is one, so the transcript stays continuous.
+      // whatever continues the session -- a question, the ruling -- so the
+      // transcript stays continuous.
       turn.pending = results;
       turn.status = "done";
+      turn.transcript = signed;
       save(turn);
       return turn;
     }

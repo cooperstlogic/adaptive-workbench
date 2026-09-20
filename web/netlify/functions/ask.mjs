@@ -8,8 +8,12 @@
 // a fixed tool list, a model from a two-entry allowlist, fixed effort and
 // a fixed output cap. A caller supplies four typed things -- which kind of
 // turn, the project's state as `wb_driver.agent_context` read it, the
-// transcript so far, and one new user turn -- and every one of them is
-// checked. The transcript is accepted only if this function signed it: each
+// session's transcript so far, and one new user turn -- and every one of
+// them is checked. The transcript is the session's whole conversation, a
+// diagnosis and the questions and the ruling that followed it, so a question
+// can refer back to what was said; the record on disk, re-read into the
+// context on every turn, is what was decided. The transcript is accepted
+// only if this function signed it: each
 // response ends with an HMAC over the full message list, and a transcript
 // that does not verify is refused before a token is spent. So an assistant
 // turn cannot be forged, a tool result can only answer a tool call the model
@@ -77,6 +81,8 @@ export const PREAMBLE = `You are Claude, seated in a project session of Shannon 
 You cannot run the pipeline scripts, submit anything to the registry, or rule. A named person rules on what you propose, with four verbs, outside this conversation. If the ruling comes back as more_evidence_requested, run what was asked for and propose again; the record keeps both passes.
 
 The project's state follows the skill, read from its own artifacts by the workbench. Every affinity value in it is synthetic: the landscape is generated and the assay is an oracle replaying it with noise. Say "synthetic" beside any number you quote.
+
+The conversation is the session's. It may already hold a diagnosis, the questions asked since it, and a ruling, and a question may refer back to any of that. The project's state is re-read from its artifacts on every turn and is authoritative for what has been decided; the conversation is what was said.
 
 How to work in this seat. Before each tool call, say in one or two plain sentences what you are about to run and why: what you know so far and what the result will tell you. Choose the second test from what the first returned. Keep the prose between calls brief; the recommendation's rationale, its alternatives and its if_wrong are where the writing belongs, and a sceptical scientist reads if_wrong first. When you are asked a question rather than to diagnose a round, answer it from the context and the two read tools, in prose, and do not propose. Do not include internal or system XML tags in your response.`;
 
@@ -269,32 +275,13 @@ export function validate(body) {
     messages = t.messages;
   }
 
-  let turn = body.turn;
+  const turn = body.turn;
   if (!turn || !TURNS.includes(turn.type)) throw new Refused(400, `turn.type is one of ${TURNS.join(", ")}`);
   const last = messages[messages.length - 1];
   const pendingCalls = last && last.role === "assistant"
     ? last.content.filter((b) => b.type === "tool_use").map((b) => b.id) : [];
 
   let userMessage;
-  if (turn.type === "ruling" && pendingCalls.length) {
-    // A proposal ends the model's turn with its tool_use unanswered, so the
-    // ruling that continues the record answers it in the same message: one
-    // tool_result per propose_decision call, then the ruling as text.
-    const names = last.content.filter((b) => b.type === "tool_use").map((b) => b.name);
-    if (names.some((n) => n !== "propose_decision")) {
-      throw new Refused(400, "the model is waiting for tool results");
-    }
-    const results = turn.pending_results;
-    if (!Array.isArray(results) || results.length !== pendingCalls.length
-        || pendingCalls.some((id) => !results.some((r) => r && r.tool_use_id === id))) {
-      throw new Refused(400, "a ruling on a continued transcript carries the proposal's tool results");
-    }
-    turn = { ...turn, _answers: results.map((r) => {
-      if (!isStr(r.content, LIMITS.tool_result_chars)) throw new Refused(413, "a tool result is too long");
-      return { type: "tool_result", tool_use_id: r.tool_use_id, content: r.content,
-               is_error: !!r.is_error };
-    }) };
-  }
   if (turn.type === "tool_results") {
     if (!pendingCalls.length) throw new Refused(400, "no tool call is waiting for a result");
     const results = turn.results;
@@ -312,35 +299,50 @@ export function validate(body) {
       }),
     };
   } else {
-    if (pendingCalls.length && !turn._answers) {
-      throw new Refused(400, "the model is waiting for tool results");
+    // The session's transcript is one conversation: a diagnosis, the
+    // questions asked after it, the ruling that sends it back. A proposal
+    // ends the model's turn with its tool_use unanswered, so whatever turn
+    // continues the transcript answers it in the same message -- one
+    // tool_result per propose_decision call, then the turn's own text. Any
+    // other unanswered call means the loop was cut off mid-turn, and that
+    // transcript is not continued.
+    let answers = [];
+    if (pendingCalls.length) {
+      const names = last.content.filter((b) => b.type === "tool_use").map((b) => b.name);
+      if (names.some((n) => n !== "propose_decision")) {
+        throw new Refused(400, "the model is waiting for tool results");
+      }
+      const results = turn.pending_results;
+      if (!Array.isArray(results) || results.length !== pendingCalls.length
+          || pendingCalls.some((id) => !results.some((r) => r && r.tool_use_id === id))) {
+        throw new Refused(400, "a turn that continues a proposal carries the proposal's tool results");
+      }
+      answers = results.map((r) => {
+        if (!isStr(r.content, LIMITS.tool_result_chars)) throw new Refused(413, "a tool result is too long");
+        return { type: "tool_result", tool_use_id: r.tool_use_id, content: r.content,
+                 is_error: !!r.is_error };
+      });
     }
+    let text;
     if (turn.type === "diagnose") {
       if (kind !== "diagnose") throw new Refused(400, "a diagnose turn belongs to a diagnose session");
       const r = context.focus_round;
       if (!Number.isInteger(r)) throw new Refused(400, "context.focus_round");
-      userMessage = {
-        role: "user",
-        content: [{ type: "text", text:
-          `Round ${r} of the project at ${context.project.root} came back flagged and the loop has stopped. Work out what the round means and hand back a decision record with a recommendation a scientist can rule on, through propose_decision.` }],
-      };
+      text = `Round ${r} of the project at ${context.project.root} came back flagged and the loop has stopped. Work out what the round means and hand back a decision record with a recommendation a scientist can rule on, through propose_decision.`;
     } else if (turn.type === "question") {
       if (!isStr(turn.text, LIMITS.question_chars) || !turn.text.trim()) throw new Refused(400, "turn.text");
-      userMessage = { role: "user", content: [{ type: "text", text: turn.text.trim() }] };
+      text = turn.text.trim();
     } else {
       if (kind !== "diagnose") throw new Refused(400, "a ruling belongs to a diagnose session");
       const verdict = String(turn.verdict || "");
       if (verdict !== "more_evidence_requested") throw new Refused(400, "only more_evidence_requested comes back to the model");
       if (!isStr(turn.by, 120) || !isStr(turn.note || "", LIMITS.note_chars)) throw new Refused(400, "turn.by / turn.note");
       if (!TESTS.includes(turn.requested)) throw new Refused(400, "turn.requested names a library test");
-      userMessage = {
-        role: "user",
-        content: [...(turn._answers || []), { type: "text", text:
-          `The ruling on your recommendation is more_evidence_requested, by ${turn.by}. `
-          + `Requested test: ${turn.requested}. Their note: ${JSON.stringify(turn.note || "")}. `
-          + `Run what was asked for, read it against what you already found, and propose again through propose_decision; the record keeps both passes.` }],
-      };
+      text = `The ruling on your recommendation is more_evidence_requested, by ${turn.by}. `
+        + `Requested test: ${turn.requested}. Their note: ${JSON.stringify(turn.note || "")}. `
+        + `Run what was asked for, read it against what you already found, and propose again through propose_decision; the record keeps both passes.`;
     }
+    userMessage = { role: "user", content: [...answers, { type: "text", text }] };
   }
 
   return { kind, model, context, messages: [...messages, userMessage] };

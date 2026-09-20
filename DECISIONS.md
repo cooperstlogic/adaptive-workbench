@@ -1181,3 +1181,35 @@ tested — `check.py` has refused `gpt-9` since phase 7 — and the allowlist wa
 part that was broken. A test that a request is *refused* is not a test that a request is
 *served*, and the two live requests behind this entry now are the only reason it can say
 *both entries run*.
+
+---
+
+## The session is the conversation — decision 157
+
+Asked whether the model in the seat could see the earlier turns of a session, the answer
+was: inside one agent turn, yes; across the push-back, yes; between the questions a
+person types, no. `askLive` started every question from an empty message list, so *why
+did round 4 flag?* followed by *and the plates?* was two strangers, and a question asked
+after a live diagnosis could not refer to it. The state was there — every decision
+record rides in the context — but nothing said was.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 157 | **A session holds one signed transcript, and every live turn in it continues that transcript.** `Project.jsx` keys its page-memory map by session rather than by turn; a diagnosis, each question asked after it and the ruling that sends it back are handed the session's transcript and the tool result answering the proposal it ended on, if it did. The function generalises what the ruling already did: any turn that continues a transcript ending in an unanswered `propose_decision` carries `pending_results`, and the message it builds is those results first and the turn's text second — a question without them is refused with a 400, as before. A transcript the function will not accept — signed under another key, grown past the 80-message cap — starts the conversation over from the record instead of ending the turn, and the badge reads *restarted* with the reason as its tooltip. The preamble gains two sentences: the conversation is the session's, and the state re-read from the artifacts on every turn is authoritative for what has been decided. A blank project's chat keeps a transcript per session the same way. Nothing is stored: the stored turn still carries steps and log numbers and not messages, and after a reload the next turn starts fresh from the record. `pyodide-check.mjs` asks a question between pass 1 and the push-back and proves the question answered the proposal, the scripted upstream saw all twelve earlier turns, the refused transcript restarted on a fresh two-message one, and pass 2 continued from the question rather than around it; `ask-check.mjs` builds the question-on-a-proposal message and reads its shape — checks 182 to 184. Amends 149 | Decision 149 said transcripts are not state, and that stands: the record is what a reload, a colleague and `check.py` read. But *not state* had been implemented as *not remembered*, which is a different claim and a worse product — a person asking a follow-up in a chat column expects the column to hold. The two are separable because the function already distinguished them: the transcript is what was said and lives in page memory under a signature; the context is what was decided and is re-read from disk on every turn. Keying the transcript by session instead of by turn is the whole change on the page. Continuing across kinds — an `ask` after a `diagnose` — was checked against the live API before it was written: a history whose `tool_use` names a tool the current request does not offer is accepted, so a question after a proposal keeps the two read tools and cannot propose. The cost is a cache miss on the turn where the tool list changes, paid once per session and bounded by the daily cap. Restarting on a refused transcript rather than stopping is what makes a key rotation or a long session degrade to what phase 7 shipped instead of to an error |
+
+What did not change. `validate()` still takes no `messages` array; a transcript is
+accepted only if this function signed it, and the forged one is still refused with a 403.
+`wb_driver.py` and the stored session shape are as they were. The replay path has no
+transcript and never did. `WORKBENCH_UPSTREAM=scripted` answers an ask in text now
+rather than walking the record's tests, which is what a real model does with a question;
+it says so in the text, as it says everything.
+
+Verified live once, on the day, for $0.20. A scripted pass 1 was signed under the real
+key's secret — 24 messages ending on the proposal — and two real Sonnet 5 asks continued
+it. The first carried the proposal's tool result and *which hypothesis did you read as
+best supported, and what did you recommend?* in one message, under the two-tool list, and
+was accepted by the API and answered from the transcript: `h1`, `offset_from_controls`,
+partially supported, `apply_offset_correction`, with the bridge offset and the coverage
+figures quoted from the tool results it had been handed and *synthetic* beside them. The
+second asked only *repeat the hypothesis id you named in your previous answer* and got
+`h1` back for $0.05, which is the cached prefix doing what decision 139 said it would.
