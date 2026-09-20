@@ -1272,6 +1272,23 @@ explicit that the proposal carries the record.
 
 Verified before the deploy: `check.py` at 186 of 186 with the function at its new path;
 the dev server answering the probe at `/api/ask`; `ask-check.mjs` refusing everything it
-refused before. What the deployed site still has to show is the same three things phase
-7 listed, with the first one now expected to pass rather than hoped: a proposal turn
-streamed to its end, the probe reporting `store: upstash-redis`, and `live: true`.
+refused before; the Redis branch of `budget.mjs` against a local double of Upstash's REST
+protocol, `get` then `set` with a three-day expiry then `get`.
+
+Verified on the deployed site, 2026-09-20. Project `adaptive-workbench` on the
+`cooper-st-logic-shop` hobby team, https://adaptive-workbench-iota.vercel.app, cloud
+build in 17 s from `web/` with `.vercelignore` keeping the key file, `dist/` and the
+runtime off the upload; the key a hidden production secret; the Redis provisioned from
+the marketplace on its free plan as `workbench-budget`, which sets `KV_REST_API_*`. The
+probe answers `live: true, store: upstash-redis` in 210 ms with the day read from Redis.
+In a real browser on the live URL: Pyodide booted from the site's origin, the wasm served
+as `application/wasm`, no console errors; round 4 approved, the order written, the
+registry refusing with Sep 28 and then reporting, the flag at −0.50 pKD, and the recorded
+diagnosis replayed at *8 of 8 results match · 3 of 3 cuts reproduce*. **Not yet run: a
+live proposal turn on the deployed site.** The choice to defer it was made on the day; the
+300-second ceiling is the plan's documented maximum and the turn was measured at 70 to
+110 s, but the number that closes this decision is a turn streamed to its end on Vercel's
+clock, and it costs about sixty cents. The GitHub connection was refused — the repository
+is private and Vercel's GitHub app is not authorized on the organization — so the deploy
+is `vercel deploy --prod` from `web/`, and push-to-deploy is one dashboard authorization
+away if it is ever wanted.
