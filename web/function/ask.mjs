@@ -452,8 +452,8 @@ const scripted = () => process.env.WORKBENCH_UPSTREAM === "scripted";
 // to a visitor whose page carries the code -- it arrives in the link, the page
 // keeps it, and sends it on every call as x-workbench-code. Without it the
 // site is what it is without a key: replay, and the probe says why. Decision
-// 160, amending 12: the audience for a live seat on a public URL is the
-// handful of people the link was sent to, and a code in the link costs them
+// 160, amending 12: the people who get a live seat on a public URL are the
+// handful the link was sent to, and a code in the link costs them
 // nothing. The comparison is constant-time and the code is never echoed.
 export const CODE_HEADER = "x-workbench-code";
 

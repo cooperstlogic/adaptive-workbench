@@ -8,16 +8,16 @@ and what is staged, and how the loop works — read it first. Read
 
 A functional prototype of an adaptive therapeutic optimization workbench: a
 scientist-governed system that takes an antibody lead, learns from each round of
-experimental results, and recommends the next batch of variants to test. It is a pitch
-artifact aimed at Anthropic, and the vision it articulates is this: Claude Science already
-offers broad connectors and skills, and building an adaptive optimization workflow on them
-still takes specialized know-how — the data mappings, the models, the decision logic and
-the review interface. **Templating those makes the workflow adoptable and repeatable, and
-the persistent record of objectives, predictions, experiments and outcomes accumulates
-project-specific value over rounds.** Frame it as that positive vision, not as a gap in
-the product.
+experimental results, and recommends the next batch of variants to test.
 
-The audience is technically sophisticated and will poke at it. Optimize for a demo that
+The vision it demonstrates is this: Claude Science already offers broad connectors and
+skills, and building an adaptive optimization workflow on them still takes specialized
+know-how — the data mappings, the models, the decision logic and the review interface.
+**Templating those makes the workflow adoptable and repeatable, and the persistent record
+of objectives, predictions, experiments and outcomes accumulates project-specific value
+over rounds.** Frame it as that positive vision, not as a gap in the product.
+
+It will be read and poked at by people who know this domain. Optimize for work that
 survives scrutiny, not for feature count.
 
 **The build is complete and deployed** — https://adaptive-workbench-iota.vercel.app, on
@@ -48,7 +48,7 @@ streaming limit is a hard 60.
    and use matplotlib. Still ask before adding a dependency, and never add one to `core/`.
 2. **The science is implemented once.** The same Python must run in Claude Science, from
    the CLI, and in the browser via Pyodide. Never port `core/` to JavaScript, even if it
-   would be faster. That fork would undermine the entire demo.
+   would be faster. That fork would undermine the whole claim.
 3. `core/` does no network I/O and no printing. Skills, MCP servers and the web app are
    thin wrappers over it.
 4. Project state is a directory of JSON files. No database, no server.
@@ -67,7 +67,7 @@ streaming limit is a hard 60.
    and what the results mean together. It may write code that produces a number — but only
    ad hoc, only read-only against mounted snapshot arrays, only with the source stored
    beside the result, and the number is evidence a human reads, never an input to a code
-   path. The moment an LLM is doing the statistics behind the chart, the demo is dead.
+   path. The moment an LLM is doing the statistics behind the chart, the claim is dead.
 9. **Landscape parameters are pre-registered and the threshold is fixed at 10.762 pKD.**
    Do not recompute, re-pick or adjust it; do not change the landscape or its parameters.
    Git history proves the order. If guided does not separate from random, say so.
@@ -104,8 +104,7 @@ streaming limit is a hard 60.
    hypotheses, tests them with library diagnostics, and a named human rules.
 
 The chart shows the loop converges. The record shows something is reasoning inside it.
-Without the second, an Anthropic audience sees a scheduler calling five scripts in order
-and the pitch collapses within ninety seconds.
+Without the second, this is a scheduler calling five scripts in order.
 
 **`decision_004.json` is gate output and is not to be hand-edited.** An agent with only the
 skill and the connectors wrote it, `check.py` recomputes every number in it, and its whole
@@ -187,7 +186,7 @@ the frame around it.
   for why. Cleanup waits for the session to finish, or is told to the session in words.
 - **A connector that is "still loading" is diagnosed, not waited on.** A missing argument
   produces no error, no timeout and no log line.
-- **The host install does not travel.** A demo needs a machine with the skill imported,
+- **The host install does not travel.** Showing it there needs a machine with the skill imported,
   both connectors configured, `config.toml` carrying both sandbox grants, and a restart
   since. Verify it green before the room fills; it cannot be done live.
 

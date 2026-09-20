@@ -98,7 +98,7 @@ So it is strong evidence that the stack **runs and reproduces** in the host, and
 evidence of what the Claude Code gate tests, which is whether `SKILL.md` and the five
 diagnostics are *sufficient on their own*. Criterion 3 stays anchored here, in the
 harness that can be scripted, re-run after a skill edit, and committed. The repo carries
-the proof; the host carries the pitch.
+the proof; the host run shows it working where it would actually live.
 
 One honest difference in depth. The Claude Code run went a level further on the
 remainder, with an ad hoc residue-level cut finding that 40 of 42 fresh designs carry

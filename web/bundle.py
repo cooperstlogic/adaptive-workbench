@@ -99,7 +99,7 @@ SKILL_MODULE = "web/function/lib/skill.mjs"
 # The shipped campaign spans weeks, because a campaign that does not is not a
 # campaign. The project was generated in one sitting, so every round carries
 # the afternoon it was written; left alone the rail dates rounds 1 to 4 "today"
-# and visibly contradicts the six-week story the pitch rests on.
+# and visibly contradicts the six-week campaign the rail is describing.
 #
 # This touches `updated` and nothing else -- the times the round graph was
 # rewritten, which check.py already excludes from byte-identity for exactly

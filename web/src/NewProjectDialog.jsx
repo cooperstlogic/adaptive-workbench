@@ -2,7 +2,7 @@
 //
 // It is Claude Science's dialog — a name, a description that only tells
 // projects apart, and instructions Claude reads in every session — with one
-// control added at the top, and that control is the whole pitch in a single
+// control added at the top, and that control is the whole idea in a single
 // radio group. A project here is either a box you write a paragraph into, or
 // an instance of a declaration. Choosing the second replaces the
 // instructions box with the template library, because a template is not a

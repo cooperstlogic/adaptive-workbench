@@ -44,8 +44,6 @@ staged](#what-is-real-and-what-is-staged) draws the line component by component.
 | **[The chart](#the-chart)** — cumulative best-observed affinity by round, model-guided against a random baseline over 20 seeds per arm | The loop converges, and the machinery works |
 | **[The round-4 decision record](#the-decision-record)** — a round comes back ambiguous, an agent forms competing hypotheses, tests them, and a named human rules | Something is reasoning inside it |
 
-Without the second, this is a scheduler calling five scripts in order.
-
 ---
 
 ## Contents
@@ -315,11 +313,7 @@ one-hot ridge has no interaction term, so it credited that pair's whole gain to 
 effects and stacked G102L onto 40 new partners. All 40 fell short. **G102L alone buys about
 +0.26 and not +1.80 — the incumbent's affinity belongs to the pair.** Round 4 advanced
 nothing, because the optimizer spent 40 of 48 wells re-testing one main effect it had a
-single observation of.
-
-That is also the epistasis limit above, caught in the wild by the system that has it. A
-scheduler calling five scripts produces the flag. **It does not produce that sentence**, and
-the sentence is what a scientist would act on.
+single observation of. That is also the epistasis limit above, caught in the wild by the system that has it. 
 
 Two further gates ran under the same conditions: one completed a full round unaided and declined
 to sign the batch off under a name that had not reviewed it, and one answered a
@@ -330,7 +324,7 @@ still deliberately unruled.** Transcripts in [`gates/`](gates/).
 
 The web app boots Pyodide, **mounts the repository's own modules** into its filesystem, and
 runs the round loop against the visitor's own copy of the project. `core/` is never ported to
-JavaScript — that fork is the one mistake that would undermine the whole demo.
+JavaScript — that fork is the one mistake that would undermine the whole claim.
 
 **It reproduces the campaign's numbers under a different Python and a different numpy**, and
 **the browser and the CLI write the same bytes**: `check.py` runs the whole round-4 loop in
