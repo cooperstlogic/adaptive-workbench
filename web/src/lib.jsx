@@ -143,16 +143,6 @@ export function CentreHead({ title, sub, children }) {
   );
 }
 
-// The speakers in the centre column. `Shannon` is the workbench itself
-// reporting what it ran; `Claude` is the part that read the numbers and had
-// something to say about them. Keeping them apart is the point: one of them
-// produces every figure on screen and the other produces none of them.
-export const SPEAKERS = {
-  you: ["Y", "You"],
-  workbench: ["S", "Shannon"],
-  claude: ["C", "Claude"],
-};
-
 // The one-word label beside an affinity number, and what it means when a
 // reader hovers it. CLAUDE.md failure mode 3: the word "synthetic" in the same
 // breath as the number. The word is the whole label; the explanation is the

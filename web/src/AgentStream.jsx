@@ -2,13 +2,14 @@
 //
 // A live model and the committed record drive the same list of steps -- a
 // sentence, a command that ran, a sentence about what it returned -- and the
-// only visible difference is the badge on the byline. Every chip is a log
+// only visible difference is the badge over the turn. Every chip is a log
 // entry, so a step that says a test ran is a test that ran, in this tab,
 // against this copy of the project.
 //
-// The badge is where the mode is stated, once, in the place the host puts
-// a model's name: `live · Opus 5`, or `replayed · 8 of 8 recomputed match`,
-// or `stopped · daily budget spent`. Nothing under the turn explains it.
+// The badge is where the mode is stated, once, above the turn and on no
+// other kind of turn: `live · Opus 5`, or `replayed · 8 of 8 recomputed
+// match`, or `stopped · daily budget spent`. Nothing under the turn explains
+// it.
 
 import Prose from "./Prose.jsx";
 import Tool from "./Tool.jsx";

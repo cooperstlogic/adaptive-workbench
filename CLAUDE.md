@@ -107,9 +107,11 @@ it builds every request itself and accepts only transcripts it signed — never 
 `validate()` to take a `messages` array. **Transcripts are not state**: they live in page
 memory; the decision record is what persists, and a push-back after a reload starts from
 it. **Claude speaks only when a model or the record's author wrote the words**, with a
-mode badge on every such turn; the workbench's prose is Shannon's. `WORKBENCH_UPSTREAM=scripted`
-is the harness's test double and is labelled everywhere it shows; it is never to be set
-on the site.
+mode badge over every such turn — and the badge is the only label in the stream. The
+column is a chat: your asks and rulings are bubbles on the right, the workbench's prose
+is the column itself with nothing over it, and no turn names a speaker — decision 153.
+`WORKBENCH_UPSTREAM=scripted` is the harness's test double and is labelled everywhere it
+shows; it is never to be set on the site.
 
 ## The two proof artifacts
 

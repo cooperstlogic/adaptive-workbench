@@ -14,8 +14,8 @@
 // The suggested asks are answered by a briefing assembled in `wb_driver`;
 // free text goes to the model in the centre seat when one is available, with
 // the same two read-only tools the diagnosis has and the project's state as
-// its context. Both kinds of answer are stored in the session, and the
-// byline says which produced each.
+// its context. Both kinds of answer are stored in the session; a model's
+// carries the mode badge and a briefing carries nothing.
 //
 // An empty one is a title and a composer. Nothing on the page says any of
 // the above; the asks under the composer are the whole invitation.

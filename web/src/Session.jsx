@@ -13,13 +13,15 @@
 // under the composer, answered by the registry, and refused the first time
 // with the date it is expected.
 //
-// **The agent sits in this column, and only it speaks as Claude.** A flagged
-// round is diagnosed by a model in the centre seat when one is available, or
-// by stepping the committed record through the same stream with every test
-// re-run here, and the byline badge says which. Everything else in the column
-// — what ran, what came back, what the record says — is Shannon reporting.
-// The four verbs stay outside the composer; `more_evidence_requested` hands
-// the work back to whichever source produced the pass being ruled on.
+// **The agent sits in this column, and only its turns carry a badge.** A
+// flagged round is diagnosed by a model in the centre seat when one is
+// available, or by stepping the committed record through the same stream
+// with every test re-run here, and the badge over the turn says which.
+// Everything else in the column — what ran, what came back, what the record
+// says — is the workbench's own prose, with nothing over it. Your side is
+// the bubble on the right: what you asked, and how you ruled. The four verbs
+// stay outside the composer; `more_evidence_requested` hands the work back
+// to whichever source produced the pass being ruled on.
 //
 // What the turns say is what ran and what came back. They do not say why the
 // interface is shaped the way it is; that reasoning lives here and in
@@ -106,25 +108,38 @@ export default function Session({ ctx, stored, suggestions }) {
     && !e.command.includes("--approved-by"));
   const sendSteps = mine.filter((e) => e.n >= submittedAt - 1 && e.n <= submittedAt + 1
     && ["select_batch", "submit", "export"].includes(e.tool));
-  const waitSteps = mine.filter((e) => e.tool === "status"
-    || (e.tool === "pull" && e.refused));
-  const arriveSteps = mine.filter((e) => e.n >= importedAt - 1 && e.n <= importedAt + 1
-    && ["pull", "import_round", "evaluate_prior"].includes(e.tool) && !e.refused);
+  const arriveSteps = mine.filter((e) => e.n >= importedAt - 2 && e.n <= importedAt + 1
+    && ["status", "pull", "import_round", "evaluate_prior"].includes(e.tool) && !e.refused);
   // Tests run by hand, from the buttons, rather than by an agent turn.
   const manualSteps = mine.filter((e) =>
     (e.tool === "run_diagnostic" || e.kind === "adhoc") && !agentNs.has(e.n));
   const afterSteps = mine.filter((e) => e.n > lastRuledAt && e.n !== Infinity
     && !["run_diagnostic", "record_decision"].includes(e.tool) && e.kind !== "adhoc");
 
-  // Every ask made in this session, read back from it. The one that asked
-  // the laboratory is rendered where the results landed rather than at the
-  // bottom, because that ask *is* the arrival -- it is the call that caused
-  // it. The rest sit at the end of the stream, in the order they were asked.
+  // Every ask made in this session, read back from it. The ones that asked
+  // the laboratory are rendered where they happened rather than at the
+  // bottom, because each *is* a call to the registry: a check logs a status
+  // and a pull, so the i-th refused ask made the i-th refused pull and the
+  // status just before it, and the ask that succeeded made the pull that
+  // imported. The rest sit at the end of the stream, in the order asked.
   const turns = storedTurns.filter((t) => t.kind !== "agent");
   const arrival = [...turns].reverse().find((t) => t.answer.kind === "arrival"
     && t.answer.ready);
+  const refusedAsks = turns.filter((t) => t.answer.kind === "arrival" && !t.answer.ready);
+  const refusedPulls = mine.filter((e) => e.tool === "pull" && e.refused);
+  const refusedSteps = refusedAsks.map((t, i) => {
+    const pull = refusedPulls[i];
+    return pull ? mine.filter((e) => (e.n === pull.n - 1 && e.tool === "status")
+      || e.n === pull.n) : [];
+  });
+  // Registry calls no ask in this session accounts for: a round checked from
+  // another session, or from the harness.
+  const placed = new Set([...refusedSteps.flat(), ...arriveSteps].map((e) => e.n));
+  const waitSteps = mine.filter((e) => (e.tool === "status"
+    || (e.tool === "pull" && e.refused)) && !placed.has(e.n));
   const tail = storedTurns
-    .filter((t) => t !== arrival && !(t.kind === "agent" && t.task === "diagnose"))
+    .filter((t) => t !== arrival && !refusedAsks.includes(t)
+      && !(t.kind === "agent" && t.task === "diagnose"))
     .map((t) => (agentTurn && agentTurn.id === t.id ? agentTurn : t));
   if (agentTurn && agentTurn.task !== "diagnose" && !tail.some((t) => t.id === agentTurn.id)) {
     tail.push(agentTurn);
@@ -240,6 +255,16 @@ export default function Session({ ctx, stored, suggestions }) {
           </Turn>
         )}
 
+        {refusedAsks.map((t, i) => (
+          <div key={`refused-${i}`}>
+            <Turn who="you"><p>{t.question}</p></Turn>
+            {refusedSteps[i].length > 0 && (
+              <Turn who="workbench"><Chips entries={refusedSteps[i]} /></Turn>
+            )}
+            <Turn who="workbench"><Briefing data={t.answer} ctx={ctx} /></Turn>
+          </div>
+        ))}
+
         {waitSteps.length > 0 && (
           <Turn who="workbench">
             <p className="small">Asked the registry. Not back yet.</p>
@@ -247,7 +272,7 @@ export default function Session({ ctx, stored, suggestions }) {
           </Turn>
         )}
 
-        {roundView.at_lab && (
+        {roundView.at_lab && refusedAsks.length === 0 && (
           <Turn who="workbench">
             <p>
               {waitSteps.length
@@ -256,6 +281,12 @@ export default function Session({ ctx, stored, suggestions }) {
             </p>
           </Turn>
         )}
+
+        {/* The answer to the ask, where the ask landed. If nobody asked -- a
+            round imported before this session was opened -- the round's own
+            record says the same thing, from the snapshot rather than from a
+            turn. Never both. */}
+        {arrival && <Turn who="you"><p>{arrival.question}</p></Turn>}
 
         {arriveSteps.length > 0 && (
           <Turn who="workbench">
@@ -267,16 +298,7 @@ export default function Session({ ctx, stored, suggestions }) {
           </Turn>
         )}
 
-        {/* The answer to the ask, where the ask landed. If nobody asked -- a
-            round imported before this session was opened -- the round's own
-            record says the same thing, from the snapshot rather than from a
-            turn. Never both. */}
-        {arrival && (
-          <>
-            <Turn who="you"><p>{arrival.question}</p></Turn>
-            <Turn who="workbench"><Briefing data={arrival.answer} ctx={ctx} /></Turn>
-          </>
-        )}
+        {arrival && <Turn who="workbench"><Briefing data={arrival.answer} ctx={ctx} /></Turn>}
 
         {arriveSteps.length > 0 && !arrival && (
           <Turn who="workbench">
@@ -416,15 +438,17 @@ export default function Session({ ctx, stored, suggestions }) {
                 </Turn>
               )}
               {p && p.ruling && (
-                <Turn who="you">
-                  {rulings[i] && <Tool entry={rulings[i]} />}
-                  <p>
-                    <b>{p.ruling.verdict.replace(/_/g, " ")}</b> by {p.ruling.by}
-                    {p.ruling.requested && <> — run <span className="mono">
-                      {p.ruling.requested.diagnostic}</span></>}.
-                    {p.ruling.note && <> “{p.ruling.note}”</>}
-                  </p>
-                </Turn>
+                <>
+                  <Turn who="you">
+                    <p>
+                      <b>{p.ruling.verdict.replace(/_/g, " ")}</b> by {p.ruling.by}
+                      {p.ruling.requested && <> — run <span className="mono">
+                        {p.ruling.requested.diagnostic}</span></>}.
+                      {p.ruling.note && <> “{p.ruling.note}”</>}
+                    </p>
+                  </Turn>
+                  {rulings[i] && <Turn who="workbench"><Tool entry={rulings[i]} /></Turn>}
+                </>
               )}
             </div>
           );
@@ -461,7 +485,7 @@ export default function Session({ ctx, stored, suggestions }) {
         )}
 
         {decision && decision.status === "open" && !agentBusy && (
-          <Turn who="you">
+          <Turn who="workbench">
             <div className="verbs">
               {VERBS.map((v) => (
                 <button key={v.id} className="verb" aria-pressed={verdict === v.id}
@@ -499,7 +523,7 @@ export default function Session({ ctx, stored, suggestions }) {
         )}
 
         {decision && decision.status === "ruled" && stage === "flagged, ruled" && !roundView.model && (
-          <Turn who="you">
+          <Turn who="workbench">
             <button className="btn primary" disabled={busy} onClick={onAdvance}>
               {busy ? <span className="busy" /> : null} Act on the ruling and propose round{" "}
               {round + 1}

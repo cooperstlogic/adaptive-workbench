@@ -1097,3 +1097,33 @@ number changed.
 *A round nobody has diagnosed is one click past the demo.* Round 5 flags at −0.818 pKD on the product path (decision 121), no record exists for it, and the live seat is the only thing that can read it. Without a key the page offers the five tests by hand and says nothing more. That is the unscripted beat, and it is not in the harness on purpose.
 
 *What phase 8 has to verify on the deployed site, and cannot be verified here.* Netlify's streaming-function limits under a proposal turn that can run a minute; that `included_files` is unnecessary because the skill is a module; that the Blobs store is reachable from the function; and that `ANTHROPIC_API_KEY` is set. The probe reports all four.
+
+---
+
+## The stream is a chat — decision 153
+
+Phase 7 put a name over every turn: *Shannon* on the workbench's prose, *Claude* on a
+model's, *You* on the person's, each with an initial in a box. Decision 147 drew the
+line between the first two and it was the right line; naming it on every turn was not.
+A visitor reading *Shannon* over one paragraph and *Claude* over the next was asked to
+learn a distinction the badge already made, and the host draws none of it: its column is
+the assistant's, unnamed, and the person's words sit in a bubble on the right.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 153 | **The centre column is a chat with two sides and one label.** Your asks and your rulings are bubbles on the right. Everything else is the column's own prose with nothing over it — what ran, what came back, what the record says — and a model's turn carries the mode badge above it: `live · Opus 5`, `replayed · 8 of 8 results match · 3 of 3 cuts reproduce`, or `stopped` with the reason. No turn names a speaker; the `SPEAKERS` table and the initial-in-a-box are gone. The past ruling reads as your bubble with the writer's `record_decision.py --rule` chip beneath it; the ruling verbs, the approve button and *Act on the ruling* are controls in the column, unattributed, exactly as decision 65 placed them. Supersedes the speaker list in 124 and amends 147: the rule that Claude speaks only when a model or the record's author wrote the words stands, and the badge is now the whole of how it is shown | Two names over adjacent turns was the interface explaining itself — decision 134's failure in a byline. The thing that has to be visible is *which turns a model wrote and in what mode*, and the badge carried that on its own; the name beside it was redundant when it agreed with the badge and confusing when a reader tried to work out why the workbench had a first name. The layout is the host's, and a layer inside Claude Science that draws its stream differently from Claude Science is making a claim it does not mean. Failure mode 1 is untouched: every model turn still says live, replayed or stopped, and *scripted · harness* still shows wherever the test double runs |
+
+One thing the bubbles made visible. The ask the registry refused was rendered at the
+tail of the stream, after the ruling, because only the ask that succeeded was placed at
+the arrival. In a chat that is a question asked after its own answer. Each laboratory
+ask is now placed where it happened — the question, then the status and pull calls it
+made, then the registry's answer — and the ask that succeeded reads the same way, with
+its own status call grouped under the arrival rather than under *Asked the registry*.
+That line survives only for registry calls no ask in the session accounts for: a round
+checked from another session, or from the harness.
+
+What did not change. `wb_driver.py`, the stored session shape and the function are as
+they were; this is `Turn.jsx`, `Session.jsx`'s turn placement and the stylesheet. The
+suggested asks still answer from disk with no model and no badge, which is now the only
+thing that distinguishes a briefing from a model's answer on the page — and it is enough,
+because a briefing has never claimed to be anything else.

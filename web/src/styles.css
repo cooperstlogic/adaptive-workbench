@@ -17,6 +17,8 @@
   --flag: #a8591b;
   --flag-soft: #fdf4e8;
   --good: #3d7a55;
+  /* Your side of the stream: a shade off the paper, as the host draws it. */
+  --bubble: #f0ede7;
   /* Three series that stay apart in hue, not only in dash pattern: the guided
      arm, the same arm pooling naively, and random selection. */
   --c-guided: #c96442;
@@ -48,6 +50,7 @@
     --flag: #d3944a;
     --flag-soft: #2e2519;
     --good: #6faa83;
+    --bubble: #151412;
     --c-guided: #e08159;
     --c-naive: #7aa8c9;
     --c-random: #9c968d;
@@ -241,11 +244,15 @@ pre.code {
 
 /* --- the stream ---------------------------------------------------------- */
 
+/* Two sides, as in the host: yours is a bubble on the right, the column's is
+   plain prose with nothing over it but, on a model's turn, the mode badge. */
 .msg { padding: 2px 0 16px; }
-.msg-who { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 12px;
-  margin-bottom: 5px; }
-.msg-who .dot { width: 16px; height: 16px; border-radius: 5px; background: var(--accent-soft);
-  color: var(--accent); display: grid; place-items: center; font-size: 9px; font-weight: 700; }
+.msg.you { display: flex; justify-content: flex-end; padding: 6px 0 18px; }
+.bubble { max-width: 78%; background: var(--bubble); border-radius: 16px; padding: 11px 16px; }
+.bubble p { margin: 0 0 8px; }
+.bubble p:last-child { margin-bottom: 0; }
+.msg-mode { margin-bottom: 6px; }
+.msg-mode .mode { margin-left: 0; }
 .msg-body p { margin: 0 0 9px; }
 .msg-body p:last-child { margin-bottom: 0; }
 
@@ -444,11 +451,7 @@ a.rail-item { text-decoration: none; }
 .picker-item:disabled { opacity: 0.45; cursor: not-allowed; }
 .picker-item[aria-selected="true"] { background: var(--accent-soft); }
 
-/* --- turns, the download chip, a refused call ---------------------------- */
-
-.dot.who-claude { background: var(--accent-soft); color: var(--accent); }
-.dot.who-workbench { background: var(--line-soft); color: var(--muted); }
-.dot.who-you { background: var(--line-soft); color: var(--ink); }
+/* --- the download chip, a refused call ----------------------------------- */
 
 .chip.download { flex-direction: column; align-items: flex-start; gap: 1px;
   border-style: dashed; padding: 7px 11px; }
@@ -475,7 +478,7 @@ table.grid.config tr.locked td.k { color: var(--faint); }
 }
 
 /* --- the agent's seat ------------------------------------------------------
-   The badge on a Claude byline is the one place the mode is stated: live,
+   The badge over a model's turn is the one place the mode is stated: live,
    replayed with its verification count, or stopped with the reason. A chip
    that ran model-written code carries its source. */
 
