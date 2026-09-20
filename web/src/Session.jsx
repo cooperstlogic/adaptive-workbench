@@ -20,9 +20,11 @@
 //
 // **The round goes to a laboratory on the way through.** Approving signs the
 // batch, submits it and writes the order file the lab would receive — and
-// then stops. Whether the results are back is a separate question, asked
-// under the composer, answered by the registry, and refused the first time
-// with the date it is expected.
+// then stops. Whether the results are back is a separate call to the
+// registry, a button beside the lab control rather than a question in the
+// composer because the model cannot reach the registry; it is refused the
+// first time with the date it is expected, and the answer is the briefing
+// the driver assembles from what came back.
 //
 // **The agent sits in this column, and only its turns carry a badge.** A
 // flagged round is diagnosed by a model in the centre seat when one is
@@ -92,7 +94,7 @@ function AskTurn({ turn, log, live, ctx }) {
   );
 }
 
-export default function Session({ ctx, stored, history, suggestions }) {
+export default function Session({ ctx, stored, history }) {
   const {
     view, round, roundView, decision, log, busy, acting, error, sessionId, batch,
     onApprove, onDiagnostic, onRule, onAdvance, onContinue, onRelease,
@@ -356,6 +358,17 @@ export default function Session({ ctx, stored, history, suggestions }) {
     ));
   }
 
+  // The registry check: the one call in this column that is not a decision.
+  // It is a button because the model cannot make it, and it is the same
+  // `ask` the driver answers with a briefing, so the turn it leaves is a
+  // question and its answer.
+  const askRegistry = (
+    <button className="btn small" disabled={busy}
+            onClick={() => onAsk("results_back", round, sessionId)}>
+      {spin("ask")} Ask the registry
+    </button>
+  );
+
   if (roundView.at_lab) {
     put(NOW, "at-lab", (
       <Turn who="workbench">
@@ -363,6 +376,7 @@ export default function Session({ ctx, stored, history, suggestions }) {
           <p>Nothing here moves until the assay reports.</p>
         )}
         <div className="row wrap" style={{ marginTop: 10 }}>
+          {askRegistry}
           <button className="btn small" disabled={busy} onClick={onRelease}>
             {spin("release")} Have the lab report now
           </button>
@@ -372,31 +386,33 @@ export default function Session({ ctx, stored, history, suggestions }) {
     ));
   }
 
-  // The lab has reported and nobody has pulled it. Before the control above
-  // existed this state lasted as long as one call, because the ask that
-  // released the round also imported it. The release is a command like any
-  // other and stays in the stream once the round has been pulled; the
-  // sentence about the registry holding the round lasts only while it does.
-  const holding = roundView.reported && (
-    <p>
-      The registry has round {round}: {lab?.n_rows || 0} rows across{" "}
-      {lab?.n_samples || 0} samples on assay {lab?.assay_version}
-      {lab?.released_by && <> — reported early, by {lab.released_by}</>}. Nothing is
-      imported until it is asked for.
-    </p>
-  );
+  // The release is a command like any other and stays in the stream once the
+  // round has been pulled.
   if (releaseSteps.length > 0) {
     put(before(releaseSteps[0].n), "released", (
       <>
         <Turn who="you"><p>Have the lab report now</p></Turn>
-        <Turn who="workbench">
-          <Chips entries={releaseSteps} />
-          {holding}
-        </Turn>
+        <Turn who="workbench"><Chips entries={releaseSteps} /></Turn>
       </>
     ));
-  } else if (roundView.reported) {
-    put(NOW, "reported", <Turn who="workbench">{holding}</Turn>);
+  }
+
+  // The lab has reported and nobody has pulled it. Before the release control
+  // existed this state lasted as long as one call, because the ask that
+  // released the round also imported it; now a person can stand in it, and
+  // the way out is the same call.
+  if (roundView.reported) {
+    put(NOW, "reported", (
+      <Turn who="workbench">
+        <p>
+          The registry has round {round}: {lab?.n_rows || 0} rows across{" "}
+          {lab?.n_samples || 0} samples on assay {lab?.assay_version}
+          {lab?.released_by && <> — reported early, by {lab.released_by}</>}. Nothing is
+          imported until it is asked for.
+        </p>
+        <div className="row wrap" style={{ marginTop: 10 }}>{askRegistry}</div>
+      </Turn>
+    ));
   }
 
   // The answer to the ask, where the ask landed. If nobody asked -- a round
@@ -727,11 +743,8 @@ export default function Session({ ctx, stored, history, suggestions }) {
 
         {items.map((it) => <Fragment key={it.key}>{it.node}</Fragment>)}
 
-        <Composer key={sessionId} suggestions={suggestions} busy={busy}
-                  asked={storedTurns.filter((t) => t.kind !== "agent" || t.task !== "diagnose").length}
-                  live={live} model={model} setModel={setModel}
+        <Composer key={sessionId} busy={busy} live={live} model={model} setModel={setModel}
                   placeholder={`Ask about round ${round}…`}
-                  onAsk={(key, forRound) => onAsk(key, forRound, sessionId)}
                   onSend={(text, chosen, label) => onAskLive(text, chosen, label)} />
       </div>
     </>

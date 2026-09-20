@@ -6,21 +6,16 @@
 // demonstrated rather than asserted:
 //
 //   Open a project you have never opened. Click `+ New`. Ask *where are we?*
-//   Back comes the state of the campaign, every figure read from an artifact
-//   on disk and resolving to the `core/` function that produced it. The same
-//   question in a chat product gets a summary of the transcript, because
-//   there is no state to read.
+//   Back comes the state of the campaign, read by the model in the centre
+//   seat from the project's artifacts with the same two read-only tools the
+//   diagnosis has -- decision 158. The same question in a chat product gets
+//   a summary of the transcript, because there is no state to read.
 //
-// The suggested asks and the free text both go to the model in the centre
-// seat when one is available, with the same two read-only tools the diagnosis
-// has and the project's state as its context -- decision 158; the asks are
-// presented as the host presents a choice, each showing the prompt it sends.
-// Without a seat the asks are answered by a briefing assembled in `wb_driver`
-// from artifacts on disk. Both kinds of answer are stored in the session; a
-// model's carries the mode badge and a briefing carries nothing.
-//
-// An empty one is a title, the choice and a composer. Nothing on the page
-// says any of the above; the asks over the composer are the whole invitation.
+// Every turn is stored in the session. A model's carries the mode badge; a
+// briefing the workbench assembled from artifacts -- the registry's answer
+// to a round's results check, made from a round session -- carries nothing.
+// An empty one is a title and a composer, and without a seat the composer
+// says so and stays closed: there is nothing on this page to press.
 
 import AgentStream, { agentBadge } from "./AgentStream.jsx";
 import Briefing from "./Briefing.jsx";
@@ -28,8 +23,8 @@ import Composer from "./Composer.jsx";
 import Turn from "./Turn.jsx";
 import { CentreHead, PanelToggle, projectTitle } from "./lib.jsx";
 
-export default function AdHoc({ ctx, stored, suggestions }) {
-  const { view, sessionId, busy, error, onAsk, onAskLive, live, model, setModel, agentTurn,
+export default function AdHoc({ ctx, stored }) {
+  const { view, sessionId, busy, error, onAskLive, live, model, setModel, agentTurn,
           log } = ctx;
   const turns = (stored?.turns || [])
     .map((t) => (agentTurn && t.kind === "agent" && agentTurn.id === t.id ? agentTurn : t));
@@ -68,9 +63,7 @@ export default function AdHoc({ ctx, stored, suggestions }) {
             the project…</p></Turn>
         )}
 
-        <Composer key={sessionId} suggestions={suggestions} busy={busy} asked={turns.length}
-                  live={live} model={model} setModel={setModel}
-                  onAsk={(key, round) => onAsk(key, round, sessionId)}
+        <Composer key={sessionId} busy={busy} live={live} model={model} setModel={setModel}
                   onSend={(text, chosen, label) => onAskLive(text, chosen, label)} />
       </div>
     </>

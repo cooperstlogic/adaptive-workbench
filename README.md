@@ -592,7 +592,7 @@ part an audience is invited to read. matplotlib is an *evaluator* dependency and
 
 ```bash
 python3.12 -m venv .venv && .venv/bin/pip install numpy matplotlib mcp
-.venv/bin/python check.py                # 198 invariant checks, ~40 s
+.venv/bin/python check.py                # 196 invariant checks, ~40 s
 .venv/bin/python simulate_campaign.py    # the evaluator: 20 seeds, 3 arms, the chart, ~35 s
 
 # The product path — the same science through the CLI
@@ -629,7 +629,7 @@ re-run with `gates/run_gate.sh round4`, `round1` or `round4-pushback`.
 | `lims.py` | The mock LIMS. Mints identifiers, owns the plate layout, holds the oracle |
 | `projects/demo-trastuzumab/` | The committed demo project, at round 4 with the round deliberately unruled |
 | `simulate_campaign.py` | The evaluator. **The only thing permitted to read landscape values** |
-| `check.py` | 198 invariant checks. Run it before and after any change |
+| `check.py` | 196 invariant checks. Run it before and after any change |
 | `gates/` | The three agent gates: the transcripts, and the script that re-runs them |
 | `web/` | `bundle.py` copies the repository into the browser's bundle and proves the derivation by replaying round 4; `function/ask.mjs` is the one stateless model turn, which builds every request itself and refuses what it did not sign; `src/` is the shell — React, a 60-line hash router, no state or charting library |
 

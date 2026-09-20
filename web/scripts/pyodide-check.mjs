@@ -177,30 +177,7 @@ report.history.resolve = report.history.figures
 say(`round history     round 3 reads back as [${report.history.past[2]}] from `
   + `${h3.reads.length} artifacts; round 4, still awaiting approval, has none`);
 
-// What the composer offers, at each state the opening screen can be in. The
-// card appears when the project's state earns it and not otherwise: round 4
-// is awaiting approval and offers nothing, round 2 is flagged and ruled and
-// offers nothing, a quiet round offers the one ask decision 66 is about.
-const keysOf = (r) => call("suggested_asks", { round_id: r }).map((a) => a.key);
-report.suggested = { awaiting_approval: keysOf(4), settled: keysOf(2), quiet: keysOf(3),
-                     seed: keysOf(1), adhoc: keysOf(null) };
-
 bringBackRound4(call, timing, report);
-
-// The same question with round 4 back and flagged. Now there is something to
-// suggest, every entry carries the prompt it sends, and the briefing still
-// answers each keyed one for a visitor with no seat.
-const asks = call("suggested_asks", { round_id: 4 });
-report.suggested.flagged = asks.map((a) => a.key);
-report.suggested.lead = asks.length ? asks[0].lead : null;
-report.suggested.prompts = asks.filter((a) => !a.registry).every((a) =>
-  typeof a.question === "string" && a.question.length > 20 && typeof a.title === "string");
-report.suggested.agent_last = asks.length > 0 && asks[asks.length - 1].agent === true;
-report.suggested.briefed = asks.filter((a) => !a.agent && !a.registry).every((a) => {
-  try { return !!call("ask", { key: a.key, round_id: a.round }).kind; } catch { return false; }
-});
-say(`suggested asks    nothing on round 4 awaiting approval, on round 2 settled or in an `
-  + `ad-hoc session; [${report.suggested.flagged}] once it flags`);
 
 // --- replay: the committed record stepped, every number recomputed ---------
 
@@ -364,7 +341,6 @@ lab.reported = {
   status: r5v.status, reported: r5v.reported, at_lab: r5v.at_lab,
   needs_you: v5.needs_you && v5.needs_you.kind,
   landing: (await import(pathToFileURL(join(WEB, "src", "router.js")))).landing(v5),
-  asks: call("suggested_asks", { round_id: 5 }).map((a) => a.key),
 };
 say(`lab released      round 5 ${lab.first_check.status} on the first ask, expected `
   + `${(lab.first_check.expected || "?").slice(0, 10)}; released by hand, now `
@@ -401,8 +377,8 @@ lab.context = (() => {
   const r = c.rounds.find((x) => x.round === 5);
   return { has_lab: !!r.lab, status: r.lab && r.lab.status };
 })();
-// A round that came back quiet and has not been carried forward is the one
-// state the quiet ask belongs in, and the project created above is where one
+// A round that came back quiet stands as `imported` until it is carried
+// forward and `complete` after, and the project created above is where one
 // can be had: round 1 carries no model predictions, so it cannot flag. Its
 // files were compared against the CLI before any of this ran.
 const made5 = made.id;
@@ -410,18 +386,11 @@ call("approve", { round_id: 1, by: BY, project: made5 });
 call("release_run", { round_id: 1, project: made5 });
 call("check_results", { round_id: 1, project: made5 });
 const quietRound = call("view", { project: made5 }).rounds.find((r) => r.round === 1);
-lab.quiet = {
-  status: quietRound.status, flagged: quietRound.flagged,
-  asks: call("suggested_asks", { project: made5, round_id: 1 }).map((a) => a.key),
-};
+lab.quiet = { status: quietRound.status, flagged: quietRound.flagged };
 call("continue_unflagged", { round_id: 1, project: made5 });
 const settledRound = call("view", { project: made5 }).rounds.find((r) => r.round === 1);
-lab.settled = {
-  status: settledRound.status,
-  asks: call("suggested_asks", { project: made5, round_id: 1 }).map((a) => a.key),
-};
-say(`quiet round       ${made5} round 1 ${lab.quiet.status}: [${lab.quiet.asks}]; once `
-  + `fitted (${lab.settled.status}): [${lab.settled.asks}]`);
+lab.settled = { status: settledRound.status };
+say(`quiet round       ${made5} round 1 ${lab.quiet.status}; once fitted, ${lab.settled.status}`);
 
 report.lab = lab;
 say(`agent tool        ${lab.tool.commands.length} commands, round 5 flagged=`

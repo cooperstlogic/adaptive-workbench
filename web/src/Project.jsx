@@ -369,10 +369,6 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
        onTrace, traced, lineage, drops, dropNotes, proposal, live, model, setModel, agentTurn,
        panelOpen, narrow, togglePanel, diagnose, askLive, act, refresh]);
 
-  const suggestionsFor = useMemo(
-    () => (view ? rt.safeCall("suggested_asks", { project: pid, round_id: round }) : []),
-    [view, pid, round]);
-
   if (!view) {
     return (
       <div className="boot"><div className="boot-card card">
@@ -389,7 +385,6 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
   const sessions = view.sessions || [];
   const active = sessions.filter((s) => s.needs_you || s.at_lab || s.kind === "adhoc");
   const older = sessions.filter((s) => !active.includes(s));
-  const suggestions = suggestionsFor;
 
   const SessionLink = ({ s }) => (
     <a key={s.id} className="rail-session"
@@ -468,10 +463,10 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
                                                         id: `r${r}` })} />
           )}
           {route.kind === "session" && round !== null && roundView && (
-            <Session ctx={ctx} stored={stored} history={history} suggestions={suggestions} />
+            <Session ctx={ctx} stored={stored} history={history} />
           )}
           {route.kind === "session" && round === null && route.id !== "new" && (
-            <AdHoc ctx={ctx} stored={stored} suggestions={suggestions} />
+            <AdHoc ctx={ctx} stored={stored} />
           )}
         </main>
 

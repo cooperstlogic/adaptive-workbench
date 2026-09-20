@@ -3,58 +3,31 @@
 // **Decisions are buttons; questions are asks.** Approval and the four ruling
 // verbs are typed controls outside the composer — that is decision 65's whole
 // point, and the reason the approval primitive is not a chat interrupt.
-// Everything that only *reads* state — where are we, why did this flag,
-// whether the lab has reported — belongs in here.
+// Everything that only *reads* state — where are we, why did this flag —
+// belongs in here, as free text to the model in the centre seat.
 //
-// Everything in it goes to the model in the centre seat when one is seated:
-// free text as typed, and the suggested asks above the box as the prompt
-// each one shows -- decision 158. The one suggestion that is a call to the
-// laboratory's registry rather than a question about state is marked as such
-// and stays one. When there is no seat, the box says so in a phrase and the
-// suggested asks are answered from artifacts on disk by the briefing
-// `wb_driver` assembles, with nothing over the answer; that is the default a
-// cold visit to the public URL gets once the daily budget is spent, and live
-// is the upgrade.
-//
-// The suggestions are presented as the host presents a choice -- `Choices`
-// -- until the session's first ask or a skip, and a toggle brings them back.
-// The model picker is wired: the function accepts exactly these two ids. It
-// is the only control under the box: nothing is drawn here that does not work.
+// Nothing sits over the box. There were suggested asks once, presented as
+// the host presents a choice; they were more in the way than they were
+// worth, and the one that was not a question -- whether the lab has
+// reported -- is a button in the column now, because it is a call to the
+// registry. When there is no seat the box says so in a phrase and stays
+// disabled; that is what a cold visit to the public URL gets, and live is
+// the upgrade. The model picker is wired: the function accepts exactly these
+// two ids. It is the only control under the box: nothing is drawn here that
+// does not work.
 
-import { useRef, useState } from "react";
-import Choices from "./Choices.jsx";
+import { useState } from "react";
 import { MODELS } from "./lib.jsx";
 
-export default function Composer({
-  suggestions = [], onAsk, onSend, busy, placeholder, live, model, setModel, asked = 0,
-}) {
+export default function Composer({ onSend, busy, placeholder, live, model, setModel }) {
   const [text, setText] = useState("");
   const [picking, setPicking] = useState(false);
-  // Open while nothing has been asked in this session, and again whenever the
-  // project's state changes what there is to suggest -- a round comes back,
-  // a round flags -- because that is a new reason rather than the old one
-  // repeated. Closed by hand until then.
-  const signature = suggestions
-    .map((s) => `${s.key}:${s.round ?? ""}:${s.state ?? ""}`).join(",");
-  const [shown, setShown] = useState(null);
-  const at = useRef(signature);
-  if (at.current !== signature) {
-    at.current = signature;
-    setShown(signature ? true : null);
-  }
   const canSend = !!(live && live.live && onSend);
-  const open = shown === null ? asked === 0 : shown;
 
   const send = () => {
     if (!text.trim() || !canSend) return;
     onSend(text.trim(), model);
     setText("");
-  };
-
-  const pick = (o) => {
-    setShown(false);
-    if (o.registry || !canSend) onAsk && onAsk(o.key, o.round);
-    else onSend(o.question, model, o.title || o.text);
   };
 
   const hint = canSend
@@ -63,12 +36,6 @@ export default function Composer({
 
   return (
     <div className="composer-wrap">
-      {suggestions.length > 0 && (open
-        ? <Choices options={suggestions} canSend={canSend} busy={busy} onPick={pick}
-                   onSkip={() => setShown(false)} />
-        : <div className="asks">
-            <button className="ask" onClick={() => setShown(true)}>Suggested asks ▸</button>
-          </div>)}
       <div className="composer">
         <textarea
           className="field" rows={2} value={text}
