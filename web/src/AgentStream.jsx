@@ -80,6 +80,9 @@ export default function AgentStream({ turn, log, live, ctx }) {
         if (s.type === "refused") {
           return <p key={i} className="err small">The writer refused it: {s.text}</p>;
         }
+        if (s.type === "malformed") {
+          return <p key={i} className="err small">Not run: {s.text}</p>;
+        }
         if (s.type === "stop") {
           return <p key={i} className="small muted">Stopped: {s.reason}.</p>;
         }

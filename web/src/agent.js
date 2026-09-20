@@ -255,11 +255,20 @@ export async function runLive({
     let final = null;
     let text = null;
     let toolInput = null;
+    // Calls whose input did not arrive as JSON, by id. Eager input streaming
+    // hands this client the parse: the API no longer checks the fragments,
+    // and the SDK reads them tolerantly, so an unescaped quote inside a code
+    // or rationale string ends it early and everything after it is dropped
+    // rather than rejected. What reaches the writer is then a truncated
+    // proposal -- "action is None" -- and the model is told it chose nothing
+    // when in fact its JSON broke. The strict parse here is what tells the
+    // two apart, and a broken call is answered instead of run.
+    const malformed = new Map();
     for await (const { event, data } of sse(res.body)) {
       if (event === "content_block_start" && data.content_block.type === "text") {
         text = push({ type: "text", text: "" });
       } else if (event === "content_block_start" && data.content_block.type === "tool_use") {
-        toolInput = { name: data.content_block.name, json: "" };
+        toolInput = { id: data.content_block.id, name: data.content_block.name, json: "" };
         turn.writing = toolInput.name;
         emit({ type: "tool_start", name: toolInput.name });
       } else if (event === "content_block_delta" && data.delta.type === "text_delta") {
@@ -272,7 +281,12 @@ export async function runLive({
                delta: data.delta.partial_json });
       } else if (event === "content_block_stop") {
         if (text) { save(turn); text = null; }
-        if (toolInput) { turn.writing = null; emit({ type: "tool_written", name: toolInput.name }); }
+        if (toolInput) {
+          try { JSON.parse(toolInput.json || "{}"); }
+          catch (err) { malformed.set(toolInput.id, String(err.message || err)); }
+          turn.writing = null;
+          emit({ type: "tool_written", name: toolInput.name });
+        }
         toolInput = null;
       } else if (event === "workbench") {
         final = data;
@@ -326,6 +340,17 @@ export async function runLive({
     const results = [];
     let proposed = false;
     for (const c of calls) {
+      if (malformed.has(c.id)) {
+        // Nothing runs on a call the model did not finish saying. The result
+        // names the parse error so the next attempt fixes the JSON rather
+        // than the diagnosis.
+        const why = `the input for ${c.name} did not arrive as valid JSON (${malformed.get(c.id)}), `
+          + "so it was not run. Send the whole call again, with every quote and newline "
+          + "inside code and prose escaped.";
+        push({ type: "malformed", name: c.name, text: why });
+        results.push({ tool_use_id: c.id, content: why, is_error: true });
+        continue;
+      }
       const out = runTool(c, { call, project, round: toolRound, session });
       // The entry rides on the step while the turn streams, so the chip can
       // render before the page re-reads the log; the stored copy drops it and
