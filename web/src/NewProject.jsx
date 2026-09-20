@@ -33,7 +33,7 @@ import * as meta from "./meta.js";
 import * as router from "./router.js";
 import * as rt from "./runtime.js";
 import { Validation } from "./Panel.jsx";
-import { APP, Badge, Empty, templateTitle } from "./lib.jsx";
+import { APP, Badge, Empty, SEAT, templateTitle } from "./lib.jsx";
 
 /** The locked declaration, row by row, read from the template file itself.
  *
@@ -108,7 +108,7 @@ export default function NewProject({ bump, campaign }) {
   const [picked, setPicked] = useState(null);
   const [name, setName] = useState(draft.name || "trastuzumab-affinity-2");
   const [description, setDescription] = useState(draft.description || "");
-  const [team, setTeam] = useState("d.webster");
+  const [team, setTeam] = useState(SEAT);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [steps, setSteps] = useState([]);

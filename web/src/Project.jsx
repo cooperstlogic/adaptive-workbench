@@ -22,7 +22,7 @@ import Session from "./Session.jsx";
 import * as agent from "./agent.js";
 import * as router from "./router.js";
 import * as rt from "./runtime.js";
-import { Badge, Hash, RailToggle, elapsed, projectTitle, templateTitle } from "./lib.jsx";
+import { Badge, Hash, RailToggle, SEAT, elapsed, projectTitle, templateTitle } from "./lib.jsx";
 
 // Under this width the artifact panel is a sheet over the conversation rather
 // than a column beside it. The same number is in styles.css; the stylesheet
@@ -335,9 +335,12 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     onReplay: (pass = 1) => diagnose("replay", { pass }),
     onPushbackLive: (ruling) => diagnose("live", { ruling }),
     onAskLive: askLive,
-    onApprove: (by) => act("approve", () => {
-      const r = rt.call("approve", { round_id: round, by, project: pid, session: sessionId,
-                                     drops, drop_notes: drops.map((d) => dropNotes[d] || "") });
+    // The approval and the ruling are signed by the seat, not by a name typed
+    // beside the button; the record carries it and the panel shows it.
+    onApprove: () => act("approve", () => {
+      const r = rt.call("approve", { round_id: round, by: SEAT, project: pid,
+                                     session: sessionId, drops,
+                                     drop_notes: drops.map((d) => dropNotes[d] || "") });
       setDrops([]);
       setTab("Progress");
       return r;
@@ -348,8 +351,8 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
       rt.call("diagnostic", { round_id: round, test, project: pid, session: sessionId,
                               ...args })),
     hasReplay: !!(proposal && round === proposal.round),
-    onRule: (verdict, by, note, request) => act("rule", () =>
-      rt.call("rule", { round_id: round, verdict, by, note, request, project: pid,
+    onRule: (verdict, note, request) => act("rule", () =>
+      rt.call("rule", { round_id: round, verdict, by: SEAT, note, request, project: pid,
                         session: sessionId })),
     onAdvance: () => act("advance", () => {
       const next = rt.call("act_and_advance", { round_id: round, project: pid,

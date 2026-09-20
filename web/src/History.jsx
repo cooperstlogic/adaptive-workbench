@@ -15,8 +15,9 @@
 // carrying no source where the value was computed inside a pipeline script
 // rather than by a function of its own. The files are named at the end.
 //
-// The one turn on the right is the approval, because a person gave it and the
-// record says who.
+// The one turn on the right is the approval, because a person gave it. The
+// record says who, and the Batch tab shows it; the turn is theirs and does
+// not name them.
 
 import Turn from "./Turn.jsx";
 import { Fig } from "./Briefing.jsx";
@@ -57,7 +58,6 @@ function Approved({ s }) {
           ? `Approve and send ${s.n} wells`
           : `Submit ${s.n} wells unreviewed`}
         {s.overrides.length > 0 && `, striking ${s.overrides.length}`}
-        {s.by && ` — ${s.by}`}
         {s.note && <> “{s.note}”</>}
       </p>
     </Turn>

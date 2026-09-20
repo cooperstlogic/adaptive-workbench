@@ -106,7 +106,6 @@ export default function Session({ ctx, stored, history }) {
   const [verdict, setVerdict] = useState(null);
   const [note, setNote] = useState("");
   const [request, setRequest] = useState(view.objectives.diagnostics[4]);
-  const [by, setBy] = useState("d.webster");
 
   const stage = roundView.status;
   const lab = roundView.lab;
@@ -220,14 +219,15 @@ export default function Session({ ctx, stored, history }) {
 
   const rule = async () => {
     const req = verdict === "more_evidence_requested" ? request : null;
-    const rec = await onRule(verdict, by, note, req);
+    const rec = await onRule(verdict, note, req);
     setVerdict(null);
     setNote("");
     if (!rec || rec.status !== "awaiting_evidence") return;
     // The push-back: the work goes back to whichever source made the pass. A
     // live one continues the session's transcript when the page still holds it.
     const prior = lastDiagnosis;
-    const ruling = { verdict: "more_evidence_requested", by, note, requested: req };
+    const ruling = { verdict: "more_evidence_requested", by: rec.ruling.by, note,
+                     requested: req };
     if (canLive && (!prior || prior.mode === "live" || !hasReplay)) {
       onPushbackLive(ruling);
     } else if (hasReplay) {
@@ -304,21 +304,21 @@ export default function Session({ ctx, stored, history }) {
           recorded with your note. Approving submits the batch and writes the lab's order.
         </p>
         <div className="row" style={{ marginTop: 12 }}>
-          <button className="btn primary" disabled={busy} onClick={() => onApprove(by)}>
+          <button className="btn primary" disabled={busy} onClick={onApprove}>
             {spin("approve")}
             {drops.length
               ? `Approve ${roundView.batch.n - drops.length} of ${roundView.batch.n} wells`
               : `Approve and send ${roundView.batch.n} wells`}
           </button>
-          <input className="field" style={{ width: 150 }} value={by}
-                 onChange={(e) => setBy(e.target.value)} aria-label="approver" />
         </div>
       </Turn>
     ));
   }
 
   if (sendSteps.length > 0) {
-    // The approval, as the record holds it: who signed, and what was struck.
+    // The approval, as the record holds it: whether it was signed, and what was
+    // struck. Who signed is in the record and on the Batch tab; a turn on the
+    // right is yours and does not name you.
     const approval = roundView.batch?.approval || {};
     const overrides = batch?.overrides || [];
     put(before(sendSteps[0].n), "approved", (
@@ -328,7 +328,6 @@ export default function Session({ ctx, stored, history }) {
             ? `Approve and send ${roundView.batch.n} wells`
             : `Submit ${roundView.batch.n} wells unreviewed`}
           {overrides.length > 0 && `, striking ${overrides.length}`}
-          {approval.by && ` — ${approval.by}`}
         </p>
       </Turn>
     ));
@@ -610,7 +609,7 @@ export default function Session({ ctx, stored, history }) {
         <>
           <Turn who="you">
             <p>
-              <b>{p.ruling.verdict.replace(/_/g, " ")}</b> by {p.ruling.by}
+              <b>{p.ruling.verdict.replace(/_/g, " ")}</b>
               {p.ruling.requested && <> — run <span className="mono">
                 {p.ruling.requested.diagnostic}</span></>}.
               {p.ruling.note && <> “{p.ruling.note}”</>}
@@ -683,8 +682,6 @@ export default function Session({ ctx, stored, history }) {
                   placeholder="your reason, your modification, or your ask"
                   value={note} onChange={(e) => setNote(e.target.value)} />
         <div className="row" style={{ marginTop: 10 }}>
-          <input className="field" style={{ width: 150 }} value={by}
-                 onChange={(e) => setBy(e.target.value)} aria-label="ruling by" />
           <button className="btn primary" disabled={!verdict || busy} onClick={rule}>
             {spin("rule")} Rule
           </button>
