@@ -1748,6 +1748,12 @@ def agent_context(project=None, round_id=None):
 # reload shows the diagnosis that ran rather than a blank column. Each turn
 # is upserted whole by its id as it progresses; the tool calls it made are in
 # the log already and are referenced by their `n`.
+#
+# Every turn carries ``after_n``, the log's length when it began, the same
+# stamp ``ask`` puts on its turns. The column is one stream in the order
+# things happened, and this is how a turn is placed in it against the commands
+# that ran before and after it. The first save is the one that stamps it,
+# because a turn is saved before its first tool call runs.
 
 
 def agent_turn_save(session_id, turn, project=None, at=None):
@@ -1764,8 +1770,10 @@ def agent_turn_save(session_id, turn, project=None, at=None):
     slot = next((i for i, t in enumerate(rec["turns"])
                  if t.get("kind") == "agent" and t.get("id") == turn.get("id")), None)
     if slot is None:
+        turn.setdefault("after_n", len(_log_read(pid)["entries"]))
         rec["turns"].append(turn)
     else:
+        turn.setdefault("after_n", rec["turns"][slot].get("after_n"))
         rec["turns"][slot] = turn
     rec["updated"] = at or rec.get("updated") or ""
     if not rec.get("title") and not _is_round(session_id) and turn.get("question"):

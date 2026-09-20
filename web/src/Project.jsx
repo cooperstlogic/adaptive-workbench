@@ -97,7 +97,9 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
   // turn in a session starts a fresh transcript from the record.
   const transcripts = useRef(new Map());
   const [tab, setTab] = useState("Batch");
-  const [busy, setBusy] = useState(false);
+  // The command in flight, by name, so the button that started it is the
+  // one that spins; every button is disabled while anything runs.
+  const [acting, setActing] = useState(null);
   const [error, setError] = useState(null);
   const [drops, setDrops] = useState([]);
   const [dropNotes, setDropNotes] = useState({});
@@ -213,8 +215,8 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     }
   }, []);
 
-  const act = useCallback(async (fn) => {
-    setBusy(true);
+  const act = useCallback(async (name, fn) => {
+    setActing(name);
     setError(null);
     let out = null;
     try {
@@ -225,7 +227,7 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     } catch (err) {
       setError(`${err.message}${err.traceback ? `\n${err.traceback}` : ""}`);
     } finally {
-      setBusy(false);
+      setActing(null);
     }
     return out;
   }, [pid]);
@@ -244,8 +246,12 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     }
     const steps = t.steps.map((s) => (s.entry ? { ...s, entry: undefined } : s));
     try {
-      rt.call("agent_turn_save", { session_id: sid, project: pid, at: t.at,
-                                   turn: { ...t, steps, transcript: null, pending: null } });
+      const kept = rt.call("agent_turn_save", { session_id: sid, project: pid, at: t.at,
+                                                turn: { ...t, steps, transcript: null,
+                                                        pending: null } });
+      // The store stamps the turn with where in the log it began; the copy in
+      // flight carries the same stamp so the column places it from the start.
+      if (kept && kept.after_n != null) t.after_n = kept.after_n;
     } catch { /* the stream still renders; the reload will not */ }
   }, [pid]);
   const conversation = (sid) => transcripts.current.get(sid) || { transcript: null, pending: null };
@@ -276,10 +282,12 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     // stored copy is written only when a step lands.
     emit: () => { if (inFlight.current) setAgentTurn({ ...inFlight.current }); },
     save: (t) => {
-      Object.assign(t, extra);
+      // The store stamps `kind: "agent"` on the turn it keeps; the copy in
+      // flight carries the same stamp so the column reads it as one.
+      Object.assign(t, { kind: "agent" }, extra);
       inFlight.current = t;
-      setAgentTurn({ ...t });
       persist(sid, t);
+      setAgentTurn({ ...t });
     },
   }), [persist]);
 
@@ -306,7 +314,7 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     project: pid, view, campaign, round, roundView, sessionId,
     batch: artifacts.batch, decision: artifacts.decision, evaluation: artifacts.evaluation,
     designs: artifacts.designs || {}, log: view?.log || [],
-    busy: busy || agentBusy, error, onTrace, traced, lineage,
+    busy: !!acting || agentBusy, acting, error, onTrace, traced, lineage,
     drops, setDrops, dropNotes, setDropNotes,
     proposal, live, model, setModel, agentTurn, agentBusy,
     panel: { open: panelOpen, narrow, toggle: togglePanel },
@@ -314,37 +322,37 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     onReplay: (pass = 1) => diagnose("replay", { pass }),
     onPushbackLive: (ruling) => diagnose("live", { ruling }),
     onAskLive: askLive,
-    onApprove: (by) => act(() => {
+    onApprove: (by) => act("approve", () => {
       const r = rt.call("approve", { round_id: round, by, project: pid, session: sessionId,
                                      drops, drop_notes: drops.map((d) => dropNotes[d] || "") });
       setDrops([]);
       setTab("Progress");
       return r;
     }),
-    onRelease: () => act(() =>
+    onRelease: () => act("release", () =>
       rt.call("release_run", { round_id: round, project: pid, session: sessionId })),
-    onDiagnostic: (test, args) => act(() =>
+    onDiagnostic: (test, args) => act("diagnostic", () =>
       rt.call("diagnostic", { round_id: round, test, project: pid, session: sessionId,
                               ...args })),
     hasReplay: !!(proposal && round === proposal.round),
-    onRule: (verdict, by, note, request) => act(() =>
+    onRule: (verdict, by, note, request) => act("rule", () =>
       rt.call("rule", { round_id: round, verdict, by, note, request, project: pid,
                         session: sessionId })),
-    onAdvance: () => act(() => {
+    onAdvance: () => act("advance", () => {
       const next = rt.call("act_and_advance", { round_id: round, project: pid,
                                                 session: sessionId });
       router.go({ kind: "session", project: pid,
                   id: `r${next.pending_round || round + 1}` });
       setTab("Batch");
     }),
-    onContinue: () => act(() => {
+    onContinue: () => act("continue", () => {
       const next = rt.call("continue_unflagged", { round_id: round, project: pid,
                                                    session: sessionId });
       router.go({ kind: "session", project: pid,
                   id: `r${next.pending_round || round + 1}` });
       setTab("Batch");
     }),
-    onAsk: (key, forRound, inSession) => act(() =>
+    onAsk: (key, forRound, inSession) => act("ask", () =>
       rt.call("ask", { key, project: pid, round_id: forRound ?? null,
                        session_id: inSession || null, at: new Date().toISOString() })),
     onDownload: (path) => {
@@ -357,7 +365,7 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
       URL.revokeObjectURL(url);
     },
     refresh,
-  }), [pid, view, campaign, round, roundView, sessionId, artifacts, busy, agentBusy, error,
+  }), [pid, view, campaign, round, roundView, sessionId, artifacts, acting, agentBusy, error,
        onTrace, traced, lineage, drops, dropNotes, proposal, live, model, setModel, agentTurn,
        panelOpen, narrow, togglePanel, diagnose, askLive, act, refresh]);
 
