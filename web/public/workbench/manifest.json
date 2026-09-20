@@ -127,13 +127,13 @@
     },
     {
       "path": "wb_driver.py",
-      "sha256": "0b69e959036941e3d7fbbc7f56d1c331bccf808b5463661bf70c84f76533763a",
+      "sha256": "d7d489081a4b698c57fcd327d7c3489caa2f8d042ed5c67c854863ee8e8bf4b4",
       "source": "web/py/wb_driver.py",
       "verbatim": false
     }
   ],
-  "commit": "3e583df56203ca0fc87d047fd0b03431f7e2ed99",
-  "hash": "sha256:1b94349a76ad014330cd6c744ee5ba6a6579e9a913f708399af45c5f636c12aa",
+  "commit": "257b8ffa30599a4020756308b8eb78944866a220",
+  "hash": "sha256:81e7f1dbe504975346f56955d9333e61ea9720e344512256e394269a0b5f4d69",
   "kind": "browser_bundle",
   "mount": "/workbench",
   "note": "code is copied byte for byte from the repository and laid out in the same shape, so Pyodide imports the same modules the CLI imports. state is the committed project rewound to before round 4 was submitted. reference is read for replay and never executed",
@@ -160,7 +160,19 @@
   "state": [
     {
       "path": "lims_store/demo-trastuzumab.json",
-      "sha256": "640fb04e0cee5a05c0b107b1fc173cee966cb035762aec49d228650e2588e2fb"
+      "sha256": "23d50274bc2e5b2665d2285cc4c5090f8c98e52226b0b3d5d4d9bb9c7b29c7e6"
+    },
+    {
+      "path": "lims_store/exports/demo-trastuzumab_round1_order.csv",
+      "sha256": "9d399c940a8ee3c181de34194d93417a324bde6ef01c667d632b65fdc97df3ad"
+    },
+    {
+      "path": "lims_store/exports/demo-trastuzumab_round2_order.csv",
+      "sha256": "93ec5169513f1d47100efc56138dde7573b862efce52aceb6747c7622f1eccee"
+    },
+    {
+      "path": "lims_store/exports/demo-trastuzumab_round3_order.csv",
+      "sha256": "a329eee5a47c14f5e9b6edc20ff20a6ae8a2552025b8741107a010425f44b674"
     },
     {
       "path": "projects/demo-trastuzumab/batches/batch_001.eval.json",
@@ -248,7 +260,7 @@
     },
     {
       "path": "projects/demo-trastuzumab/rounds.json",
-      "sha256": "6c915259627099f8003de9ae9ae7e0979f77af69e4862678b7ba62e60690e11f"
+      "sha256": "7fb71ec9092be989fee4fdee79b622370f7ada73968e0cdb730705a241b45ef5"
     }
   ]
 }

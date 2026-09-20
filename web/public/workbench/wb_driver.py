@@ -323,8 +323,12 @@ def _round_view(state, entry, project_id):
         "refs": {k: entry[k] for k in ("pool", "batch", "snapshot", "evaluation",
                                        "model", "decision") if k in entry},
         "submission": entry.get("submission"),
+        # Only an order file that is actually on the mount, as the stream's
+        # "submitted" step already does: a path the page cannot serve is a
+        # download that fails on the click.
         "order": (_order_csv(project_id, r).replace(MOUNT + "/", "")
-                  if entry.get("submission") else None),
+                  if entry.get("submission") and os.path.exists(_order_csv(project_id, r))
+                  else None),
         "reconciliation": None if snap is None else snap["reconciliation"],
         "batch": None if batch is None else {
             "hash": batch["hash"], "mode": batch["mode"], "n": len(batch["approved"]),

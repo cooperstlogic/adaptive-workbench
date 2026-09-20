@@ -61,6 +61,7 @@ import tempfile
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 
+import lims  # noqa: E402
 from core import project, schema  # noqa: E402
 
 OUT = os.path.join(REPO, "web", "public", "workbench")
@@ -206,6 +207,28 @@ def rewind_store(dest_root, minted_at_round4):
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     schema.write_json(dst, store)
     return dst
+
+
+def ship_orders(dest_root, store):
+    """The order file each shipped round sent to the lab, beside the store.
+
+    Approving a round in the browser writes two things: the registry's record
+    of the submission, and the order file the laboratory receives. The rewound
+    store carries the first for rounds 1-3; without the second the Batch tab
+    offers a download the mount cannot serve. Regenerated here from the store
+    rather than copied, because the repository's `lims_store/exports/` is
+    gitignored and never held an order file -- and because the export is a
+    read of the registry, so it is the same bytes either way.
+    """
+    root = os.path.join(dest_root, "projects", DEMO)
+    out = []
+    for key in sorted(schema.read_json(store)["rounds"], key=lambda k: int(k.lstrip("R"))):
+        # Named by lims.py, so the driver's _order_csv finds it on the mount.
+        path = os.path.join(dest_root, "lims_store", "exports",
+                            os.path.basename(lims.order_path_for(root, key)))
+        lims.export_order(key, root, store, path)
+        out.append(path)
+    return out
 
 
 def proposal_payload():
@@ -462,7 +485,7 @@ def build(verbose=True):
     write_skill_module()
 
     _, minted = rewind_project(OUT)
-    rewind_store(OUT, minted)
+    ship_orders(OUT, rewind_store(OUT, minted))
     unapprove_round4(OUT, verbose=verbose)
     os.makedirs(os.path.join(OUT, "reference"), exist_ok=True)
     schema.write_json(os.path.join(OUT, "reference", "decision_004.proposal.json"),
