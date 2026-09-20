@@ -128,18 +128,39 @@ export function Empty({ children }) {
 
 // The title bar across the top of the centre column: what the session is
 // called, one line of context under it, and anything that belongs beside the
-// name. The column beneath it holds the stream and pins the composer to the
-// bottom, so an empty session is a title and a composer and nothing else.
-export function CentreHead({ title, sub, aside, children }) {
+// name -- `lead` before it, `aside` at the far end. The column beneath it
+// holds the stream and pins the composer to the bottom, so an empty session
+// is a title and a composer and nothing else.
+export function CentreHead({ title, sub, lead, aside, children }) {
   return (
     <div className="centre-head">
       <div className="row wrap" style={{ gap: 8 }}>
+        {lead}
         <h2>{title}</h2>
         {children}
         {aside}
       </div>
       {sub && <p className="small muted" style={{ margin: "1px 0 0" }}>{sub}</p>}
     </div>
+  );
+}
+
+// The one control over the rail: the same button at the right end of the
+// rail's header while the rail is open, and at the left end of the centre
+// column's title bar while it is hidden. Hidden means gone -- the whole rail,
+// not a strip of its icons -- which is what the host does. `lead` marks the
+// title bar's copy, which is only drawn when there is no rail to hold it.
+export function RailToggle({ rail, lead }) {
+  if (!rail || (lead && !rail.hidden)) return null;
+  return (
+    <button className="rail-toggle" onClick={rail.toggle}
+            title={rail.hidden ? "Show the sidebar" : "Hide the sidebar"}>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+           strokeWidth="1.4" aria-hidden="true">
+        <rect x="1.7" y="2.2" width="12.6" height="11.6" rx="2.2" />
+        <path d="M6.2 2.2v11.6" />
+      </svg>
+    </button>
   );
 }
 

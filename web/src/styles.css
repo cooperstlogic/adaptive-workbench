@@ -118,6 +118,12 @@ h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
   border-right: 1px solid var(--line); display: flex; flex-direction: column;
   min-height: 0; padding: 12px 10px;
 }
+/* Hidden is gone, not narrowed to a strip of icons; the title bar's toggle
+   brings it back. Both `display`s sit above the narrow layout so it can
+   override them: there the rail is the strip across the top, there is nothing
+   to hide it behind, and the toggle is not drawn. */
+.rail.is-collapsed { display: none; }
+.rail-toggle { display: inline-flex; }
 .rail-brand { padding: 4px 8px 12px; }
 .rail-brand .mark { font-weight: 600; letter-spacing: -0.02em; }
 .rail-group { margin-top: 12px; }
@@ -380,10 +386,11 @@ pre.code {
    conversation was squeezed to nothing. */
 @media (max-width: 980px) {
   .body { flex-direction: column; }
-  .rail, .rail.is-collapsed { width: 100%; flex-direction: row; align-items: center;
-    overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  .rail, .rail.is-collapsed { width: 100%; display: flex; flex-direction: row;
+    align-items: center; overflow-x: auto; border-right: 0;
+    border-bottom: 1px solid var(--line); }
   .rail-sub { white-space: nowrap; padding: 0 8px; }
-  .rail-collapse, .rail-sessions, .rail-foot, .rail-group.hide-narrow, .grip { display: none; }
+  .rail-toggle, .rail-sessions, .rail-foot, .rail-group.hide-narrow, .grip { display: none; }
   .rail-head, .rail-item { width: auto; flex: none; }
   .panel {
     position: fixed; top: 0; right: 0; bottom: 0; z-index: 25;
@@ -431,11 +438,12 @@ a.block:hover, a.card:hover { border-color: var(--muted); }
 /* --- the project rail ---------------------------------------------------- */
 
 .rail-head { display: flex; align-items: center; gap: 4px; padding: 2px 2px 0; }
-.rail-back, .rail-collapse {
+.rail-back, .rail-toggle {
   border: 0; background: none; color: var(--muted); padding: 4px 6px; border-radius: 6px;
   text-decoration: none; line-height: 1; font-size: 14px; flex: none;
 }
-.rail-back:hover, .rail-collapse:hover { background: var(--line-soft); color: var(--ink); }
+.rail-back:hover, .rail-toggle:hover { background: var(--line-soft); color: var(--ink); }
+.rail-toggle { padding: 3px 5px; }
 .rail-project {
   display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0; border: 0;
   background: none; padding: 4px 6px; border-radius: 6px; font-weight: 600;
@@ -444,10 +452,6 @@ a.block:hover, a.card:hover { border-color: var(--muted); }
 .rail-project:hover { background: var(--line-soft); }
 .rail-project .chev, .picker .chev { color: var(--faint); font-size: 11px; flex: none; }
 .rail-sub { padding: 0 8px 10px; }
-.rail.is-collapsed { width: 58px; }
-.rail.is-collapsed .rail-item span:not(.ic), .rail.is-collapsed .rail-group,
-.rail.is-collapsed .rail-sub, .rail.is-collapsed .rail-project,
-.rail.is-collapsed .rail-foot > * { display: none; }
 a.rail-item { text-decoration: none; }
 
 /* --- the composer ------------------------------------------------------- */

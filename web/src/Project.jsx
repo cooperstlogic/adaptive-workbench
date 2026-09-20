@@ -22,7 +22,7 @@ import Session from "./Session.jsx";
 import * as agent from "./agent.js";
 import * as router from "./router.js";
 import * as rt from "./runtime.js";
-import { Badge, Hash, elapsed, projectTitle, templateTitle } from "./lib.jsx";
+import { Badge, Hash, RailToggle, elapsed, projectTitle, templateTitle } from "./lib.jsx";
 
 // Under this width the artifact panel is a sheet over the conversation rather
 // than a column beside it. The same number is in styles.css; the stylesheet
@@ -107,7 +107,9 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
   const [lineage, setLineage] = useState(null);
   const [artifacts, setArtifacts] = useState({});
   const [saved, setSaved] = useState(null);
+  // The rail: hidden altogether or not, from its own button at either end.
   const [collapsed, setCollapsed] = useState(false);
+  const toggleRail = useCallback(() => setCollapsed((c) => !c), []);
   // The artifact panel: a column beside the conversation that can be hidden
   // and dragged, or under the narrow breakpoint a sheet that starts closed
   // and is opened from the title bar. Crossing the breakpoint resets it.
@@ -328,6 +330,7 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     drops, setDrops, dropNotes, setDropNotes,
     proposal, live, model, setModel, agentTurn, agentBusy,
     panel: { open: panelOpen, narrow, toggle: togglePanel },
+    rail: { hidden: collapsed, toggle: toggleRail },
     onDiagnoseLive: () => diagnose("live"),
     onReplay: (pass = 1) => diagnose("replay", { pass }),
     onPushbackLive: (ruling) => diagnose("live", { ruling }),
@@ -377,7 +380,8 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     refresh,
   }), [pid, view, campaign, round, roundView, sessionId, artifacts, acting, agentBusy, error,
        onTrace, traced, lineage, drops, dropNotes, proposal, live, model, setModel, agentTurn,
-       panelOpen, narrow, togglePanel, diagnose, askLive, act, refresh]);
+       panelOpen, narrow, togglePanel, collapsed, toggleRail, diagnose, askLive, act,
+       refresh]);
 
   if (!view) {
     return (
@@ -410,8 +414,10 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
   );
 
   const showPanel = route.kind === "session" && panelOpen;
+  // The panel's width cap counts the rail, and a hidden rail is nought wide.
   const widths = {};
-  if (rail.width) widths["--rail-w"] = `${rail.width}px`;
+  if (collapsed) widths["--rail-w"] = "0px";
+  else if (rail.width) widths["--rail-w"] = `${rail.width}px`;
   if (panel.width) widths["--panel-w"] = `${panel.width}px`;
 
   return (
@@ -425,8 +431,7 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
               <span className="ellipsis">{projectTitle(view.project)}</span>
               <span className="chev">⌄</span>
             </button>
-            <button className="rail-collapse" onClick={() => setCollapsed(!collapsed)}
-                    title="Collapse">▤</button>
+            <RailToggle rail={ctx.rail} />
           </div>
           <div className="rail-sub mono tiny faint">{view.project.id}</div>
 

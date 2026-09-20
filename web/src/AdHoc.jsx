@@ -21,7 +21,7 @@ import AgentStream, { agentBadge } from "./AgentStream.jsx";
 import Briefing from "./Briefing.jsx";
 import Composer from "./Composer.jsx";
 import Turn from "./Turn.jsx";
-import { CentreHead, PanelToggle, projectTitle } from "./lib.jsx";
+import { CentreHead, PanelToggle, RailToggle, projectTitle } from "./lib.jsx";
 
 export default function AdHoc({ ctx, stored }) {
   const { view, sessionId, busy, error, onAskLive, live, model, setModel, agentTurn,
@@ -37,6 +37,7 @@ export default function AdHoc({ ctx, stored }) {
       <CentreHead title={stored?.title || "New session"}
                   sub={`${projectTitle(view.project)} · ${view.rounds.length} rounds · ${
                     view.n_designs} designs`}
+                  lead={<RailToggle rail={ctx.rail} lead />}
                   aside={<PanelToggle panel={ctx.panel} />} />
       <div className="centre-inner thread">
         {error && <div className="err" style={{ marginBottom: 14 }}>{error}</div>}

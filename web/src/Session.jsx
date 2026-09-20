@@ -49,7 +49,8 @@ import Tool from "./Tool.jsx";
 import Turn from "./Turn.jsx";
 import { recordedPushback } from "./agent.js";
 import {
-  ACTION_LABEL, Badge, CentreHead, Hash, PanelToggle, VERBS, dayMonth, n, pct, signed,
+  ACTION_LABEL, Badge, CentreHead, Hash, PanelToggle, RailToggle, VERBS, dayMonth, n, pct,
+  signed,
 } from "./lib.jsx";
 
 // The template's own list, with the two arguments that change what a test
@@ -734,6 +735,7 @@ export default function Session({ ctx, stored, history }) {
                   sub={`${view.project.lead.name} ${view.project.lead.chain} → ${
                     view.project.target} · ${view.n_designs} designs · assay ${
                     roundView.assay_version || "not yet run"}`}
+                  lead={<RailToggle rail={ctx.rail} lead />}
                   aside={<PanelToggle panel={ctx.panel} />}>
         {roundView.flagged && <Badge kind="flag">flagged</Badge>}
         {roundView.at_lab && <Badge kind="attn">at the lab</Badge>}
