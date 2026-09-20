@@ -1422,3 +1422,22 @@ alike. The positive case is round 1 of a project created in the browser, importe
 yet fitted — it cannot flag, because round 1 carries no model predictions — which offers
 `["live", "agent"]`, and offers nothing once `continue_unflagged` has run. Both directions
 of the rule, on real state, in the same harness pass.
+
+---
+
+## The panel is a column you can drag, or a sheet you have to open — decision 166
+
+Under 980 pixels the body stacked its three regions and the artifact panel became a
+fourth row under the centre with no height cap. The batch table is taller than any
+viewport, so the panel took the page and the conversation was squeezed to nothing: a
+laptop with a docked inspector open showed the right panel and nothing else. Above that,
+the panel was a fixed 470 pixels, 400 under 1180, and there was no way to give a wide
+table more room or a long diagnosis less.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 166 | **Beside the conversation the artifact panel is dragged from its left edge and hidden from the title bar; under 980 pixels it is a sheet over the conversation that the same title-bar control opens and its own ✕, the scrim or Escape closes, and it starts closed.** The width persists per browser and is floored at 340, so the tab strip always fits; the stylesheet also caps it so the centre keeps about four hundred pixels, and the fixed 400-under-1180 rule is gone because the cap makes it. Double-click on the grip resets. Crossing the breakpoint resets open/closed to that side's default. A click on a figure's lineage opens the panel on the Notebook tab whatever the width; nothing else opens it by itself | The centre column is the claim and the panel is the frame — CLAUDE.md's *cut order* rule about the shell. When both cannot fit, the conversation is what stays, because approving, ruling and asking all happen there and the panel is read-only artifacts. A sheet that starts closed is honest about that ordering; a fourth row that hid the composer was the opposite. The drag is there because the batch table and the round graph are genuinely wider than a diagnosis is, and one fixed number was wrong for at least one of them on every screen |
+
+Verified in a browser at 1400, 1000, 820 and 390 pixels: the drag clamps at both ends and
+survives a reload, the sheet closes three ways, and the strip across the top no longer
+wraps the project id. `check.py` unchanged at 196; nothing it reads moved.

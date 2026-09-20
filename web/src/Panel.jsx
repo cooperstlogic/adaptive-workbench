@@ -12,7 +12,7 @@ import {
 
 export const TABS = ["Batch", "Decision", "Progress", "Objectives", "Notebook"];
 
-export default function Panel({ tab, setTab, ctx }) {
+export default function Panel({ tab, setTab, ctx, onClose }) {
   // One scroll container serves every tab; a new tab starts at its top.
   const body = useRef(null);
   useEffect(() => { if (body.current) body.current.scrollTop = 0; }, [tab]);
@@ -26,6 +26,12 @@ export default function Panel({ tab, setTab, ctx }) {
             {t === "Decision" && ctx.decision?.status === "open" && " ●"}
           </button>
         ))}
+        {/* Only when the panel is a sheet: a column beside the conversation
+            is closed from the title bar, not from inside itself. */}
+        {onClose && (
+          <button className="panel-close" title="Close" aria-label="Close the artifact panel"
+                  onClick={onClose}>✕</button>
+        )}
       </div>
       <div className="panel-body" role="tabpanel" ref={body}>
         {tab === "Batch" && <BatchTab ctx={ctx} />}

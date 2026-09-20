@@ -130,15 +130,30 @@ export function Empty({ children }) {
 // called, one line of context under it, and anything that belongs beside the
 // name. The column beneath it holds the stream and pins the composer to the
 // bottom, so an empty session is a title and a composer and nothing else.
-export function CentreHead({ title, sub, children }) {
+export function CentreHead({ title, sub, aside, children }) {
   return (
     <div className="centre-head">
       <div className="row wrap" style={{ gap: 8 }}>
         <h2>{title}</h2>
         {children}
+        {aside}
       </div>
       {sub && <p className="small muted" style={{ margin: "1px 0 0" }}>{sub}</p>}
     </div>
+  );
+}
+
+// The one control over the artifact panel: it sits at the right end of the
+// title bar, and it is the same button whether the panel is a column beside
+// the conversation or, under the narrow breakpoint, a sheet over it.
+export function PanelToggle({ panel }) {
+  if (!panel) return null;
+  return (
+    <button className="glyph wide panel-toggle" aria-pressed={panel.open}
+            title={panel.open ? "Hide the artifact panel" : "Show the artifact panel"}
+            onClick={panel.toggle}>
+      {panel.open ? "◨" : "▢"} Artifacts
+    </button>
   );
 }
 

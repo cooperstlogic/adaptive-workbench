@@ -31,6 +31,37 @@ const RAIL = [
   { id: "compute", icon: "⚙", label: "Compute" },
 ];
 
+// Under this width the artifact panel is a sheet over the conversation rather
+// than a column beside it. The same number is in styles.css; the stylesheet
+// decides how the sheet is drawn and this decides whether it starts open.
+const NARROW = "(max-width: 980px)";
+const PANEL_MIN = 340;
+const PANEL_KEY = "wb.panel-w";
+
+function useMedia(query) {
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const on = () => setMatches(mq.matches);
+    mq.addEventListener("change", on);
+    on();
+    return () => mq.removeEventListener("change", on);
+  }, [query]);
+  return matches;
+}
+
+// The width a person last dragged the panel to, or null for the stylesheet's
+// default. A per-browser convenience, so storage that is missing or refused
+// just means the default.
+function storedPanelWidth() {
+  try {
+    const w = Number(localStorage.getItem(PANEL_KEY));
+    return w >= PANEL_MIN ? w : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function Project({ route, runtime, campaign, proposal, live, reprobe,
                                   model, setModel }) {
   const pid = route.project;
@@ -60,6 +91,42 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
   const [artifacts, setArtifacts] = useState({});
   const [saved, setSaved] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
+  // The artifact panel: a column beside the conversation that can be hidden
+  // and dragged, or under the narrow breakpoint a sheet that starts closed
+  // and is opened from the title bar. Crossing the breakpoint resets it.
+  const narrow = useMedia(NARROW);
+  const [panelOpen, setPanelOpen] = useState(!narrow);
+  const [panelW, setPanelW] = useState(storedPanelWidth);
+  const [resizing, setResizing] = useState(false);
+  useEffect(() => { setPanelOpen(!narrow); }, [narrow]);
+  useEffect(() => {
+    if (!(narrow && panelOpen)) return undefined;
+    const onKey = (e) => { if (e.key === "Escape") setPanelOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [narrow, panelOpen]);
+  useEffect(() => {
+    if (resizing) return;
+    try {
+      if (panelW) localStorage.setItem(PANEL_KEY, String(panelW));
+      else localStorage.removeItem(PANEL_KEY);
+    } catch { /* the width lasts until the reload, then */ }
+  }, [resizing, panelW]);
+  const togglePanel = useCallback(() => setPanelOpen((o) => !o), []);
+  // The grip captures the pointer, so the drag keeps going when it leaves the
+  // eight-pixel strip. The panel is flush with the viewport's right edge, so
+  // its width is the distance from the pointer to that edge.
+  const grip = {
+    onPointerDown: (e) => { e.currentTarget.setPointerCapture(e.pointerId); setResizing(true); },
+    onPointerMove: (e) => {
+      if (!resizing) return;
+      const w = window.innerWidth - e.clientX;
+      setPanelW(Math.round(Math.min(Math.max(w, PANEL_MIN), window.innerWidth * 0.6)));
+    },
+    onPointerUp: () => setResizing(false),
+    onPointerCancel: () => setResizing(false),
+    onDoubleClick: () => setPanelW(null),
+  };
 
   const refresh = useCallback(() => {
     try {
@@ -136,6 +203,7 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     setLineage(null);
     if (!item) return;
     setTab("Notebook");
+    setPanelOpen(true);
     try {
       setLineage(rt.call("lineage", { dotted: item.source }));
     } catch (err) {
@@ -239,6 +307,7 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     busy: busy || agentBusy, error, onTrace, traced, lineage,
     drops, setDrops, dropNotes, setDropNotes,
     proposal, live, model, setModel, agentTurn, agentBusy,
+    panel: { open: panelOpen, narrow, toggle: togglePanel },
     onDiagnoseLive: () => diagnose("live"),
     onReplay: (pass = 1) => diagnose("replay", { pass }),
     onPushbackLive: (ruling) => diagnose("live", { ruling }),
@@ -288,7 +357,7 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     refresh,
   }), [pid, view, campaign, round, roundView, sessionId, artifacts, busy, agentBusy, error,
        onTrace, traced, lineage, drops, dropNotes, proposal, live, model, setModel, agentTurn,
-       diagnose, askLive, act, refresh]);
+       panelOpen, narrow, togglePanel, diagnose, askLive, act, refresh]);
 
   const suggestionsFor = useMemo(
     () => (view ? rt.safeCall("suggested_asks", { project: pid, round_id: round }) : []),
@@ -325,9 +394,12 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     </a>
   );
 
+  const showPanel = route.kind === "session" && panelOpen;
+
   return (
     <div className="shell">
-      <div className="body">
+      <div className={`body${resizing ? " is-resizing" : ""}`}
+           style={panelW ? { "--panel-w": `${panelW}px` } : undefined}>
         <nav className={`rail${collapsed ? " is-collapsed" : ""}`}>
           <div className="rail-head">
             <a className="rail-back" href="#/" title="All projects">←</a>
@@ -392,8 +464,13 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
           )}
         </main>
 
-        {route.kind === "session" && (
-          <Panel tab={tab} setTab={setTab} ctx={ctx} />
+        {showPanel && narrow && <div className="scrim" onClick={togglePanel} />}
+        {showPanel && !narrow && (
+          <div className="grip" role="separator" aria-orientation="vertical"
+               title="Drag to resize; double-click to reset" {...grip} />
+        )}
+        {showPanel && (
+          <Panel tab={tab} setTab={setTab} ctx={ctx} onClose={narrow ? togglePanel : null} />
         )}
       </div>
     </div>
