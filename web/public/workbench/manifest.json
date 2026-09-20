@@ -122,7 +122,7 @@
     },
     {
       "path": "templates/enzyme-thermostability/template.json",
-      "sha256": "429b0db3e10ae57bb55662d9a6ded5ed8280c18fab166c6bba59cf91e6c297fa",
+      "sha256": "10752eaafa7397ebbad25d18a8cffdf007e112655e713d6da8f9d24ff42e4572",
       "verbatim": true
     },
     {
@@ -132,8 +132,8 @@
       "verbatim": false
     }
   ],
-  "commit": "51e43135841237dd483f5778c282c910e7ea7416",
-  "hash": "sha256:77eda9b3cd91b5fc680ba8e4edbba501182e18da17dab2bafc6ef3439488717d",
+  "commit": "ec246b82efd5929a3b58b4f57d1fafe850fc52ed",
+  "hash": "sha256:73db083d49112fbbd3a20d65d33a5f492b40af699ee18b8a11d6d111ba4eb1aa",
   "kind": "browser_bundle",
   "mount": "/workbench",
   "note": "code is copied byte for byte from the repository and laid out in the same shape, so Pyodide imports the same modules the CLI imports. state is the committed project rewound to before round 4 was submitted. reference is read for replay and never executed",
@@ -160,7 +160,7 @@
   "state": [
     {
       "path": "lims_store/demo-trastuzumab.json",
-      "sha256": "7811a236a96a643213b50f2ecf0561a48561bcd5adfa128e34aa8d27816375b6"
+      "sha256": "dd321a651a4bd7cc29a3199fe155cf7ded5b035e23867d79daf176dad90d8ee1"
     },
     {
       "path": "projects/demo-trastuzumab/batches/batch_001.eval.json",
@@ -248,7 +248,7 @@
     },
     {
       "path": "projects/demo-trastuzumab/rounds.json",
-      "sha256": "ae6457c0852a8fde50a5c9aa38158106d3968164dd29ed4b5b450716659e344c"
+      "sha256": "5423a31f7f483d8d87eeb3e98a0c2d93eab2d0be55041289f05755d9d21678dd"
     }
   ]
 }

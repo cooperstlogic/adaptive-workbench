@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "title": "Enzyme thermostability",
   "status": "stub",
-  "description": "Placeholder. Present in the picker, greyed out, so the abstraction is visibly not single-purpose. Building it would cost an hour and prove nothing further.",
+  "description": "Design-test-learn rounds over an enzyme scaffold, optimizing measured melting temperature under activity constraints. Not built in this prototype.",
   "objectives": [],
   "constraints": {},
   "batch": {},

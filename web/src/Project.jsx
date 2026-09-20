@@ -9,6 +9,10 @@
 // Below those sits Rounds, the one item that is new, and then the session
 // list. A session is a unit of work: a round starts one, and a person can
 // start an ad-hoc one at any time. Both kinds are in the same list.
+//
+// The four host items are drawn and not wired: nothing in this build is
+// behind Search, Customize, Files or Compute, and a rail item that opens an
+// essay about what the host does there is an essay in the way of the round.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AdHoc from "./AdHoc.jsx";
@@ -20,21 +24,10 @@ import * as rt from "./runtime.js";
 import { Badge, Hash, elapsed, projectTitle, templateTitle } from "./lib.jsx";
 
 const RAIL = [
-  { id: "search", icon: "⌕", label: "Search",
-    blurb: "The host has it. Nothing in this project is behind it, so it is drawn and "
-      + "not wired." },
-  { id: "customize", icon: "◉", label: "Customize",
-    blurb: "Skills, connectors and project instructions live here in the host. This "
-      + "artifact installs into that surface — see the README's Claude Science section — "
-      + "rather than replacing it." },
-  { id: "files", icon: "▤", label: "Files",
-    blurb: "The host has a Files directory with persistent folder grants. The project "
-      + "directory in this browser is the same idea, and it is not the gap: the gap is "
-      + "that nothing renders the graph those files form." },
-  { id: "compute", icon: "⚙", label: "Compute",
-    blurb: "The host has persistent kernels. The kernel here is Pyodide, running the "
-      + "repository's own modules, and the Notebook tab shows exactly which function "
-      + "produced any number on screen." },
+  { id: "search", icon: "⌕", label: "Search" },
+  { id: "customize", icon: "◉", label: "Customize" },
+  { id: "files", icon: "▤", label: "Files" },
+  { id: "compute", icon: "⚙", label: "Compute" },
 ];
 
 export default function Project({ route, runtime, campaign, proposal }) {
@@ -49,7 +42,6 @@ export default function Project({ route, runtime, campaign, proposal }) {
   const [lineage, setLineage] = useState(null);
   const [artifacts, setArtifacts] = useState({});
   const [saved, setSaved] = useState(null);
-  const [stub, setStub] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
 
   const refresh = useCallback(() => {
@@ -259,16 +251,13 @@ export default function Project({ route, runtime, campaign, proposal }) {
             <span className="ic">✦</span>New
           </a>
           {RAIL.map((item) => (
-            <button key={item.id} className="rail-item"
-                    aria-current={stub === item.id}
-                    onClick={() => setStub(stub === item.id ? null : item.id)}>
+            <button key={item.id} className="rail-item" title="Not wired in this prototype">
               <span className="ic">{item.icon}</span>{item.label}
             </button>
           ))}
           <a className="rail-item is-new" aria-current={route.kind === "rounds"}
              href={router.href({ kind: "rounds", project: pid })}>
             <span className="ic">⌸</span>Rounds
-            <span className="rail-new-tag">new</span>
           </a>
 
           <div className="rail-group hide-narrow">
@@ -295,35 +284,20 @@ export default function Project({ route, runtime, campaign, proposal }) {
         </nav>
 
         <main className={`centre${route.kind === "rounds" ? " wide" : ""}`}>
-          {stub && (
-            <div className="centre-inner">
-              <h2>{RAIL.find((r) => r.id === stub).label}</h2>
-              <p className="muted" style={{ maxWidth: 560 }}>
-                {RAIL.find((r) => r.id === stub).blurb}
-              </p>
-              <p className="note" style={{ marginTop: 18 }}>
-                Everything above <b>Rounds</b> in the rail already exists in Claude Science.
-                Exactly one item is new, and it is the one holding the campaign.
-              </p>
-              <button className="btn" style={{ marginTop: 14 }} onClick={() => setStub(null)}>
-                Back to the session
-              </button>
-            </div>
-          )}
-          {!stub && route.kind === "rounds" && (
+          {route.kind === "rounds" && (
             <RoundGraph ctx={ctx}
                         onOpenRound={(r) => router.go({ kind: "session", project: pid,
                                                         id: `r${r}` })} />
           )}
-          {!stub && route.kind === "session" && round !== null && roundView && (
+          {route.kind === "session" && round !== null && roundView && (
             <Session ctx={ctx} stored={stored} suggestions={suggestions} />
           )}
-          {!stub && route.kind === "session" && round === null && route.id !== "new" && (
+          {route.kind === "session" && round === null && route.id !== "new" && (
             <AdHoc ctx={ctx} stored={stored} suggestions={suggestions} />
           )}
         </main>
 
-        {route.kind === "session" && !stub && (
+        {route.kind === "session" && (
           <Panel tab={tab} setTab={setTab} ctx={ctx} />
         )}
       </div>

@@ -9,7 +9,10 @@
 // The projects list is deliberately mixed. One of them is a campaign -- six
 // weeks of rounds under a template -- and the rest are one-shot analyses with
 // no template at all. Clicking one of those opens an empty chat, which is
-// what a project is when nothing has declared what it means.
+// what a project is when nothing has declared what it means. The page does
+// not say so. The templated card carries a template, rounds and a best
+// observed value, and the others carry a title and a date; the difference is
+// shown and not captioned.
 
 import { useEffect, useMemo, useState } from "react";
 import * as blank from "./blank.js";
@@ -85,9 +88,9 @@ export default function Home({ epoch }) {
           </div>
         </div>
         <div className="row">
-          <button className="btn small" disabled
-                  title={"The host has it. Nothing here is behind it, so it is drawn and "
-                    + "not wired."}>⌕ Search</button>
+          <button className="btn small" disabled title="Not wired in this prototype">
+            ⌕ Search
+          </button>
           <a className="btn small" href={router.href({ kind: "templates" })}>Templates</a>
           <a className="btn small primary" href={router.href({ kind: "new" })}>
             + New project
@@ -116,14 +119,7 @@ export default function Home({ epoch }) {
               <p className="small muted" style={{ margin: "5px 0 0" }}>
                 {projectTitle(item.view.project)} · {item.detail}
               </p>
-              <p className="tiny faint" style={{ margin: "8px 0 0" }}>
-                {item.kind === "ruling"
-                  ? "A typed decision with hashed evidence, an if_wrong line, and four "
-                    + "verbs bound to code paths. Not a chat interrupt."
-                  : "48 wells chosen by expected improvement under the template's "
-                    + "constraints. Strike what you do not want; the override is recorded."}
-              </p>
-              <p className="tiny faint" style={{ margin: "6px 0 0", textAlign: "right" }}>
+              <p className="tiny faint" style={{ margin: "8px 0 0", textAlign: "right" }}>
                 {elapsed(item.view.rounds.find((r) => r.round === item.round)?.updated)}
               </p>
             </a>
@@ -166,23 +162,12 @@ export default function Home({ epoch }) {
               <a key={p.id} className="card block subtle"
                  href={router.href({ kind: "project", project: p.id })}>
                 <div className="spread">
-                  <div>
-                    <b>{p.title}</b>
-                    <p className="tiny faint" style={{ margin: "2px 0 0" }}>
-                      No template — a one-shot analysis
-                    </p>
-                  </div>
+                  <b>{p.title}</b>
                   <span className="tiny faint">{elapsed(p.updated)}</span>
                 </div>
               </a>
             ))}
           </div>
-          <p className="tiny faint" style={{ marginTop: 10 }}>
-            One of these is a campaign and the rest are analyses. The difference is a
-            template: a project without one has no objectives schema, no constraint
-            ruleset and no batch policy, so there is nothing for a round loop to read.
-            Open one and see.
-          </p>
         </section>
 
         <section>
@@ -209,11 +194,6 @@ export default function Home({ epoch }) {
               </a>
             ))}
           </div>
-          <p className="tiny faint" style={{ marginTop: 10 }}>
-            A session is a unit of work inside a project. A new round starts one, and you
-            can start an ad-hoc one at any time — the list interleaves both, because to
-            the person doing the work they are the same kind of thing.
-          </p>
         </section>
       </div>
     </div>

@@ -61,10 +61,7 @@ export default function App() {
       <div className="boot"><div className="boot-card card">
         <h2>The Python runtime did not start</h2>
         <p className="err" style={{ marginTop: 10 }}>{boot.error}</p>
-        <p className="small muted">
-          Everything on this page runs in your browser, so there is no server to blame.
-          A reload is the first thing to try.
-        </p>
+        <p className="small muted">Try reloading.</p>
       </div></div>
     );
   }
@@ -73,10 +70,7 @@ export default function App() {
     return (
       <div className="boot"><div className="boot-card">
         <h2 className="brandmark">{APP}</h2>
-        <p className="muted">
-          Starting Python in your browser. The project, the model code and the simulated lab
-          are the repository's own files; nothing is sent anywhere.
-        </p>
+        <p className="muted">Starting Python in your browser…</p>
         <div className="boot-steps">
           {boot.steps.map((s, i) => (
             <div className="boot-step" key={i}>

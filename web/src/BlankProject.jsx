@@ -12,14 +12,16 @@
 // opens on 48 wells already enumerated, filtered against constraints enforced
 // in code, scored by a model that beat another model, and waiting for a named
 // person to sign. The gap between them is the template, and a template is
-// exactly what Claude Science has no way to express.
+// exactly what Claude Science has no way to express. The page does not say
+// so: an empty session here is a title and a composer, and that is the point
+// made by showing it.
 
 import { useEffect, useState } from "react";
 import Composer from "./Composer.jsx";
 import Turn from "./Turn.jsx";
 import * as blank from "./blank.js";
 import * as router from "./router.js";
-import { elapsed } from "./lib.jsx";
+import { CentreHead, elapsed } from "./lib.jsx";
 
 const RAIL = [
   { id: "new", icon: "✦", label: "New" },
@@ -122,50 +124,18 @@ export default function BlankProject({ route, project, bump }) {
         </nav>
 
         <main className="centre">
-          <div className="centre-inner">
-            <h2>{session?.title || "New session"}</h2>
-            <p className="small muted" style={{ margin: "2px 0 20px" }}>{rec.title}</p>
-
-            {turns.length === 0 && (
-              <Turn who="claude">
-                <p>
-                  This project has no template, so there is nothing here but this
-                  conversation. Which is the point of showing it to you.
-                </p>
-                <p className="small muted">
-                  Next door, <a href="#/p/demo-trastuzumab">Trastuzumab → HER2</a> has a
-                  template applied, and that one file is the whole difference: it declares
-                  the objectives schema, the constraint ruleset that is enforced in code
-                  before any model runs, the recipes permitted to compete, the diagnostics
-                  a decision may cite, and the batch policy. Without it there is no round
-                  graph to read, no batch to approve and no decision to rule on — not
-                  because the feature is missing, but because nothing has said what any of
-                  those would mean here.
-                </p>
-                <p className="tiny faint">
-                  Type something if you like. It is kept in this browser and goes nowhere;
-                  there is no model behind this composer in this build.
-                </p>
-              </Turn>
-            )}
-
+          <CentreHead title={session?.title || "New session"} sub={rec.title} />
+          <div className="centre-inner thread">
             {turns.map((t, i) => (
               <Turn key={i} who="you"><p>{t.text}</p></Turn>
             ))}
             {turns.length > 0 && (
-              <Turn who="claude">
-                <p className="muted">
-                  There is no model wired to this composer in this build — phase 7 is where
-                  one arrives. What your message demonstrates is the shape of the thing:
-                  a project whose entire state is what was said in it.
-                </p>
-              </Turn>
+              <p className="tiny faint" style={{ margin: "0 0 12px" }}>
+                No model is connected in this prototype.
+              </p>
             )}
 
-            <Composer busy={false} onSend={send}
-                      note={"Nothing typed here is sent anywhere. The picker is the host's "
-                        + "own; the project is empty because no template has declared what "
-                        + "it means."} />
+            <Composer busy={false} onSend={send} />
           </div>
         </main>
       </div>

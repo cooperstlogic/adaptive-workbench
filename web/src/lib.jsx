@@ -118,6 +118,22 @@ export function Empty({ children }) {
   return <p className="muted small" style={{ margin: "6px 0" }}>{children}</p>;
 }
 
+// The title bar across the top of the centre column: what the session is
+// called, one line of context under it, and anything that belongs beside the
+// name. The column beneath it holds the stream and pins the composer to the
+// bottom, so an empty session is a title and a composer and nothing else.
+export function CentreHead({ title, sub, children }) {
+  return (
+    <div className="centre-head">
+      <div className="row wrap" style={{ gap: 8 }}>
+        <h2>{title}</h2>
+        {children}
+      </div>
+      {sub && <p className="small muted" style={{ margin: "1px 0 0" }}>{sub}</p>}
+    </div>
+  );
+}
+
 // The speakers in the centre column. `Shannon` is the workbench itself
 // reporting what it ran; `Claude` is the part that read the numbers and had
 // something to say about them. Keeping them apart is the point: one of them
@@ -128,15 +144,11 @@ export const SPEAKERS = {
   claude: ["C", "Claude"],
 };
 
-// The four-word label beside an affinity number, and what it means when a
+// The one-word label beside an affinity number, and what it means when a
 // reader hovers it. CLAUDE.md failure mode 3: the word "synthetic" in the same
-// breath as the number, every time, in every surface.
+// breath as the number. The word is the whole label; the explanation is the
+// tooltip and the README, not a paragraph on the page.
 export const SYNTHETIC_TIP =
   "The landscape is generated and the assay is an oracle replaying values with noise. "
   + "This shows the decision loop converging; it does not show that the method finds "
   + "better antibodies.";
-
-export const SYNTHETIC =
-  "Synthetic. The landscape is generated, the LIMS is a mock and the assay is an "
-  + "oracle replaying values with noise. This shows the decision loop converging; it "
-  + "does not show that the method finds better antibodies.";

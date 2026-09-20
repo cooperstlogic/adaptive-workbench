@@ -992,3 +992,60 @@ The four verbs, the hashed evidence, the `if_wrong` line and the refusal to
 act on an unruled record are exactly where phase 6 left them. Round 5 still
 flags at −0.818 pKD on the product path — decision 121 — and still nobody has
 diagnosed it, which remains phase 7's best test.
+
+---
+
+## Show, don't tell — decision 134
+
+After the redesign shipped, the pages still explained themselves. Under the projects
+list: *one of these is a campaign and the rest are analyses; the difference is a
+template…* Under the sessions list: *a session is a unit of work inside a project…* In
+every empty session, a first turn from Claude saying the session was empty and why that
+was the point. Under the composer, a paragraph about decision 65. Under every tool call, a
+caption about what the command proved. Four rail items that opened essays about what the
+host does there, and a badge on the fifth saying *new*. A note on the Progress chart that
+gave away the diagnosis before anyone had run it.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 134 | **The interface shows and does not tell.** Text on a page reports state — what ran, what came back, where it was read from — or labels a stub or a synthetic number. It does not explain why the interface is shaped the way it is. That reasoning lives in the source comments, the README and this file. An empty session is a title and a composer pinned to the bottom of the column, as in Claude Science; the four host rail items are drawn and inert; the composer has no footnote; tool calls show the command and its output and nothing under them; the requirements table on the New project screen lists what a template needs and where it is declared, and no longer carries a column about the host | Design rationale on a working page reads as an apology for the page. The argument the prototype makes is made by the contrast between a blank project and a templated one, by the asks under the composer answering from disk, and by the verbs sitting outside the text box — every one of which is weaker with a caption beside it saying so. Failure modes 1 and 3 are untouched: stubs keep a terse label where they sit (*Not wired in this prototype*, *No model is connected in this prototype*, *Not declared anywhere in this build*), and *synthetic* still appears beside every affinity number in every surface. What changed is that the label is the whole sentence |
+
+Two things this pass did not do. It did not touch `wb_driver.py`: the tool-log entries
+still carry a `note` field, and the page simply stops rendering it, so no bundle or
+byte-identity claim moved. And it did not remove the requirements table — decision 109's
+artifact — only its third column, which was an audit finding wearing a product screen.
+
+---
+
+## The benchmark belongs to the template — decision 135
+
+The Progress tab overlaid this project's cumulative best on the evaluator's benchmark:
+three arms, twenty seeds each, six rounds. With the project at round 3 and the arms
+climbing to round 6, the first question anyone asked of it was *why is there data for
+rounds 4, 5 and 6?* The legend said why. The chart still read as a forecast.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 135 | **The project's Progress tab draws only the project's own artifacts**: its cumulative best from its snapshots through `core.reconcile.pool`, a target line only if the template declares one, and the calibration of its last scored round. **The evaluator's benchmark is drawn as the template's validation** — on the Objectives tab, which is the template's page inside a project, and on the New project configure card — with the threshold, mean rounds-to-threshold per arm, the paired sign test and the rounds where the bands separate beside it, under the synthetic label | The benchmark answers a question that can only be asked when the ground truth is owned: does this machinery converge faster than random? No real campaign can be scored that way, so on a project's own axes the benchmark is either a forecast or a decoration, and a product that appears to forecast a campaign from a simulation is failure mode 3 in a new form. It is a fair thing for a *template* to carry — this is what the declaration was shown to do, on a landscape built for the purpose — and putting it there keeps it one click from the approval beat without letting it be read as the project's future. `simulate_campaign.py` was already "the evaluator, not the product"; its chart now sits on the same side of that line |
+
+The threshold's provenance string — *99th percentile of the landscape, pre-registered in
+DECISIONS.md* — went with it. It is evaluator language and had no business under a
+project's own line.
+
+---
+
+## The synthetic label is a word, not a paragraph — decision 136
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 136 | **The three-sentence *Synthetic…* block is removed from the Decision, Progress and Validation surfaces**, and the Batch tab's line about what is computed, predicted and simulated goes with it. What stays is the one-word tag: *synthetic* beside a quoted affinity figure in a briefing and on the home card, with the explanation as its tooltip. The full claim — what is generated, what is mocked, what the chart does and does not show — is made in the README and `SPEC.md`'s staged table, once. **This narrows failure mode 3 as decision 125 narrowed failure mode 1**: the label stays where a number is quoted in prose; the banner-shaped version of it goes | The block was read three times per session and said the same thing each time; on a demo it is the audience's attention spent on a disclaimer instead of the round. Show, don't tell (decision 134) applies to honesty as much as to design: the way to be honest about a synthetic landscape is to label the number and document the landscape, not to apologise on every tab. `CLAUDE.md`'s failure-mode-3 sentence and the README's staged table are the places that carry the claim now, and they should say so in those words |
+
+Two things looked at and left alone. The Objectives tab still renders the template's
+own `anomaly_flag.note`, because it is the declaration's justification of the trigger
+and is data hashed into `objectives.json`, not the interface explaining itself. And a
+*random selection to date* line was considered for the Progress chart and rejected: it is
+a counterfactual about designs nobody assayed, obtainable only from the oracle — which no
+product path may read — or by clipping the benchmark's random arm, which is correct for
+the demo project alone and impossible for a real one. The honest to-date reference a real
+product can draw is the lead's own starting affinity, and that is a small driver change
+if it is wanted.

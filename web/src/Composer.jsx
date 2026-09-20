@@ -6,15 +6,11 @@
 // Everything that only *reads* state — where are we, why did this flag,
 // whether the lab has reported — belongs in here.
 //
-// So the composer stops being decorative. The suggested asks under it work
-// today and work deterministically: each one is answered by a briefing
-// assembled in `wb_driver` from artifacts on disk, with no model involved and
-// every figure carrying the `core/` function that produced it. Free text is
-// phase 7, when a live model takes the same seat — and it says so rather than
-// pretending otherwise.
-//
-// A row of suggestions under the composer is the host's own pattern, which is
-// why they are here and not on a button somewhere else on the page.
+// The suggested asks above it work today and work deterministically: each one
+// is answered by a briefing assembled in `wb_driver` from artifacts on disk,
+// with no model involved and every figure carrying the `core/` function that
+// produced it. Free text is phase 7, when a live model takes the same seat.
+// None of that is said on the page; the page is a composer.
 
 import { useState } from "react";
 
@@ -26,8 +22,7 @@ const MODELS = [
   { id: "claude-haiku-4-5-20251001", label: "Haiku 4.5", live: false },
 ];
 
-export default function Composer({ suggestions = [], onAsk, busy, placeholder, note,
-                                   onSend }) {
+export default function Composer({ suggestions = [], onAsk, busy, placeholder, onSend }) {
   const [text, setText] = useState("");
   const [model, setModel] = useState(MODELS[0].id);
   const [picking, setPicking] = useState(false);
@@ -80,10 +75,6 @@ export default function Composer({ suggestions = [], onAsk, busy, placeholder, n
                       <span className="mono tiny faint">{m.id}</span>
                     </button>
                   ))}
-                  <p className="tiny faint" style={{ margin: "6px 8px 2px" }}>
-                    One is selectable because one is what phase 7 would run. The picker is
-                    the host's; the choice it makes is not wired to anything yet.
-                  </p>
                 </div>
               )}
             </span>
@@ -96,18 +87,6 @@ export default function Composer({ suggestions = [], onAsk, busy, placeholder, n
           </span>
         </div>
       </div>
-      <p className="tiny faint" style={{ margin: "7px 2px 0" }}>
-        {note || (
-          <>
-            The suggested asks above run today: each is answered from artifacts on disk,
-            deterministically, with every figure resolving to the <span className="mono">
-            core/</span> function that produced it. Free text is phase 7. The approval and
-            the ruling deliberately do <i>not</i> go through here — Claude Science's
-            approval primitive is an untyped chat interrupt, and the panel beside this one
-            is four verbs bound to code paths.
-          </>
-        )}
-      </p>
     </div>
   );
 }

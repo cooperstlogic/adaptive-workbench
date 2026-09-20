@@ -5,8 +5,8 @@ every choice already settled.
 
 ## Where the build is
 
-**Phases 1 to 6 are done, and the web app redesign on top of them is done — decisions 122
-to 133.** Both gates passed, the plugin runs in Claude Science and the round-4 diagnosis
+**Phases 1 to 6 are done, the web app redesign on top of them is done — decisions 122
+to 133 — and the show-don't-tell pass over it is done — decisions 134 to 136.** Both gates passed, the plugin runs in Claude Science and the round-4 diagnosis
 reproduces there, the gap audit is written (decisions 105 to 111), and the browser runs
 the round loop on the repository's own modules, writing artifacts byte-identical to the
 CLI's. The redesign added the two shells and the hash router, the project boundary, the
@@ -114,14 +114,23 @@ trustworthy and inspectable.
    on a banner across every screen — the redesign superseded decision 60 and took the
    wireframe bar off. Keep the staged table accurate as you build; it is now the place
    the honesty claim is made, so it carries more weight than it did. Individual mock
-   fields still carry their own label where they sit. Failure mode 3 is untouched: the
-   word *synthetic* still appears beside every affinity number, in every surface.
+   fields still carry their own label where they sit — as a word or a tooltip, never a
+   paragraph. **Show, don't tell — decision 134.** Text on a page reports state or
+   labels a stub; it never explains why the interface is shaped the way it is. That
+   reasoning lives in source comments, the README and `DECISIONS.md`.
 2. **The science implemented twice.** The same Python must run in Claude Science, from
    the CLI, and in the browser via Pyodide. Never port `core/` to JavaScript, even if it
    would be faster. That fork would undermine the entire demo.
 3. **Overclaiming a synthetic result.** The landscape is invented, so the chart proves
    the machinery and not the chemistry. Say the word "synthetic" in the same breath as
-   the number, every time, in every surface.
+   the number wherever a number is quoted in prose — the one-word tag on a briefing
+   figure and the home card, with the explanation as its tooltip — and make the full
+   claim once, in the README and the staged table. Decision 136 took the three-sentence
+   block off every tab; it is not to come back as a paragraph. **The evaluator's
+   benchmark is drawn on the template surfaces as the template's validation and never on
+   a project's own axes** — decision 135. A project cannot be compared against a random
+   arm it never ran, and a chart that looks like a forecast from a simulation is this
+   failure mode in a new coat.
 
 ## Non-negotiables
 

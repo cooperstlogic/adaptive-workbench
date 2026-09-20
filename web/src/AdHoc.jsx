@@ -14,58 +14,40 @@
 // Until phase 7 there is no live model, so the asks are the vocabulary and a
 // briefing assembled in `wb_driver` is the answer. That is decision 62's
 // one-surface, two-sources pattern applied to status rather than diagnosis.
+//
+// An empty one is a title and a composer. Nothing on the page says any of
+// the above; the asks under the composer are the whole invitation.
 
 import Briefing from "./Briefing.jsx";
 import Composer from "./Composer.jsx";
 import Turn from "./Turn.jsx";
-import { projectTitle } from "./lib.jsx";
+import { CentreHead, projectTitle } from "./lib.jsx";
 
 export default function AdHoc({ ctx, stored, suggestions }) {
   const { view, sessionId, busy, error, onAsk } = ctx;
   const turns = stored?.turns || [];
 
   return (
-    <div className="centre-inner">
-      <div className="spread" style={{ marginBottom: 16 }}>
-        <div>
-          <h2>{stored?.title || "New session"}</h2>
-          <p className="small muted" style={{ margin: "2px 0 0" }}>
-            {projectTitle(view.project)} · {view.rounds.length} rounds ·{" "}
-            {view.n_designs} designs
-          </p>
-        </div>
+    <>
+      <CentreHead title={stored?.title || "New session"}
+                  sub={`${projectTitle(view.project)} · ${view.rounds.length} rounds · ${
+                    view.n_designs} designs`} />
+      <div className="centre-inner thread">
+        {error && <div className="err" style={{ marginBottom: 14 }}>{error}</div>}
+
+        {turns.map((t, i) => (
+          <div key={i}>
+            <Turn who="you"><p>{t.question}</p></Turn>
+            <Turn who="workbench"><Briefing data={t.answer} ctx={ctx} /></Turn>
+          </div>
+        ))}
+
+        {busy && <Turn who="workbench"><p className="muted"><span className="busy" /> reading
+          the project…</p></Turn>}
+
+        <Composer suggestions={suggestions} busy={busy}
+                  onAsk={(key, round) => onAsk(key, round, sessionId)} />
       </div>
-
-      {error && <div className="err" style={{ marginBottom: 14 }}>{error}</div>}
-
-      {turns.length === 0 && (
-        <Turn who="workbench">
-          <p>
-            This session is empty, and the project it is in is not. Ask anything below —
-            the answer is assembled from the project's own artifacts rather than from
-            anything said in this window, which is the difference a persistent decision
-            state makes.
-          </p>
-          <p className="small muted">
-            There is no live model in this build; that is phase 7. What runs today is a
-            briefing read off disk, so every number in an answer has a file behind it and
-            a function behind that.
-          </p>
-        </Turn>
-      )}
-
-      {turns.map((t, i) => (
-        <div key={i}>
-          <Turn who="you"><p>{t.question}</p></Turn>
-          <Turn who="workbench"><Briefing data={t.answer} ctx={ctx} /></Turn>
-        </div>
-      ))}
-
-      {busy && <Turn who="workbench"><p className="muted"><span className="busy" /> reading
-        the project…</p></Turn>}
-
-      <Composer suggestions={suggestions} busy={busy}
-                onAsk={(key, round) => onAsk(key, round, sessionId)} />
-    </div>
+    </>
   );
 }

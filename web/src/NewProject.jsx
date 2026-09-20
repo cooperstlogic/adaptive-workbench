@@ -25,6 +25,7 @@ import { useEffect, useMemo, useState } from "react";
 import * as blank from "./blank.js";
 import * as router from "./router.js";
 import * as rt from "./runtime.js";
+import { Validation } from "./Panel.jsx";
 import { APP, Badge, Empty, templateTitle } from "./lib.jsx";
 
 /** The locked declaration, row by row, read from the template file itself.
@@ -34,9 +35,7 @@ import { APP, Badge, Empty, templateTitle } from "./lib.jsx";
  *  so, because failure mode one applies to a configuration screen as much as
  *  to anything else.
  */
-const MOCK_TIP = "Not declared anywhere in this build: a plausible field on a screen "
-  + "that is otherwise reading a real declaration. Labelled, because failure mode one "
-  + "applies to a configuration screen too.";
+const MOCK_TIP = "Not declared anywhere in this build.";
 
 function declaration(tpl) {
   const lead = tpl.lead;
@@ -68,7 +67,7 @@ function declaration(tpl) {
   ];
 }
 
-export default function NewProject({ bump }) {
+export default function NewProject({ bump, campaign }) {
   const [templates, setTemplates] = useState(null);
   const [reqs, setReqs] = useState(null);
   const [picked, setPicked] = useState(null);
@@ -148,13 +147,8 @@ export default function NewProject({ bump }) {
       <div className="new-grid">
         <section>
           <h3 className="home-h">Start from a template</h3>
-          <p className="small muted" style={{ marginTop: 4 }}>
-            A template is a declaration, not a prompt. It carries the objectives schema, the
-            constraint ruleset enforced in code, the permitted recipes and diagnostics, and
-            the batch policy.
-          </p>
           {!templates ? <Empty>loading…</Empty> : (
-            <div className="tiles" style={{ marginTop: 12 }}>
+            <div className="tiles" style={{ marginTop: 4 }}>
               {templates.map((t) => {
                 const stub = t.status === "stub";
                 return (
@@ -216,16 +210,13 @@ export default function NewProject({ bump }) {
                   </tr>
                 </tbody>
               </table>
-              <p className="tiny faint" style={{ marginTop: 10 }}>
-                None of the locked rows is configured here — the template declares them, and
-                the constraints are enforced in code before any model runs. That is what
-                makes two instantiations of this template the same project rather than two
-                interpretations of a request.
-              </p>
+              {campaign && (
+                <div className="card stack" style={{ marginTop: 12, padding: 12 }}>
+                  <Validation campaign={campaign} />
+                </div>
+              )}
               <div className="card" style={{ marginTop: 12, padding: 12 }}>
-                <p className="tiny faint" style={{ margin: 0 }}>
-                  Create runs three commands in your browser, in this order:
-                </p>
+                <p className="tiny faint" style={{ margin: 0 }}>Create runs:</p>
                 <pre className="code" style={{ marginTop: 6 }}>{
 `python init_project.py --template ${chosen.id} --name ${name || "<name>"} …
 python skills/adaptive-optimization/scripts/generate_candidates.py --round 1
@@ -236,10 +227,6 @@ python skills/adaptive-optimization/scripts/select_batch.py --round 1`}</pre>
                         onClick={createTemplated}>
                   {busy ? <span className="busy" /> : null} Create and select round 1
                 </button>
-                <span className="tiny faint">
-                  Round 1 is a single-mutant scan the template declares — not a model's
-                  opinion, because nothing is fitted yet.
-                </span>
               </div>
               {steps.length > 0 && (
                 <div style={{ marginTop: 10 }}>
@@ -270,9 +257,7 @@ python skills/adaptive-optimization/scripts/select_batch.py --round 1`}</pre>
                   </div>
                 ))}
                 <p className="tiny faint" style={{ marginTop: 8, marginBottom: 0 }}>
-                  Everything here lives in your browser's localStorage, which is about 5MB,
-                  so this browser holds three created projects at a time. The shipped
-                  campaign is not removable; Reset restores it.
+                  This browser holds three created projects at a time.
                 </p>
               </div>
             </>
@@ -283,24 +268,13 @@ python skills/adaptive-optimization/scripts/select_batch.py --round 1`}</pre>
           </h3>
           <div className="card">
             <p className="small muted" style={{ marginTop: 0 }}>
-              An empty project with no template. It opens on a chat and nothing else,
-              because nothing has declared what it optimizes, which constraints hold, or
-              how big a batch is.
+              An empty project with no template.
             </p>
             <input className="field" placeholder="What is it about?" value={blankTitle}
                    onChange={(e) => setBlankTitle(e.target.value)} />
             <button className="btn" style={{ marginTop: 10 }} onClick={createBlank}>
               Create blank project
             </button>
-            <p className="tiny faint" style={{ marginTop: 10 }}>
-              This one never touches Python. <span className="mono">project.load()</span>{" "}
-              requires <span className="mono">project.json</span>,{" "}
-              <span className="mono">objectives.json</span>,{" "}
-              <span className="mono">designs.json</span> and{" "}
-              <span className="mono">rounds.json</span>, and a project with no template has
-              none of them. That is the point rather than a limitation: make one, then make
-              the templated one, and the difference between them is the whole claim.
-            </p>
           </div>
 
           {reqs && live.length > 0 && (
@@ -308,10 +282,9 @@ python skills/adaptive-optimization/scripts/select_batch.py --round 1`}</pre>
               <h3 className="home-h" style={{ marginTop: 24 }}>
                 What a templated project needs before a round can run
               </h3>
-              <p className="small muted" style={{ marginTop: 4 }}>{reqs.note}</p>
-              <table className="grid" style={{ marginTop: 8 }}>
+              <table className="grid" style={{ marginTop: 4 }}>
                 <thead>
-                  <tr><th>needs</th><th>declared in</th><th>in Claude Science today</th></tr>
+                  <tr><th>needs</th><th>declared in</th></tr>
                 </thead>
                 <tbody>
                   {reqs.needs.map((r) => (
@@ -325,7 +298,6 @@ python skills/adaptive-optimization/scripts/select_batch.py --round 1`}</pre>
                           ? <Badge kind="flag">nothing declares this</Badge>
                           : <span className="mono">{r.declared_in}</span>}
                       </td>
-                      <td className="tiny muted">{r.in_the_host}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -341,9 +313,7 @@ python skills/adaptive-optimization/scripts/select_batch.py --round 1`}</pre>
                   </div>
                   {s.withheld.length > 0 && (
                     <p className="tiny faint" style={{ marginTop: 8 }}>
-                      Not available, deliberately: <span className="mono">
-                        {s.withheld.join(", ")}</span>. The answer to “does this replace the
-                      LIMS” is a tool list.
+                      Not exposed: <span className="mono">{s.withheld.join(", ")}</span>
                     </p>
                   )}
                 </div>

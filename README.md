@@ -392,6 +392,7 @@ diagnostics itself and refuses any payload that arrives carrying its own numbers
 | 5b | The plugin installed into Claude Science, the gate re-run there, and the gap audit written | **Done** — skill and both connectors installed, all eight tools exercised, the round-4 diagnosis reproduced in the host, and the audit written. Three of four claimed gaps survive narrowed, three unclaimed ones were found |
 | 6 | Web app: Pyodide boot, the Claude Science-shaped shell, artifact tabs, approve loop | **Done** — the round loop runs in the browser on the repository's own modules, approve in 1.5 s and advance in 2.7 s, and the browser and the CLI write byte-identical artifacts |
 | 6b | Redesign: two shells, the project boundary, the session model, project creation in the browser, the lab round trip | **Done — decisions 122 to 133.** Home is its own shell; the rail belongs to the project; a session is a unit of work and an ad-hoc one answers *where are we?* from artifacts on disk; projects are created here from a locked configuration screen or blank; and approving a batch sends it to a laboratory that has to be waited on |
+| 6c | Show, don't tell: the page's commentary on itself removed, empty sessions reduced to a title and a composer, the benchmark moved to the template surfaces, Fraunces / Public Sans / IBM Plex Mono | **Done — decisions 134 to 136.** No footnotes, no captions under tool calls, no rail essays, no synthetic paragraph; the one-word tag and the staged table carry the claim. The Progress tab draws only the project's own line; the twenty-seed benchmark is the template's Validation |
 | 7 | The agent in the session: tool-call stream, two tools, push-back round trip, budget cap, verified replay | Not started |
 | 8 | Committed demo project at round 3, Netlify deploy, public README | Not started |
 | 9 | Demo script and rehearsal | Not started |
@@ -810,10 +811,10 @@ figure that was not recomputed here.
 
 | Piece | Gap |
 | --- | --- |
-| Four ruling verbs bound to code paths, with hashed evidence and an `if_wrong` line, deliberately *not* in the composer | 105 — a ruling has no type. The composer is present and inert, and says why |
+| Four ruling verbs bound to code paths, with hashed evidence and an `if_wrong` line, deliberately *not* in the composer | 105 — a ruling has no type. The composer carries the asks and nothing else |
 | **Rounds**, the one item added to the rail: the campaign as a hash chain, pool → batch → snapshot → evaluation → decision → model | 106 — `rounds.json` has nowhere to render |
 | The Notebook tab: click any figure and get the `core/` function, its file, that file's sha256, its arguments and its input hashes | 107, narrowed to one component as the audit said to narrow it |
-| A requirements table in the template gallery, assembled from `plugin.json`, `marketplace.json` and the connector modules, with a column for what each row cost by hand in the host | 109 — a connector cannot declare what it needs |
+| A requirements table in the template gallery, assembled from `plugin.json`, `marketplace.json` and the connector modules; the two rows no manifest can declare are badged so | 109 — a connector cannot declare what it needs |
 
 Gap 108 is not leaned on: the gallery says plainly that instantiating a second project is
 not wired up in this build.
@@ -870,6 +871,23 @@ is why the approval primitive is not a chat interrupt. Everything that only *rea
 goes in the composer as a contextual suggested ask. That makes the composer stop being
 decorative without putting a decision through a text box, and it is what gives phase 7 a
 seat to sit in rather than a feature to design.
+
+**Show, don't tell — decision 134.** After the redesign, the pages still carried the
+reasoning behind themselves: a footnote under the projects list explaining what a template
+is, one under the sessions list explaining what a session is, a first turn in every empty
+session explaining why it was empty, a paragraph under the composer about decision 65,
+captions under every tool call, and rail items that opened essays about the host. All of it
+is gone. An empty session is a title and a composer, pinned to the bottom, as in Claude
+Science. What remains on screen is what ran, what came back, and the word *synthetic*
+beside every affinity number; the reasoning lives in this file and in `DECISIONS.md`.
+
+**The benchmark is the template's, not the project's — decision 135.** The Progress tab
+used to overlay this project's line on the evaluator's three arms, and the arms ran to
+round 6 while the project stood at round 3, so the chart read as a forecast. The Progress
+tab now draws only what this project produced: its own cumulative best and the calibration
+of its last scored round. The twenty-seed benchmark is drawn where the template is
+described — the Objectives tab and the New project configure card — under *Validation*,
+with its threshold, rounds-to-threshold and paired sign test beside it.
 
 **The staggered lab costs no invariant, which is the part worth checking.** `lims.py`'s
 round record already carried `status`, `submitted`, `samples` and `rows`; `status` was
@@ -935,14 +953,15 @@ one in the source, which is where it should be obvious.
 | `drop_wells` | **Real, exercised in `check.py` and not in the demo.** `import_round.py --drop-plate` runs under a ruling that recommends it, and refuses without one. No round in this campaign needs it |
 | Both model recipes and the bake-off between them | **Real.** `ridge_onehot` against `gp_pca64` over the one-hot block |
 | Developability and liability scores | **Real** deterministic calculations, labelled computed throughout |
-| Affinity values | **Simulated.** Synthetic landscape with pre-registered parameters |
+| Affinity values | **Simulated.** Synthetic landscape with pre-registered parameters; the oracle replays its values with noise. Every affinity number in every surface is invented, and this shows the decision loop converging, not that the method finds better antibodies. **This row is where that is said in full.** On the page it is the one-word *synthetic* tag beside a quoted figure, with this sentence as its tooltip — decision 136 |
 | The wet lab | **Simulated.** Noise, ~3% failure, censoring, per-round offsets |
 | The LIMS | **Staged, and reachable over MCP.** `lims.py` mints identifiers, lays out plates, exports orders and rows, and answers whether a run has reported; the write path attaches a link and nothing more. `connectors/registry_server.py` serves those same seven functions over stdio and `check.py` compares the two exports byte for byte. The two added tools — `export_submission` and `check_run_status` — are reads a real LIMS unambiguously owns, so they widen the tool list without widening the write path |
 | Sequence embeddings | **Not built.** One-hot only. The provider interface is real and served over MCP; `esm_live` is declared and unwired, and asking for it returns an error naming what is missing rather than one-hot in disguise |
 | Structure prediction | **Stubbed.** `predict_structures` returns nulls and a note saying it predicted nothing. It invents no confidence score, and nothing downstream reads it |
 | The agent's reasoning in the browser | **Phase 7.** The browser replays the committed round-4 sequence with every number recomputed in Pyodide, and offers the five library tests read-only on a round it has no record for. Live Claude choosing the sequence is what phase 7 adds |
 | The composer's free text | **Phase 7.** The suggested asks beneath it work today and work deterministically: each is answered by a briefing assembled from artifacts on disk, no model involved, every figure naming the `core/` function behind it. Typing into the box is what phase 7 turns on |
-| The web app's chrome | **A wireframe.** It renders the layer the phase-5b audit found missing, in the host's own grammar; the panels, the Python, the state and the hashes inside it are real and are running in your tab. The rail's host-only items are drawn and inert rather than faked, and each says what the host does with it. **Decision 125 removed the on-page banner, so this row is where the claim lives** |
+| The web app's chrome | **A wireframe.** It renders the layer the phase-5b audit found missing, in the host's own grammar; the panels, the Python, the state and the hashes inside it are real and are running in your tab. The rail's host-only items are drawn and inert, with a tooltip saying so. **Decision 125 removed the on-page banner, so this row is where the claim lives**, and decision 134 removed the rest of the page's commentary on itself: the interface shows and does not tell |
+| The proof chart | **Real, and the evaluator's.** Twenty simulated campaigns per arm, drawn as the template's Validation on the Objectives tab and the New project screen — never on a project's own Progress chart, which draws only what that project measured (decision 135) |
 | The working model picker | **Drawn.** Opus 5 is selectable; Sonnet 5 and Haiku 4.5 are shown and are not. Nothing is wired to the choice |
 | The lab round trip | **Staged, deliberately, and the staging is in the source.** Approving submits the batch and writes the order file; `check_run_status` is what releases the run, and it releases on the second ask rather than on a clock. `lims.py`'s `submit_batch` takes `--stagger`, off by default, so every CLI path writes byte-for-byte what it always did. The refusal a pull gets while a run is going is real, and it is run and shown rather than described |
 | Blank projects | **Real, and deliberately empty.** They live in `localStorage`, never touch Python, and open on a chat — because nothing has declared what they mean. That is the control arm for decision 108, not a gap |

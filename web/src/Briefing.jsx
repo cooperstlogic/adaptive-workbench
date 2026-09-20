@@ -12,6 +12,9 @@
 // Nothing here computes and nothing here is a model's sentence. `wb_driver`
 // assembles typed figures; this file lays them out. Which is the same
 // division decision 62 drew for the diagnosis, applied to status.
+//
+// An answer reports. It says what the state is and where it was read from;
+// it does not explain why the workbench is built to have that state.
 
 import { Badge, Empty, SYNTHETIC_TIP, Trace, n, signed } from "./lib.jsx";
 
@@ -41,7 +44,7 @@ function Reads({ reads }) {
       {reads.map((r, i) => (
         <span key={r}>{i > 0 && ", "}<span className="mono">{r}</span></span>
       ))}
-      . Nothing was computed to answer this.
+.
     </p>
   );
 }
@@ -87,16 +90,14 @@ export default function Briefing({ data, ctx }) {
                 <span className="mono">{m.authority}</span>
               </span>
             ))}
-            . A frame moves in code, after a ruling, naming it — never because a round
-            looked wrong.
+.
           </p>
         )}
         {data.model_winner && (
           <p>
-            The winning recipe is <span className="mono">{data.model_winner}</span>, chosen
-            on lowest held-out negative log predictive density against{" "}
-            <span className="mono">gp_pca64</span>. Two recipes compete every round; the
-            winner is not a setting.
+            The winning recipe is <span className="mono">{data.model_winner}</span>, on
+            lowest held-out negative log predictive density against{" "}
+            <span className="mono">gp_pca64</span>.
           </p>
         )}
         <Reads reads={data.reads} />
@@ -123,10 +124,6 @@ export default function Briefing({ data, ctx }) {
             </li>
           ))}
         </ul>
-        <p className="small muted">
-          A ruling and an approval are typed controls in the round's own session, not
-          messages to reply to. The lab is the registry's to answer and this asks it.
-        </p>
         <Reads reads={data.reads} />
       </>
     );
@@ -146,11 +143,9 @@ export default function Briefing({ data, ctx }) {
             ? "has never characterized it" : "has an offset on record for it"}.
         </p>
         <p>
-          <b>The flag is a threshold; what it means is not.</b> An assay shift and a real
-          activity cliff trip this statistic identically, which is the point — it says a
-          round needs deciding, never which explanation wins. Telling them apart means
-          conditioning on the designs this round shares with earlier ones, because those
-          are the same molecules measured twice.
+          An assay shift and a real activity cliff trip this statistic identically. Telling
+          them apart means conditioning on the designs this round shares with earlier ones,
+          because those are the same molecules measured twice.
         </p>
         {data.policy_note && <p className="note">{data.policy_note}</p>}
         <Reads reads={data.reads} />
@@ -166,7 +161,7 @@ export default function Briefing({ data, ctx }) {
           <span className="mono">{data.template.id}</span> v{data.template.version}, hashed
           into this project's <span className="mono">objectives.json</span> at{" "}
           <span className="mono faint">{String(data.objectives_hash).slice(7, 19)}</span>.
-          It declares, and the code enforces:
+          It declares:
         </p>
         <ul className="small" style={{ paddingLeft: 18, margin: "0 0 8px" }}>
           <li>editable region VH {data.editable_region[0]}–{data.editable_region[1]},
@@ -187,11 +182,6 @@ export default function Briefing({ data, ctx }) {
             <span className="mono">{data.anomaly_flag.statistic}</span> over{" "}
             {data.anomaly_flag.scope.replace(/_/g, " ")}</li>
         </ul>
-        <p className="small muted">
-          None of this was configured in a conversation. The constraints are enforced in
-          code before any model runs, so what the project means does not depend on how
-          well someone phrased a request.
-        </p>
         <Reads reads={data.reads} />
       </>
     );
@@ -209,12 +199,7 @@ export default function Briefing({ data, ctx }) {
           {data.refusal && (
             <pre className="code" style={{ marginBottom: 9 }}>{data.refusal}</pre>
           )}
-          <p className="small muted">
-            It refused the pull rather than returning an empty one, and it said what it
-            refused and why. That refusal is the boundary working: the workbench cannot
-            read a result the laboratory has not produced, and nothing in this project can
-            say what the answer is before it does. Ask again when it has had time.
-          </p>
+          <p className="small muted">Ask again when it has had time.</p>
           <Reads reads={data.reads} />
         </>
       );
@@ -242,11 +227,7 @@ export default function Briefing({ data, ctx }) {
             ? "has never characterized it" : "has an offset on record for it"}.
         </p>
         <p className="small muted">
-          {data.flagged
-            ? "The flag is a threshold; deciding what it means is not, and that is the "
-              + "next thing in this session."
-            : "Nothing to decide. Declining to act is a judgment too, and it is recorded "
-              + "as one."}
+          {data.flagged ? "Deciding what it means is next." : "Nothing to decide."}
         </p>
         <Reads reads={data.reads} />
       </>
@@ -260,9 +241,7 @@ export default function Briefing({ data, ctx }) {
           <p>
             Not yet. Round {data.round} went to the lab on{" "}
             {String(data.submitted || "").slice(0, 10)} and is expected{" "}
-            {String(data.expected || "").slice(0, 10)}. The registry will not hand over a
-            run before the assay reports, and it refused the pull above rather than
-            returning an empty one.
+            {String(data.expected || "").slice(0, 10)}.
           </p>
           <Reads reads={data.reads} />
         </>
