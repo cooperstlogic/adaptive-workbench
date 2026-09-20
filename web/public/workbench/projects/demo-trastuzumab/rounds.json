@@ -1,5 +1,5 @@
 {
-  "hash": "sha256:99219d20e5ed980271c05144fb1d15bc2ebda3716e77601ee96f4294128aecf6",
+  "hash": "sha256:9988cd228434bf62ee56292ba10cfb65c9e4f5d29c91ad67607eeb308740b5b6",
   "project": "demo-trastuzumab",
   "rounds": [
     {
@@ -31,7 +31,7 @@
         "registry": "mock-lims",
         "round_id": "R1"
       },
-      "updated": "2026-09-19T17:53:00+00:00"
+      "updated": "2026-08-07T01:58:54+00:00"
     },
     {
       "batch": {
@@ -67,7 +67,7 @@
         "registry": "mock-lims",
         "round_id": "R2"
       },
-      "updated": "2026-09-19T17:53:15+00:00"
+      "updated": "2026-08-18T01:58:54+00:00"
     },
     {
       "batch": {
@@ -98,7 +98,7 @@
         "registry": "mock-lims",
         "round_id": "R3"
       },
-      "updated": "2026-09-19T17:53:25+00:00"
+      "updated": "2026-08-29T01:58:54+00:00"
     },
     {
       "batch": {
@@ -110,7 +110,7 @@
         "hash": "sha256:65a9390bcafc2252d15b0d04f5a641bedc3b8f7b02de94e627919c75d85333eb"
       },
       "round": 4,
-      "updated": "2026-09-19T23:07:53+00:00"
+      "updated": "2026-09-20T01:58:55+00:00"
     }
   ],
   "schema_version": 1

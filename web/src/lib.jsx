@@ -1,4 +1,29 @@
-// Formatting and the three or four pieces every panel needs.
+// Formatting, the names the product wears, and the three or four pieces every
+// panel needs.
+
+// The product is Claude Science; this is what a project becomes once a
+// template is applied to it. Only the template's *display* title changes --
+// `antibody-affinity-maturation` is the id written into project.json, named
+// by decision records and read by check.py, and it is carried unchanged.
+export const APP = "Shannon Science";
+export const APP_STAGE = "Beta";
+export const TEMPLATE_TITLES = {
+  "antibody-affinity-maturation": "Adaptive antibody optimization",
+  "enzyme-thermostability": "Enzyme thermostability",
+};
+export const templateTitle = (t) =>
+  TEMPLATE_TITLES[t?.id || t] || t?.title || String(t?.id || t || "");
+
+/** What a project is called on screen: the molecule and its target. */
+export function projectTitle(p) {
+  if (!p) return "";
+  if (p.kind === "blank") return p.title || p.id;
+  const lead = p.lead?.name || p.project?.lead?.name;
+  const target = p.target || p.project?.target;
+  if (!lead) return p.id;
+  return `${lead[0].toUpperCase()}${lead.slice(1)} → ${target}`;
+}
+
 
 export const shortHash = (h) => (h ? String(h).replace(/^sha256:/, "").slice(0, 12) : "—");
 
@@ -15,6 +40,11 @@ export function when(iso) {
   if (!iso) return "";
   const d = new Date(iso);
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+export function dayMonth(iso) {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 export function elapsed(iso) {
@@ -88,7 +118,37 @@ export function Empty({ children }) {
   return <p className="muted small" style={{ margin: "6px 0" }}>{children}</p>;
 }
 
-export const SYNTHETIC =
-  "Synthetic. The landscape is generated, the LIMS is a mock and the assay is an "
-  + "oracle replaying values with noise. This shows the decision loop converging; it "
-  + "does not show that the method finds better antibodies.";
+// The title bar across the top of the centre column: what the session is
+// called, one line of context under it, and anything that belongs beside the
+// name. The column beneath it holds the stream and pins the composer to the
+// bottom, so an empty session is a title and a composer and nothing else.
+export function CentreHead({ title, sub, children }) {
+  return (
+    <div className="centre-head">
+      <div className="row wrap" style={{ gap: 8 }}>
+        <h2>{title}</h2>
+        {children}
+      </div>
+      {sub && <p className="small muted" style={{ margin: "1px 0 0" }}>{sub}</p>}
+    </div>
+  );
+}
+
+// The speakers in the centre column. `Shannon` is the workbench itself
+// reporting what it ran; `Claude` is the part that read the numbers and had
+// something to say about them. Keeping them apart is the point: one of them
+// produces every figure on screen and the other produces none of them.
+export const SPEAKERS = {
+  you: ["Y", "You"],
+  workbench: ["S", "Shannon"],
+  claude: ["C", "Claude"],
+};
+
+// The one-word label beside an affinity number, and what it means when a
+// reader hovers it. CLAUDE.md failure mode 3: the word "synthetic" in the same
+// breath as the number. The word is the whole label; the explanation is the
+// tooltip and the README, not a paragraph on the page.
+export const SYNTHETIC_TIP =
+  "The landscape is generated and the assay is an oracle replaying values with noise. "
+  + "This shows the decision loop converging; it does not show that the method finds "
+  + "better antibodies.";

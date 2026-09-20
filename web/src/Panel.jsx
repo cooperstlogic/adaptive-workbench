@@ -4,15 +4,18 @@
 // that a `core/` function wrote, and every figure that came from a named
 // function is a button that opens the Notebook tab on it.
 
-import { Fragment, useEffect, useState } from "react";
-import { ProofChart, CalibrationChart } from "./Charts.jsx";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { CalibrationChart, ProgressChart, ProofChart } from "./Charts.jsx";
 import {
-  ACTION_LABEL, Badge, Empty, Hash, KV, SYNTHETIC, Trace, n, pct, shortHash, signed, when,
+  ACTION_LABEL, Badge, Empty, Hash, KV, Trace, n, pct, shortHash, signed, when,
 } from "./lib.jsx";
 
 export const TABS = ["Batch", "Decision", "Progress", "Objectives", "Notebook"];
 
 export default function Panel({ tab, setTab, ctx }) {
+  // One scroll container serves every tab; a new tab starts at its top.
+  const body = useRef(null);
+  useEffect(() => { if (body.current) body.current.scrollTop = 0; }, [tab]);
   return (
     <aside className="panel">
       <div className="panel-tabs" role="tablist">
@@ -24,7 +27,7 @@ export default function Panel({ tab, setTab, ctx }) {
           </button>
         ))}
       </div>
-      <div className="panel-body" role="tabpanel">
+      <div className="panel-body" role="tabpanel" ref={body}>
         {tab === "Batch" && <BatchTab ctx={ctx} />}
         {tab === "Decision" && <DecisionTab ctx={ctx} />}
         {tab === "Progress" && <ProgressTab ctx={ctx} />}
@@ -45,7 +48,8 @@ const SLOT_BADGE = {
 };
 
 function BatchTab({ ctx }) {
-  const { batch, designs, round, onTrace, drops, setDrops, dropNotes, setDropNotes } = ctx;
+  const { batch, designs, round, roundView, onTrace, onDownload,
+          drops, setDrops, dropNotes, setDropNotes } = ctx;
   const [open, setOpen] = useState(null);
   if (!batch) return <Empty>No batch selected for this round yet.</Empty>;
 
@@ -72,12 +76,24 @@ function BatchTab({ ctx }) {
           pool <Hash value={batch.inputs.pool} />, model <Hash value={batch.inputs.model_run} />,
           {" "}objectives <Hash value={batch.inputs.objectives} />
         </span>],
+        roundView?.submission && ["at the lab", <span className="tiny">
+          {roundView.submission.round_id}, assay {roundView.submission.assay_version},{" "}
+          {roundView.submission.n_samples} samples
+          {roundView.lab?.status === "running"
+            ? <> — running, expected {String(roundView.lab.expected || "").slice(0, 10)}</>
+            : " — reported"}
+        </span>],
       ]} />
-      {!approved && (
-        <p className="note">
-          Struck designs are recorded as overrides with your note, by the same script that
-          chose them. Approving re-runs selection with your name on it.
-        </p>
+      {/* The order file, because the thing that leaves the building is an
+          artifact too, and a panel that lists every record except the one the
+          laboratory actually receives is describing a different workflow. */}
+      {roundView?.order && (
+        <button className="chip download" onClick={() => onDownload(roundView.order)}>
+          ↓ {roundView.order.split("/").pop()}
+          <span className="tiny faint">
+            construct · sample · design · plate · sequence
+          </span>
+        </button>
       )}
       <table className="grid">
         <thead>
@@ -162,10 +178,6 @@ function BatchTab({ ctx }) {
           })}
         </tbody>
       </table>
-      <p className="tiny faint">
-        Hydrophobicity and liability counts are computed, not measured. Affinity is
-        predicted by the model and simulated by the oracle.
-      </p>
     </div>
   );
 }
@@ -263,10 +275,7 @@ function DecisionTab({ ctx }) {
       {decision.ad_hoc?.length > 0 && (
         <>
           <h4 style={{ marginTop: 6 }}>Ad hoc analysis</h4>
-          <p className="tiny faint">
-            One-off, unversioned, written for this round. Evidence a human reads; never an
-            input to a code path.
-          </p>
+          <p className="tiny faint">One-off, unversioned, written for this round.</p>
           {decision.ad_hoc.map((a, i) => (
             <details key={i} className="card" style={{ padding: 12 }}>
               <summary className="small">{a.question}</summary>
@@ -309,7 +318,6 @@ function DecisionTab({ ctx }) {
           {decision.ruling.note && <p className="small">{decision.ruling.note}</p>}
         </div>
       )}
-      <p className="synthetic">{SYNTHETIC}</p>
     </div>
   );
 }
@@ -326,34 +334,34 @@ function Para({ text, small }) {
 
 /* --- Progress -------------------------------------------------------------- */
 
+// Everything on this tab is this project's own: its line, its last scored
+// round. The evaluator's benchmark is the template's validation and lives on
+// the Objectives tab, so nothing here can be read as a forecast.
 function ProgressTab({ ctx }) {
-  const { campaign, view, evaluation, onTrace } = ctx;
+  const { view, evaluation, onTrace } = ctx;
   const yours = view.progress;
   const best = yours.length ? yours[yours.length - 1] : null;
   const unruled = view.rounds.find((r) => r.status === "flagged, ruling pending");
+  const target = view.objectives.objectives.find((o) => o.name === "affinity")?.threshold;
   return (
     <div className="stack">
       <h3>Cumulative best observed</h3>
-      <ProofChart campaign={campaign} yours={yours} />
+      {yours.length
+        ? <ProgressChart progress={yours} target={target} />
+        : <Empty>No round has reported yet.</Empty>}
       {unruled && (
         <p className="note">
-          Your line falls at round {unruled.round}, and that is the finding rather than a
-          drawing error. The round re-measured the incumbent on an assay version the
-          project has never characterized, and pooling the two reads without a correction
-          drags the project's best observed value down with it. Rule on round{" "}
-          {unruled.round} and it comes back.
+          Round {unruled.round} is flagged and unruled; the line includes its reads as
+          measured.
         </p>
       )}
       {best && (
         <KV rows={[
-          ["your best so far", <span className="num">{n(best.best_observed)} pKD after round{" "}
+          ["best so far", <span className="num">{n(best.best_observed)} pKD after round{" "}
             {best.round}</span>],
-          ["threshold", <span className="num">{n(campaign?.threshold_pkd, 3)} pKD — {" "}
-            {campaign?.threshold_provenance}</span>],
           ["designs measured", <span className="num">{best.n_measured}</span>],
         ]} />
       )}
-      <p className="synthetic">{SYNTHETIC}</p>
 
       <h3 style={{ marginTop: 10 }}>Calibration of the last scored round</h3>
       {evaluation
@@ -386,17 +394,13 @@ function ProgressTab({ ctx }) {
 function ObjectivesTab({ ctx }) {
   const o = ctx.view.objectives;
   const p = ctx.view.project;
+  const { campaign } = ctx;
   return (
     <div className="stack">
       <div className="spread">
         <h3>Objectives</h3>
         <Badge>version {o.version} · read-only</Badge>
       </div>
-      <p className="note">
-        Declared by the template when the project was created, and enforced in code before
-        any model runs. Amending this changes what every past round meant, so it is a
-        versioned act and not a setting.
-      </p>
       <KV rows={[
         ["lead", `${p.lead.name} ${p.lead.chain}`],
         ["target", p.target],
@@ -429,9 +433,7 @@ function ObjectivesTab({ ctx }) {
         </tbody>
       </table>
       <p className="tiny faint">
-        Affinity is measured by the assay. The other two are deterministic calculations over
-        the sequence, which is why the optimizer treats them as constraints rather than as
-        things to predict.
+        Affinity is measured; the other two are computed from the sequence.
       </p>
       <h4>Anomaly flag</h4>
       <KV rows={[
@@ -444,11 +446,37 @@ function ObjectivesTab({ ctx }) {
       <ul className="small" style={{ margin: 0, paddingLeft: 18 }}>
         {o.diagnostics.map((d) => <li key={d} className="mono">{d}</li>)}
       </ul>
-      <p className="tiny faint">
-        The agent chooses which of these to run and in what order. It cannot name one that
-        is not on this list.
-      </p>
+      <Validation campaign={campaign} />
     </div>
+  );
+}
+
+/** The template's validation: the evaluator's benchmark, drawn where the
+ *  template is described and nowhere near a project's own line. */
+export function Validation({ campaign }) {
+  if (!campaign) return null;
+  const g = campaign.summary.guided;
+  const r = campaign.summary.random;
+  return (
+    <>
+      <h4>Validation</h4>
+      <ProofChart campaign={campaign} />
+      <KV rows={[
+        ["benchmark", `${campaign.n_seeds} paired seeds per arm, ${campaign.n_rounds} rounds, `
+          + "synthetic landscape"],
+        ["threshold", <span className="num">{n(campaign.threshold_pkd, 3)} pKD</span>],
+        ["rounds to threshold", <span>
+          guided <span className="num">{n(g.mean_rounds_to_threshold, 2)}</span> mean,{" "}
+          random <span className="num">{n(r.mean_rounds_to_threshold, 2)}</span> mean
+        </span>],
+        ["paired sign test", <span>
+          {campaign.gate.paired_sign_test.wins} wins, {campaign.gate.paired_sign_test.losses}{" "}
+          losses, {campaign.gate.paired_sign_test.ties} ties · p ={" "}
+          <span className="num">{n(campaign.gate.paired_sign_test.p_value, 4)}</span>
+        </span>],
+        ["bands separate at rounds", campaign.gate.rounds_where_bands_separate.join(", ")],
+      ]} />
+    </>
   );
 }
 
@@ -463,16 +491,10 @@ function NotebookTab({ ctx }) {
     return (
       <div className="stack">
         <h3>Notebook</h3>
-        <p className="small">
-          Click any figure in the batch table or the decision record. This tab shows the{" "}
-          <code>core/</code> function that produced it, its source as loaded into this
+        <p className="small muted">
+          Click any figure in the batch table or the decision record to see the{" "}
+          <code>core/</code> function that produced it, its source as loaded in this
           browser, and the hashes of what it was given.
-        </p>
-        <p className="note">
-          Claude Science ships a background reviewer that flags untraceable numbers. The
-          claim here is narrower and structural: the host versions the <i>skill</i>, and
-          nothing versions the <i>number</i> back to the function and the input hash that
-          made it. A template makes an untraceable number impossible to write.
         </p>
       </div>
     );

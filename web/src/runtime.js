@@ -20,7 +20,11 @@
 const MOUNT = "/workbench";
 const BUNDLE = `${import.meta.env.BASE_URL}workbench`;
 const PYODIDE = `${import.meta.env.BASE_URL}pyodide/`;
-const OVERLAY_KEY = "workbench.overlay.v1";
+// Bumped with the redesign: the overlay now holds several projects and a
+// per-project session directory, so a v1 overlay would restore files into a
+// layout that no longer exists. A key change is a clean start, which is
+// cheaper than migrating state nobody has yet.
+const OVERLAY_KEY = "workbench.overlay.v2";
 
 let py = null;
 let manifest = null;
@@ -106,6 +110,7 @@ async function bootOnce(onStep) {
     if (!entry.path.endsWith(".whl")) shipped.set(entry.path, textOf(bytes[i]));
   });
   py.FS.mkdirTree(`${MOUNT}/session`);
+  py.FS.mkdirTree(`${MOUNT}/lims_store/exports`);
 
   const overlay = readOverlay();
   if (overlay) {
@@ -137,6 +142,17 @@ export function call(name, args = {}) {
     throw err;
   }
   return out.result;
+}
+
+// The same call, for the places that render a suggestion list rather than
+// perform an action: a project that has no round graph yet should show no
+// suggestions, not an error banner.
+export function safeCall(name, args = {}) {
+  try {
+    return call(name, args);
+  } catch {
+    return [];
+  }
 }
 
 // Yield to the browser so a progress line can paint before Python blocks it.

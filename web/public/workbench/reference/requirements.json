@@ -52,6 +52,8 @@
       "name": "registry",
       "tools": [
         "submit_batch",
+        "export_submission",
+        "check_run_status",
         "list_designs",
         "pull_assay_results",
         "get_construct",

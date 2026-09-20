@@ -54,9 +54,12 @@ INSTRUCTIONS = """The registry for an adaptive optimization project: the mock
 LIMS that owns construct and sample identifiers, the plate layout, and the
 assay results.
 
-Submit an approved batch with submit_batch, then pull_assay_results to get the
-export, then hand that CSV to import_round.py. Results are generated once, at
-submission, so pulling is a read and a round replays identically.
+Submit an approved batch with submit_batch, then export_submission for the
+order the lab receives. A round does not report the moment it is submitted:
+check_run_status says whether the assay has finished and when it is expected,
+and pull_assay_results refuses until it has. Once it has, pull the export and
+hand that CSV to import_round.py. Results are generated once, at submission,
+so pulling is a read and a round replays identically.
 
 This connector cannot create a sample, edit an assay result, start a workflow
 or delete a record. Those are the laboratory's to do, not the workbench's. If
@@ -85,7 +88,7 @@ def _refuse(exc):
 
 
 @server.tool()
-def submit_batch(project: str, round: int) -> dict:
+def submit_batch(project: str, round: int, stagger: bool = False) -> dict:
     """Submit a project's approved batch for a round and mint its identifiers.
 
     The registry mints a construct id per design and a sample id per well, lays
@@ -99,12 +102,16 @@ def submit_batch(project: str, round: int) -> dict:
     Args:
         project: path to the project directory, e.g. projects/demo-trastuzumab
         round: the round number
+        stagger: hold the round running until check_run_status releases it,
+            so approving a batch and reading its data are two moments with a
+            laboratory in between. Off by default, and off is what every
+            scripted campaign uses.
     """
     try:
-        r = lims.submit_project_batch(project, int(round))
+        r = lims.submit_project_batch(project, int(round), stagger=bool(stagger))
     except (ValueError, KeyError) as exc:
         raise _refuse(exc) from exc
-    return {
+    out = {
         "round_id": r["round_id"],
         "assay_version": r["assay_version"],
         "status": r["status"],
@@ -114,9 +121,78 @@ def submit_batch(project: str, round: int) -> dict:
         "plates": r["plates"],
         "batch_approval": r["approval_status"],
         "external_refs_written_to": os.path.join(project, "designs.json"),
-        "next": "pull_assay_results(project=%r, round_id=%r)" % (project, r["round_id"]),
+        "next": ("export_submission(project=%r, round_id=%r)" % (project, r["round_id"])
+                 if r["status"] == "running"
+                 else "pull_assay_results(project=%r, round_id=%r)" % (project, r["round_id"])),
         "note": "simulated assay; the values are generated, not measured",
     }
+    if r["status"] == "running":
+        out["expected"] = r.get("expected")
+        out["then"] = "check_run_status(project=%r, round_id=%r)" % (project, r["round_id"])
+    return out
+
+
+@server.tool()
+def export_submission(project: str, round_id: str, out: str = "") -> dict:
+    """The order file a submitted round produces: what the laboratory receives.
+
+    One row per sample, in submission order, carrying the construct id, the
+    sample id, the design id, the plate and the sequence to make. It carries
+    no measured value, because an order is not a result -- at the moment it is
+    written there is nothing to measure yet.
+
+    This is a read. It creates nothing and changes nothing; the submission
+    already exists and this is the shape it takes on the way out.
+
+    Args:
+        project: path to the project directory
+        round_id: R4, or 4
+        out: where to write the CSV; defaults to lims_store/exports/
+    """
+    path = out or lims.order_path_for(project, round_id)
+    try:
+        r = lims.export_order(round_id, project, out=path)
+    except KeyError as exc:
+        raise _refuse(exc) from exc
+    return {
+        "round_id": r["round_id"],
+        "assay_version": r["assay_version"],
+        "submitted": r["submitted"],
+        "n_rows": r["n_rows"],
+        "plates": r["plates"],
+        "columns": r["columns"],
+        "path": os.path.relpath(path, REPO),
+        "note": "an order, not a result: no value column, and none is computable from it",
+    }
+
+
+@server.tool()
+def check_run_status(project: str, round_id: str) -> dict:
+    """Has this round's assay reported yet?
+
+    Binary, because a run either has results to hand over or it does not.
+    Answers ``complete`` with the row and sample counts, or ``running`` with
+    the date it is expected -- and while it is running, pull_assay_results
+    will refuse and say so.
+
+    Args:
+        project: path to the project directory
+        round_id: R4, or 4
+    """
+    try:
+        r = lims.run_status(round_id, project)
+    except KeyError as exc:
+        raise _refuse(exc) from exc
+    if r["status"] == "running":
+        return {"round_id": r["round_id"], "status": "running",
+                "assay_version": r["assay_version"], "submitted": r["submitted"],
+                "expected": r["expected"], "n_rows_available": 0,
+                "next": "nothing to pull yet; ask again after %s"
+                        % (r["expected"] or "?")[:10]}
+    return {"round_id": r["round_id"], "status": "complete",
+            "assay_version": r["assay_version"], "submitted": r["submitted"],
+            "n_rows_available": r["n_rows"], "n_samples": r["n_samples"],
+            "next": "pull_assay_results(project=%r, round_id=%r)" % (project, r["round_id"])}
 
 
 @server.tool()
@@ -138,11 +214,14 @@ def pull_assay_results(project: str, round_id: str, out: str = "") -> dict:
         project: path to the project directory
         round_id: R4, or 4
         out: where to write the CSV; defaults to lims_store/exports/
+
+    Refuses a round that is still running, and says what it refused: the
+    registry does not hand over a run before the assay reports.
     """
     path = out or lims.export_path_for(project, round_id)
     try:
         r = lims.pull_to_csv(round_id, project, out=path)
-    except (KeyError, ValueError) as exc:
+    except (KeyError, ValueError) as exc:   # RunningError is a ValueError
         raise _refuse(exc) from exc
     n = int(str(r["round_id"]).lstrip("R"))
     return {

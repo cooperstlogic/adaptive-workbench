@@ -6,9 +6,10 @@
 // 3*. A six-week campaign is not a list of questions; it is a graph running
 // recommendation → tested constructs → returned evidence → diagnosis →
 // updated model → next batch, with a content hash at every edge. This view is
-// that graph, read straight out of rounds.json.
+// that graph, read straight out of rounds.json. It does not say so: the chips
+// carry the hashes, and the page is the graph.
 
-import { Badge, Empty, Hash, elapsed, n, pct, signed, when } from "./lib.jsx";
+import { Badge, Empty, elapsed, n, pct, signed, when } from "./lib.jsx";
 
 const LINKS = [
   ["pool", "candidates enumerated and filtered"],
@@ -31,21 +32,10 @@ export default function RoundGraph({ ctx, onOpenRound }) {
             <span className="mono">rounds.json</span>
           </p>
         </div>
-        <Badge kind="attn">the one added primitive</Badge>
       </div>
 
-      <p className="note" style={{ margin: "14px 0 20px" }}>
-        Every other file in the project could be regenerated from the snapshots. This link —
-        from what was recommended, to what was built, to what came back, to what it was
-        taken to mean, to the model that carries it forward — could not. Each chip below is
-        a content hash over canonical JSON, so any surface recomputes it and a batch walks
-        back to the exact evidence behind it.
-      </p>
-
-      <p className="tiny faint" style={{ marginBottom: 16 }}>
-        These rounds were generated in one run, so their timestamps are seconds apart
-        rather than the weeks a real campaign would take. The dates are as invented as the
-        affinities; the graph is the same shape either way.
+      <p className="tiny faint" style={{ margin: "10px 0 18px" }}>
+        Dates are simulated, like the affinities.
       </p>
 
       <div className="graph">

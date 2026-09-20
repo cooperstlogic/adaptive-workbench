@@ -72,7 +72,12 @@
     },
     {
       "path": "lims.py",
-      "sha256": "b6a7f8551bc0de772dbf603f54a372683f3860a8937483f0a6af5f42fd248d78",
+      "sha256": "b1ea3420636347f27484a44f82386c10a6ebea505939654ad122e573417e1ea2",
+      "verbatim": true
+    },
+    {
+      "path": "init_project.py",
+      "sha256": "ed6c4e89ca5bc9daa88d24dab6b66b83b2ad82f0fd7ef127db0525d7f5da7921",
       "verbatim": true
     },
     {
@@ -117,18 +122,18 @@
     },
     {
       "path": "templates/enzyme-thermostability/template.json",
-      "sha256": "429b0db3e10ae57bb55662d9a6ded5ed8280c18fab166c6bba59cf91e6c297fa",
+      "sha256": "10752eaafa7397ebbad25d18a8cffdf007e112655e713d6da8f9d24ff42e4572",
       "verbatim": true
     },
     {
       "path": "wb_driver.py",
-      "sha256": "32218e449b2173b05734a2307131d2df09620dd20b2b9ad63db4652c0594610d",
+      "sha256": "f4ce03d25c3b6f4a2ff86093247875bc757b1dfcb7bac9b8b385c66f6d267785",
       "source": "web/py/wb_driver.py",
       "verbatim": false
     }
   ],
-  "commit": "e0c86466fab78e924c293c7daca492e6c6a43d40",
-  "hash": "sha256:e11cc70bf5db20161c10327e49424b7a9edf001a6f5cc5b65ff2f7b72c31dad7",
+  "commit": "ec246b82efd5929a3b58b4f57d1fafe850fc52ed",
+  "hash": "sha256:73db083d49112fbbd3a20d65d33a5f492b40af699ee18b8a11d6d111ba4eb1aa",
   "kind": "browser_bundle",
   "mount": "/workbench",
   "note": "code is copied byte for byte from the repository and laid out in the same shape, so Pyodide imports the same modules the CLI imports. state is the committed project rewound to before round 4 was submitted. reference is read for replay and never executed",
@@ -148,14 +153,14 @@
     },
     {
       "path": "reference/requirements.json",
-      "sha256": "b3dd582a8ea8e3b0b140778c8e80931f2b23f8a23a1ca38f960f802d85e397e1"
+      "sha256": "cf0a510c21bd942ed5388befb2726c6e797b60b220cc9fb390e9e2a38747c410"
     }
   ],
   "schema_version": 1,
   "state": [
     {
       "path": "lims_store/demo-trastuzumab.json",
-      "sha256": "ecad3ed0abb7dfafb4bbd337ff802f7073919329e4193e3fc63e867b2a9e11bb"
+      "sha256": "dd321a651a4bd7cc29a3199fe155cf7ded5b035e23867d79daf176dad90d8ee1"
     },
     {
       "path": "projects/demo-trastuzumab/batches/batch_001.eval.json",
@@ -243,7 +248,7 @@
     },
     {
       "path": "projects/demo-trastuzumab/rounds.json",
-      "sha256": "ea447b3c82182452f26aaa4872c2209d25ed8879871d62247ddd0b948fde0e3b"
+      "sha256": "5423a31f7f483d8d87eeb3e98a0c2d93eab2d0be55041289f05755d9d21678dd"
     }
   ]
 }

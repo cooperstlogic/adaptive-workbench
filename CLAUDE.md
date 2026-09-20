@@ -5,17 +5,21 @@ every choice already settled.
 
 ## Where the build is
 
-**Phases 1 to 6 are done. Both gates passed, the plugin runs in Claude Science and the
-round-4 diagnosis reproduces there, the gap audit is written — decisions 105 to 111 — and
-the browser now runs the round loop on the repository's own modules, writing artifacts
-byte-identical to the CLI's. Phase 7 is next: the live agent in the centre column, the
-push-back round trip, the budget cap and verified replay.** Full status, results and
-commands are in `README.md`; every settled choice and its reasoning is in `DECISIONS.md`.
-Read both before writing code, and read `skills/adaptive-optimization/SKILL.md` before
-touching anything in the round loop.
+**Phases 1 to 6 are done, the web app redesign on top of them is done — decisions 122
+to 133 — and the show-don't-tell pass over it is done — decisions 134 to 136.** Both gates passed, the plugin runs in Claude Science and the round-4 diagnosis
+reproduces there, the gap audit is written (decisions 105 to 111), and the browser runs
+the round loop on the repository's own modules, writing artifacts byte-identical to the
+CLI's. The redesign added the two shells and the hash router, the project boundary, the
+session model, project creation from a template *in the browser*, blank projects as the
+control arm for decision 108, and the lab round trip — approve and export, then wait, then
+check. **Phase 7 is next: the live agent in the centre column, the push-back round trip,
+the budget cap and verified replay.** Full status, results and commands are in
+`README.md`; every settled choice and its reasoning is in `DECISIONS.md`. Read both before
+writing code, and read `skills/adaptive-optimization/SKILL.md` before touching anything in
+the round loop.
 
 - Use `.venv/bin/python`, never `python3` — the system interpreter has no numpy.
-- Run `.venv/bin/python check.py` before and after any phase. It verifies 147 invariants
+- Run `.venv/bin/python check.py` before and after any phase. It verifies 160 invariants
   that correspond to rules here and numbers in `DECISIONS.md`; a failure means the state
   drifted from what is documented. It takes about half a minute, because it runs two full
   six-round campaigns through the CLI, checks them against the evaluator, drives both
@@ -48,11 +52,20 @@ The audience is technically sophisticated and will poke at it. Optimize for a de
 survives scrutiny, not for feature count.
 
 **The web app wears the Claude Science interface**, because the claim is that this is a
-layer inside it rather than a product beside it: a home screen with a `Needs you` card,
-a left rail whose sessions are rounds, a centre conversation, and a right artifact panel
-with tabs. The chrome is a wireframe and is labelled one. Decisions 57–66 in
-`DECISIONS.md` record that choice, why orchestration runs live while the verdict stays
-human, and what was cut to pay for it. Read them before phase 6.
+layer inside it rather than a product beside it. It is **two shells**: a home screen that
+is full-bleed and owns no project, and a project shell with a rail, a centre conversation
+and a right artifact panel. **A session is a unit of work** — a round starts one, and a
+person can start an ad-hoc one at any time. Decisions 57–66 record the original choice,
+why orchestration runs live while the verdict stays human, and what was cut to pay for
+it; decisions 122–133 record what the redesign changed on top of it, including that the
+wireframe banner is gone (superseding 60) and that a session is no longer only a round
+(amending 59).
+
+**Decisions are buttons; questions are asks.** Approval and the four ruling verbs are
+typed controls outside the composer — that is decision 65 and it is why the approval
+primitive is not a chat interrupt. Everything that only *reads* state belongs in the
+composer, as a contextual suggested ask, answered until phase 7 by a deterministic
+briefing assembled in `wb_driver` from artifacts on disk. Keep that line where it is.
 
 **`decision_004.json` is gate output and is not to be hand-edited.** An agent with only
 the skill and the connectors wrote it, `check.py` recomputes every number in it, and its
@@ -64,6 +77,12 @@ one is under-tested, and three unclaimed gaps were found that are stronger than 
 four. Phase 6 answered 105 with four verbs outside the composer, 106 with the Rounds view,
 107 with the Notebook tab, and 109 with a requirements table derived from the manifests.
 108 is not leaned on anywhere.
+
+**The lab is not instantaneous, and it must not become so again.** Approving a batch
+submits it and writes the order file the lab receives, and then stops. Whether the results
+are back is a separate question put to the registry, refused the first time with the date
+it is expected. `lims.py`'s `submit_batch` takes `--stagger`, off by default, so every CLI
+path and every existing store is byte-for-byte unaffected — decision 130.
 
 **Phase 6 is done — decisions 112 to 121.** Three things from it change how phase 7 works.
 The browser mounts `core/` byte for byte rather than bundling a copy, and `check.py` fails
@@ -89,15 +108,29 @@ trustworthy and inspectable.
 
 ## Three failure modes that matter more than missing features
 
-1. **A mock dressed up as real.** If something is stubbed, label it stubbed — in the UI
-   and in the README. `SPEC.md` has a "What is real and what is staged" table; keep it
-   accurate as you build.
+1. **A mock dressed up as real.** If something is stubbed, label it stubbed. That claim
+   lives in the README and in `SPEC.md`'s "What is real and what is staged" table, which
+   is where a sceptic goes looking, and it is stated once on the page rather than banged
+   on a banner across every screen — the redesign superseded decision 60 and took the
+   wireframe bar off. Keep the staged table accurate as you build; it is now the place
+   the honesty claim is made, so it carries more weight than it did. Individual mock
+   fields still carry their own label where they sit — as a word or a tooltip, never a
+   paragraph. **Show, don't tell — decision 134.** Text on a page reports state or
+   labels a stub; it never explains why the interface is shaped the way it is. That
+   reasoning lives in source comments, the README and `DECISIONS.md`.
 2. **The science implemented twice.** The same Python must run in Claude Science, from
    the CLI, and in the browser via Pyodide. Never port `core/` to JavaScript, even if it
    would be faster. That fork would undermine the entire demo.
 3. **Overclaiming a synthetic result.** The landscape is invented, so the chart proves
    the machinery and not the chemistry. Say the word "synthetic" in the same breath as
-   the number, every time, in every surface.
+   the number wherever a number is quoted in prose — the one-word tag on a briefing
+   figure and the home card, with the explanation as its tooltip — and make the full
+   claim once, in the README and the staged table. Decision 136 took the three-sentence
+   block off every tab; it is not to come back as a paragraph. **The evaluator's
+   benchmark is drawn on the template surfaces as the template's validation and never on
+   a project's own axes** — decision 135. A project cannot be compared against a random
+   arm it never ran, and a chart that looks like a forecast from a simulation is this
+   failure mode in a new coat.
 
 ## Non-negotiables
 
