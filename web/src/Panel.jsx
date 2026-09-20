@@ -313,7 +313,7 @@ function DecisionTab({ ctx }) {
           </div>
           {decision.ruling.requested && (
             <p className="small">requested: <span className="mono">
-              {decision.ruling.requested}</span></p>
+              {decision.ruling.requested.diagnostic}</span></p>
           )}
           {decision.ruling.note && <p className="small">{decision.ruling.note}</p>}
         </div>

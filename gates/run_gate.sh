@@ -2,8 +2,9 @@
 # Re-run an hour-5 gate. The point of this script is that the gate is a thing
 # you run, not a thing the README claims happened.
 #
-#   gates/run_gate.sh round4     diagnose the flagged round and write a record
-#   gates/run_gate.sh round1     run one full round end to end on a new project
+#   gates/run_gate.sh round4           diagnose the flagged round and write a record
+#   gates/run_gate.sh round1           run one full round end to end on a new project
+#   gates/run_gate.sh round4-pushback  answer a more_evidence_requested ruling on it
 #
 # It builds a throwaway tree holding only what the gate is entitled to -- the
 # code, the skill, the connectors and the project -- and points a headless
@@ -31,8 +32,14 @@ ln -s "$REPO/.venv" "$TREE/.venv"
 mkdir -p "$TREE/.claude/skills" "$TREE/projects" "$TREE/lims_store"
 rsync -a --exclude='__pycache__' --exclude='.DS_Store' \
       skills/adaptive-optimization "$TREE/.claude/skills/"
-cat > "$TREE/.claude/settings.json" <<'JSON'
-{ "permissions": { "deny": ["Read(./data/**)", "Read(./lims_store/**)"] } }
+# The repository itself is denied too: the plugin installed in phase 5 resolves
+# its skill against this checkout, and the first push-back run listed the real
+# repository -- and saw that README, SPEC, DECISIONS and CLAUDE.md exist there
+# -- before working in its own tree. It read none of them, and the transcript
+# is grepped for the path below, but a gate should not depend on restraint.
+cat > "$TREE/.claude/settings.json" <<JSON
+{ "permissions": { "deny": ["Read(./data/**)", "Read(./lims_store/**)",
+                            "Read(${REPO}/**)"] } }
 JSON
 
 OFFLIMITS='
@@ -46,6 +53,16 @@ if [[ "$WHICH" == "round4" ]]; then
   # The gate writes this record. Handing it the answer would make it a formality.
   rm -f "$TREE/projects/demo-trastuzumab/decisions/decision_004.json"
   PROMPT="Round 4 of the project at projects/demo-trastuzumab came back flagged and the loop has stopped. Work out what the round means and write a decision record with a recommendation a scientist can rule on.${OFFLIMITS}"
+elif [[ "$WHICH" == "round4-pushback" ]]; then
+  # The push-back round trip -- acceptance criterion 8. The committed record
+  # is present *with* its more_evidence_requested ruling, because answering a
+  # ruling means reading it; what the gate tests is whether the agent runs
+  # what was asked for, reads it against its own first pass, and proposes
+  # again. record_decision.py refuses a second pass that skips the test.
+  rsync -a --exclude='__pycache__' --exclude='.DS_Store' \
+        projects/demo-trastuzumab "$TREE/projects/"
+  rsync -a lims_store/demo-trastuzumab.json "$TREE/lims_store/"
+  PROMPT="The decision record for round 4 of the project at projects/demo-trastuzumab came back from the scientist ruled more_evidence_requested. Read the record and the ruling, run what was asked for, and propose again with a recommendation they can rule on.${OFFLIMITS}"
 else
   (cd "$TREE" && .venv/bin/python init_project.py --name gate-round1 --team a.gate --force >/dev/null)
   PROMPT="The project at projects/gate-round1 was just created and has no designs yet. Run round 1 end to end: get the batch selected, tested and the results imported and modelled, so the project is ready to choose round 2. Report what came back.${OFFLIMITS}"
@@ -64,3 +81,6 @@ echo "transcript: $TREE/transcript.jsonl"
 grep -c 'landscape.npz\|data/synthetic\|data/oracle' "$TREE/transcript.jsonl" \
   && echo "LEAK: the session reached the simulated laboratory" \
   || echo "clean: nothing in the transcript touched data/"
+grep -c "$REPO/\(README\|SPEC\|DECISIONS\|CLAUDE\)" "$TREE/transcript.jsonl" \
+  && echo "LEAK: the session named one of the four documents in the repository" \
+  || echo "clean: none of the four documents was named"

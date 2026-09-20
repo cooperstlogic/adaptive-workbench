@@ -17,6 +17,8 @@
   --flag: #a8591b;
   --flag-soft: #fdf4e8;
   --good: #3d7a55;
+  /* Your side of the stream: a shade off the paper, as the host draws it. */
+  --bubble: #f0ede7;
   /* Three series that stay apart in hue, not only in dash pattern: the guided
      arm, the same arm pooling naively, and random selection. */
   --c-guided: #c96442;
@@ -48,6 +50,7 @@
     --flag: #d3944a;
     --flag-soft: #2e2519;
     --good: #6faa83;
+    --bubble: #151412;
     --c-guided: #e08159;
     --c-naive: #7aa8c9;
     --c-random: #9c968d;
@@ -241,11 +244,15 @@ pre.code {
 
 /* --- the stream ---------------------------------------------------------- */
 
+/* Two sides, as in the host: yours is a bubble on the right, the column's is
+   plain prose with nothing over it but, on a model's turn, the mode badge. */
 .msg { padding: 2px 0 16px; }
-.msg-who { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 12px;
-  margin-bottom: 5px; }
-.msg-who .dot { width: 16px; height: 16px; border-radius: 5px; background: var(--accent-soft);
-  color: var(--accent); display: grid; place-items: center; font-size: 9px; font-weight: 700; }
+.msg.you { display: flex; justify-content: flex-end; padding: 6px 0 18px; }
+.bubble { max-width: 78%; background: var(--bubble); border-radius: 16px; padding: 11px 16px; }
+.bubble p { margin: 0 0 8px; }
+.bubble p:last-child { margin-bottom: 0; }
+.msg-mode { margin-bottom: 6px; }
+.msg-mode .mode { margin-left: 0; }
 .msg-body p { margin: 0 0 9px; }
 .msg-body p:last-child { margin-bottom: 0; }
 
@@ -417,6 +424,38 @@ a.rail-item { text-decoration: none; }
 .ask:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
 .ask:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* The suggested asks as a choice: numbered rows, the agent's row, the
+   invitation to type. Each row is one button, the prompt it sends beneath
+   its title, so what is clicked is what is read. */
+.choices {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 16px 18px 10px; margin-bottom: 12px;
+}
+.choices-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.choices-title { margin: 0 0 6px; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+.choice {
+  display: flex; gap: 14px; align-items: flex-start; width: 100%; text-align: left;
+  border: 0; border-top: 1px solid var(--line-soft); background: none; color: inherit;
+  padding: 13px 0; font: inherit; cursor: pointer;
+}
+.choices-head + .choice { border-top: 0; }
+.choice:disabled { opacity: 0.5; cursor: not-allowed; }
+.choice:hover:not(:disabled) .choice-head { color: var(--accent); }
+.choice-n {
+  flex: 0 0 auto; width: 30px; height: 30px; border-radius: 8px; margin-top: 1px;
+  background: var(--bubble); border: 1px solid var(--line); color: var(--ink);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600;
+}
+.choice-n.glyphic { font-weight: 400; color: var(--muted); }
+.choice-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.choice-head { font-size: 15px; font-weight: 600; }
+.choice-q { font-size: 13.5px; color: var(--muted); line-height: 1.45; }
+.choice-pro, .choice-con { font-size: 13px; line-height: 1.4; }
+.choice-pro { color: var(--good); }
+.choice-con { color: var(--flag); }
+
+
 .composer-bar { display: flex; align-items: center; justify-content: space-between;
   margin-top: 6px; }
 .composer-left, .composer-right { display: flex; align-items: center; gap: 4px; }
@@ -444,11 +483,7 @@ a.rail-item { text-decoration: none; }
 .picker-item:disabled { opacity: 0.45; cursor: not-allowed; }
 .picker-item[aria-selected="true"] { background: var(--accent-soft); }
 
-/* --- turns, the download chip, a refused call ---------------------------- */
-
-.dot.who-claude { background: var(--accent-soft); color: var(--accent); }
-.dot.who-workbench { background: var(--line-soft); color: var(--muted); }
-.dot.who-you { background: var(--line-soft); color: var(--ink); }
+/* --- the download chip, a refused call ----------------------------------- */
 
 .chip.download { flex-direction: column; align-items: flex-start; gap: 1px;
   border-style: dashed; padding: 7px 11px; }
@@ -473,3 +508,31 @@ table.grid.config tr.locked td.k { color: var(--faint); }
 @media (max-width: 1020px) {
   .home-grid, .new-grid { grid-template-columns: 1fr; gap: 22px; }
 }
+
+/* --- the agent's seat ------------------------------------------------------
+   The badge over a model's turn is the one place the mode is stated: live,
+   replayed with its verification count, or stopped with the reason. A chip
+   that ran model-written code carries its source. */
+
+.mode { margin-left: 4px; padding: 1px 7px; border-radius: 999px; font-size: 10.5px;
+  border: 1px solid var(--line); color: var(--muted); background: var(--panel);
+  white-space: nowrap; }
+.mode.live { color: var(--good); border-color: transparent; background: var(--line-soft); }
+.mode.replay { color: var(--accent); border-color: transparent; background: var(--accent-soft); }
+.mode.stop { color: var(--flag); border-color: transparent; background: var(--flag-soft); }
+
+.stream > * + * { margin-top: 8px; }
+.stream .reading { padding-left: 10px; border-left: 2px solid var(--line); }
+.stream .reading.supported { border-left-color: var(--good); }
+.stream .reading.partially-supported { border-left-color: var(--flag); }
+.stream .proposal { margin-top: 10px; }
+
+.tool.adhoc .tool-cmd::before { content: "ad hoc · "; color: var(--faint); }
+.ok-text { color: var(--good); }
+
+.caret { display: inline-block; width: 6px; height: 13px; margin-left: 2px; vertical-align: -2px;
+  background: var(--accent); animation: caret 0.9s steps(2, start) infinite; }
+@keyframes caret { to { visibility: hidden; } }
+
+.ask.live { border-style: dashed; }
+.composer textarea:disabled { color: var(--faint); cursor: not-allowed; }

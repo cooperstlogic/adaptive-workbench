@@ -5,27 +5,32 @@ every choice already settled.
 
 ## Where the build is
 
-**Phases 1 to 6 are done, the web app redesign on top of them is done — decisions 122
-to 133 — and the show-don't-tell pass over it is done — decisions 134 to 136.** Both gates passed, the plugin runs in Claude Science and the round-4 diagnosis
-reproduces there, the gap audit is written (decisions 105 to 111), and the browser runs
-the round loop on the repository's own modules, writing artifacts byte-identical to the
-CLI's. The redesign added the two shells and the hash router, the project boundary, the
-session model, project creation from a template *in the browser*, blank projects as the
-control arm for decision 108, and the lab round trip — approve and export, then wait, then
-check. **Phase 7 is next: the live agent in the centre column, the push-back round trip,
-the budget cap and verified replay.** Full status, results and commands are in
-`README.md`; every settled choice and its reasoning is in `DECISIONS.md`. Read both before
-writing code, and read `skills/adaptive-optimization/SKILL.md` before touching anything in
-the round loop.
+**Phases 1 to 7 are done.** Both gates passed, the plugin runs in Claude Science and the
+round-4 diagnosis reproduces there, the gap audit is written (decisions 105 to 111), the
+browser runs the round loop on the repository's own modules, writing artifacts
+byte-identical to the CLI's, and the redesign (decisions 122 to 136) gave it two shells,
+the session model, project creation in the browser and a laboratory that has to be waited
+on. **Phase 7 — decisions 137 to 152 — put the model in the centre seat**: one stateless
+function behind the composer, `SKILL.md` as its system prompt, three tools, a signed
+transcript, a daily cap, and the same stream component stepping the committed record
+without a key with every number recomputed and checked. The round-4 record is two-pass,
+its second pass written by a third headless gate. **Phase 8 is next: the committed demo
+project's opening state, the Netlify deploy, and the public README** — and the first
+thing to verify there is the function under a real key: streaming limits on a proposal
+turn, the Blobs store, and `ANTHROPIC_API_KEY` set. Full status, results and commands are
+in `README.md`; every settled choice and its reasoning is in `DECISIONS.md`. Read both
+before writing code, and read `skills/adaptive-optimization/SKILL.md` before touching
+anything in the round loop.
 
 - Use `.venv/bin/python`, never `python3` — the system interpreter has no numpy.
-- Run `.venv/bin/python check.py` before and after any phase. It verifies 160 invariants
+- Run `.venv/bin/python check.py` before and after any phase. It verifies 186 invariants
   that correspond to rules here and numbers in `DECISIONS.md`; a failure means the state
-  drifted from what is documented. It takes about half a minute, because it runs two full
+  drifted from what is documented. It takes about forty seconds, because it runs two full
   six-round campaigns through the CLI, checks them against the evaluator, drives both
-  connectors over the MCP protocol, and boots Pyodide to compare the browser's artifacts
-  against the CLI's byte for byte. The last of those needs `cd web && npm install && npm
-  run sync`; without it that check reports SKIPPED and fails, which is deliberate.
+  connectors over the MCP protocol, boots Pyodide twice to compare the browser's artifacts
+  against the CLI's byte for byte and to drive the agent loop through a scripted upstream,
+  and calls the model function in-process with no key. Those need `cd web && npm install
+  && npm run sync`; without it they report SKIPPED and fail, which is deliberate.
 - **The threshold is already fixed at 10.762 pKD**, pre-registered and recorded before any
   campaign ran. Do not recompute, re-pick, or adjust it. Do not change the landscape or
   its parameters. If guided does not separate from random, say so.
@@ -64,8 +69,19 @@ wireframe banner is gone (superseding 60) and that a session is no longer only a
 **Decisions are buttons; questions are asks.** Approval and the four ruling verbs are
 typed controls outside the composer — that is decision 65 and it is why the approval
 primitive is not a chat interrupt. Everything that only *reads* state belongs in the
-composer, as a contextual suggested ask, answered until phase 7 by a deterministic
-briefing assembled in `wb_driver` from artifacts on disk. Keep that line where it is.
+composer, as a contextual suggested ask. **Suggested asks go to the model, and only
+when the state gives a reason to suggest one** — decision 158. A round at the lab, a
+flagged round nobody has ruled on, a round that came back quiet: those earn a card
+(`Choices.jsx` — options each showing the prompt it sends, headed by the state that
+earned it with Skip beside it, then *Let the agent decide*; numbered only when there is
+more than one). A batch awaiting
+approval, a settled round and a new session earn nothing, and the composer stands
+alone; do not put a generic ask back under it. Every option goes to the seat when there
+is one, except the results check, which is a call to the registry and says so where it
+sits. The deterministic briefing `wb_driver.ask` assembles from artifacts on disk is
+what answers them when there is no seat, and it is not to be removed: it is the no-key
+path and the figures in it resolve to `core/` functions in the Notebook tab. Keep that
+line where it is.
 
 **`decision_004.json` is gate output and is not to be hand-edited.** An agent with only
 the skill and the connectors wrote it, `check.py` recomputes every number in it, and its
@@ -84,14 +100,34 @@ are back is a separate question put to the registry, refused the first time with
 it is expected. `lims.py`'s `submit_batch` takes `--stagger`, off by default, so every CLI
 path and every existing store is byte-for-byte unaffected — decision 130.
 
-**Phase 6 is done — decisions 112 to 121.** Three things from it change how phase 7 works.
-The browser mounts `core/` byte for byte rather than bundling a copy, and `check.py` fails
-if a copy drifts, so **re-run `python web/bundle.py` after touching anything the browser
-executes** — including `web/py/wb_driver.py`. Cross-surface hash claims are made on
-*unsigned* selection records, because `--approved-by` stamps a timestamp inside the hashed
-body and it propagates down the whole chain. And **round 5 flags at −0.818 pKD on the
-product path** — reproduced by both surfaces, predicted by `decision_004`'s own `if_wrong`
-line — which gives phase 7 a round nobody has diagnosed yet. Use it.
+**Phase 6 is done — decisions 112 to 121.** The browser mounts `core/` byte for byte
+rather than bundling a copy, and `check.py` fails if a copy drifts, so **re-run `python
+web/bundle.py` after touching anything the browser executes** — including
+`web/py/wb_driver.py`, and including `skills/adaptive-optimization/SKILL.md`, which the
+same script writes into the model function as its system prompt. Cross-surface hash claims
+are made on *unsigned* selection records, because `--approved-by` stamps a timestamp inside
+the hashed body and it propagates down the whole chain. And **round 5 flags at −0.818 pKD
+on the product path** — reproduced by both surfaces, predicted by `decision_004`'s own
+`if_wrong` line — and still nobody has diagnosed it: only a live seat can, and that beat is
+deliberately not in the harness.
+
+**Phase 7 is done — decisions 137 to 152.** Four rules from it. **The model produces no
+numbers, still**: its three tools are two reads and `record_decision.py --propose`, and
+the writer's refusal goes back to it as an error result. **The function is not a proxy**:
+it builds every request itself and accepts only transcripts it signed — never loosen
+`validate()` to take a `messages` array. **The session is the conversation, and
+transcripts are still not state** — decision 157, amending 149: a session holds one
+signed transcript in page memory, and the diagnosis, every question asked after it and
+the ruling that sends it back all continue it, so a follow-up can refer to what was
+said. The decision record is what persists and is re-read into the context on every
+turn; after a reload the next turn starts a fresh transcript from it, and a transcript
+the function refuses starts over with *restarted* on the badge rather than ending the
+turn. **Claude speaks only when a model or the record's author wrote the words**, with a
+mode badge over every such turn — and the badge is the only label in the stream. The
+column is a chat: your asks and rulings are bubbles on the right, the workbench's prose
+is the column itself with nothing over it, and no turn names a speaker — decision 153.
+`WORKBENCH_UPSTREAM=scripted` is the harness's test double and is labelled everywhere it
+shows; it is never to be set on the site.
 
 ## The two proof artifacts
 

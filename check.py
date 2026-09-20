@@ -93,10 +93,15 @@ def cli_replay_of(files):
         csv_path = os.path.join(exports, "demo-trastuzumab_round4.csv")
         payload = schema.read_json(os.path.join(web_out, "reference",
                                                 "decision_004.proposal.json"))
-        proposal = os.path.join(tmp, "proposal_004.json")
-        with open(proposal, "w", encoding="utf-8") as fh:
-            json.dump({k: payload[k] for k in
-                       ("trigger", "hypotheses", "recommendation", "ad_hoc")}, fh, indent=1)
+        proposals = []
+        for p in payload["passes"]:
+            path = os.path.join(tmp, "proposal_004_pass%d.json" % p["pass"])
+            with open(path, "w", encoding="utf-8") as fh:
+                json.dump({"trigger": payload["trigger"], "hypotheses": p["hypotheses"],
+                           "recommendation": p["recommendation"],
+                           "ad_hoc": [dict(a, stdout="") for a in p["ad_hoc"]]},
+                          fh, indent=1)
+            proposals.append((path, p.get("ruling")))
 
         def run(*argv):
             r = subprocess.run([sys.executable] + list(argv), cwd=REPO,
@@ -113,7 +118,14 @@ def cli_replay_of(files):
         run(S("import_round.py"), "--project", root, "--round", "4", "--results", csv_path,
             "--offset", "if-clear", "--authority", "bridge_policy:browser --offset if-clear")
         run(S("evaluate_prior.py"), "--project", root, "--round", "4")
-        run(S("record_decision.py"), "--project", root, "--round", "4", "--propose", proposal)
+        # The browser's sequence: each recorded pass proposed, the recorded
+        # push-back ruled between them, the last pass accepted.
+        for path, ruling in proposals:
+            run(S("record_decision.py"), "--project", root, "--round", "4", "--propose", path)
+            if ruling and ruling["verdict"] == "more_evidence_requested":
+                run(S("record_decision.py"), "--project", root, "--round", "4",
+                    "--rule", "more_evidence_requested", "--by", "check.py",
+                    "--note", ruling["note"], "--request", ruling["requested"]["diagnostic"])
         run(S("record_decision.py"), "--project", root, "--round", "4", "--rule", "accepted",
             "--by", "check.py", "--note", "ruled by web/scripts/pyodide-check.mjs")
         run(S("import_round.py"), "--project", root, "--round", "4", "--results", csv_path,
@@ -943,22 +955,27 @@ def main():
     # checked here is the record, not the transcript: the claim is that the
     # skill and the five tests are sufficient, and a record that holds up is
     # what sufficient looks like.
+    # Since phase 7 the record is two-pass: the gate's diagnosis is pass 1,
+    # a named person sent it back, and a second gate run answered. These
+    # checks read pass 1, which is what the hour-5 gate wrote; the push-back
+    # and its answer are checked under phase 7.
     demo = project.load(demo_root)
     dec4 = project.read_decision(demo, 4)
     snap4 = project.read_artifact(demo, "evidence", 4)
     batch4 = project.read_artifact(demo, "batches", 4)
+    pass1 = dec4["passes"][0]
     by_test = {}
-    for h in dec4["hypotheses"]:
+    for h in pass1["hypotheses"]:
         by_test.setdefault(h["diagnostic"], []).append(h["reading"])
 
     check("round 4 carries a decision record and it verifies",
           schema.verify(dec4) and dec4["round"] == 4,
-          "%s, %d hypotheses over %d of the five tests"
-          % (dec4["id"], len(dec4["hypotheses"]), len(by_test)))
+          "%s, %d hypotheses over %d of the five tests in pass 1"
+          % (dec4["id"], len(pass1["hypotheses"]), len(by_test)))
     check("it identifies the offset rather than the whole discrepancy",
           any(r in ("supported", "partially supported")
               for r in by_test.get("offset_from_controls", []))
-          and dec4["recommendation"]["action"] == "apply_offset_correction",
+          and pass1["recommendation"]["action"] == "apply_offset_correction",
           "bridge -1.014 against a -2.046 round: correct what the bridge supports")
     check("it rejects the plate and the unstable read with the tests that reject them",
           by_test.get("residual_by_plate") == ["not supported"]
@@ -966,23 +983,25 @@ def main():
           "both plates displaced equally, and no replicate outside tolerance")
     check("it ran the counterfactual and says what the correction leaves behind",
           any(h["args"].get("offset") == "bridge"
-              for h in dec4["hypotheses"] if h["diagnostic"] == "calibration_by_region"),
+              for h in pass1["hypotheses"] if h["diagnostic"] == "calibration_by_region"),
           "calibration_by_region --offset bridge is what makes the remainder visible")
     check("it says what would falsify it, and it is not left open",
-          len(dec4["recommendation"]["if_wrong"].split()) > 20
-          and dec4["recommendation"]["alternative_considered"],
-          "%d words of if_wrong" % len(dec4["recommendation"]["if_wrong"].split()))
+          len(pass1["recommendation"]["if_wrong"].split()) > 20
+          and pass1["recommendation"]["alternative_considered"],
+          "%d words of if_wrong" % len(pass1["recommendation"]["if_wrong"].split()))
     check("the sixth question is in ad_hoc, with its source and its label",
-          dec4["ad_hoc"] and all(a["code"] and "one-off, unversioned" in a["note"]
-                                 for a in dec4["ad_hoc"]),
-          "%d ad hoc cuts, none of them an input to a code path" % len(dec4["ad_hoc"]))
+          pass1["ad_hoc"] and all(a["code"] and "one-off, unversioned" in a["note"]
+                                  for a in pass1["ad_hoc"]),
+          "%d ad hoc cuts, none of them an input to a code path" % len(pass1["ad_hoc"]))
+    every = [h for p in dec4["passes"] for h in p["hypotheses"]]
     check("every number in it reproduces when its test is re-run",
-          not [h["diagnostic"] for h in dec4["hypotheses"]
+          not [h["diagnostic"] for h in every
                if schema.content_hash(diagnostics.run(
                    h["diagnostic"], snap4, batch4, project.designs_by_id(demo),
                    policy=demo["objectives"]["diagnostics_policy"],
                    args=dict(h["args"]))) != schema.content_hash(h["result"])],
-          "%d results recomputed from the hashed inputs" % len(dec4["hypotheses"]))
+          "%d results over %d passes recomputed from the hashed inputs"
+          % (len(every), len(dec4["passes"])))
     check("it points at the snapshot and batch it was computed from",
           dec4["inputs"]["snapshot"] == snap4["hash"]
           and dec4["inputs"]["batch"] == batch4["hash"],
@@ -1210,20 +1229,24 @@ def main():
           % (len(store["constructs"]), store["next_construct"]))
 
     proposal = schema.read_json(os.path.join(OUT, "reference", "decision_004.proposal.json"))
-    carried = [k for h in proposal["hypotheses"] for k in ("result", "source", "inputs")
-               if k in h]
+    shipped_h = [h for p in proposal["passes"] for h in p["hypotheses"]]
+    carried = ([k for h in shipped_h for k in ("result", "source", "inputs") if k in h]
+               + [k for p in proposal["passes"] for a in p["ad_hoc"] for k in ("stdout",)
+                  if k in a])
     check("the shipped proposal carries claims and no numbers",
-          not carried and len(proposal["hypotheses"]) == 8
-          and all(h.get("diagnostic") and h.get("reading") for h in proposal["hypotheses"]),
-          "8 hypotheses, every result stripped; record_decision.py re-runs each test in "
-          "the browser -- CLAUDE.md non-negotiable 7")
+          not carried and len(shipped_h) >= 8
+          and all(h.get("diagnostic") and h.get("reading") for h in shipped_h),
+          "%d hypotheses over %d passes, every result and every ad hoc stdout stripped; "
+          "record_decision.py re-runs each test in the browser -- CLAUDE.md "
+          "non-negotiable 7" % (len(shipped_h), len(proposal["passes"])))
     committed_record = schema.read_json(os.path.join(demo, "decisions",
                                                      "decision_004.json"))
     check("and it is the committed record's own claims, not a retelling of them",
-          [h["claim"] for h in proposal["hypotheses"]]
-          == [h["claim"] for h in committed_record["hypotheses"]]
-          and proposal["source_record"] == committed_record["hash"],
-          "derived from %s by web/bundle.py"
+          [h["claim"] for h in shipped_h]
+          == [h["claim"] for p in committed_record["passes"] for h in p["hypotheses"]]
+          and proposal["source_record"] == committed_record["hash"]
+          and proposal["n_passes"] == committed_record["n_passes"],
+          "derived from %s by web/bundle.py, pass by pass"
           % schema.short_hash(committed_record["hash"]))
 
     print("\nRedesign: the lab round trip -- an order goes out, and a run is waited on")
@@ -1391,6 +1414,16 @@ def main():
                   and browser["created"]["n_designs"] == 48,
                   "%s, %d designs -- no batch written by a second code path"
                   % (browser["created"]["mode"], browser["created"]["n_designs"]))
+            rl = browser.get("reload") or {}
+            check("a project created in the browser survives the reload that follows it",
+                  rl.get("dropped") == ["decisions", "evidence", "models"]
+                  and rl.get("broke_before") is True and rl.get("lists_after") is True
+                  and [r["project"] for r in rl.get("reasserted", [])]
+                      == ["harness-instantiated"]
+                  and rl["reasserted"][0]["created"] == ["decisions", "evidence", "models"],
+                  "the overlay drops %d still-empty directories and the driver re-asserts "
+                  "them at boot -- without it one created project takes the home list down "
+                  "with it" % len(rl.get("dropped", [])))
             check("the status briefing is assembled from artifacts, not narrated",
                   browser["briefing"]["kind"] == "status"
                   and browser["briefing"]["source"] == "core.reconcile.pool"
@@ -1398,6 +1431,198 @@ def main():
                   "best observed %s pKD via %s -- every figure names the function behind "
                   "it, which is what the Notebook tab resolves"
                   % (browser["briefing"]["best_observed"], browser["briefing"]["source"]))
+
+            print("\nPhase 7: the agent in the session -- verified replay")
+            v1 = browser["replay1"]["verified"]
+            check("the recorded diagnosis is stepped with every test re-run here, and every "
+                  "result matches the committed record by content hash",
+                  browser["replay1"]["status"] == "done"
+                  and v1["diagnostics"] == v1["of_diagnostics"] >= 8,
+                  "%d of %d results match -- the badge's claim, checked"
+                  % (v1["diagnostics"], v1["of_diagnostics"]))
+            check("and every ad hoc cut runs again and prints what the record holds",
+                  v1["ad_hoc"] == v1["of_ad_hoc"] >= 3,
+                  "%d of %d cuts reproduce, from their source, read-only, in the sandbox"
+                  % (v1["ad_hoc"], v1["of_ad_hoc"]))
+            pb = browser["pushback"]
+            check("the recorded push-back rules more_evidence_requested and the recorded "
+                  "answer replays it (SPEC.md acceptance criterion 8, without a key)",
+                  pb is not None and pb["ruled_status"] == "awaiting_evidence"
+                  and pb["n_passes"] == 2 and pb["answering"] == pb["requested"]
+                  and pb["replay_status"] == "done"
+                  and pb["verified"]["diagnostics"] == pb["verified"]["of_diagnostics"] >= 1,
+                  ("asked for %s; pass 2 answers it, %d of %d results match"
+                   % (pb["requested"], pb["verified"]["diagnostics"],
+                      pb["verified"]["of_diagnostics"])) if pb else "no recorded push-back")
+            sg = browser.get("suggested") or {}
+            check("the composer suggests nothing until the project's state earns it, and "
+                  "a flagged round earns it (decision 158)",
+                  sg.get("awaiting_approval") == [] and sg.get("settled") == []
+                  and sg.get("adhoc") == [] and sg.get("quiet") == ["live", "agent"]
+                  and sg.get("flagged") == ["why_flagged", "whats_waiting", "agent"],
+                  ("nothing on a batch awaiting approval, a settled round or an ad-hoc "
+                   "session; [%s] once round 4 flags, led by %r"
+                   % (", ".join(sg.get("flagged", [])), sg.get("lead"))) if sg else "none")
+            check("and every suggested ask is a prompt for the model, the agent's option "
+                  "last, with the briefing still answering each keyed one without a seat",
+                  sg.get("prompts") is True and sg.get("agent_last") is True
+                  and sg.get("briefed") is True,
+                  "each carries the text it sends; the no-key path still answers them")
+            check("the context the model is handed is read from artifacts and fits the "
+                  "cached prefix",
+                  browser["context"]["rows"] == 48 and browser["context"]["decisions"] >= 2
+                  and 20000 < browser["context"]["bytes"] < 160000
+                  and "paths" in browser["context"]["keys"],
+                  "%d bytes: objectives, the round graph, 48 scored wells, %d decision "
+                  "records, and the paths an ad hoc cut may read"
+                  % (browser["context"]["bytes"], browser["context"]["decisions"]))
+
+            print("\nPhase 7: the live loop, through the function, scripted upstream")
+            lv = browser["live"]
+            check("the function is reachable in-process and reports its upstream honestly",
+                  lv["probe"]["live"] is True and lv["probe"]["upstream"] == "scripted"
+                  and lv["probe"]["store"] == "memory",
+                  "live under a scripted upstream, memory budget store -- the harness, "
+                  "labelled as the harness")
+            check("a whole diagnosis round-trips: signed transcript, tool results answering "
+                  "the model's calls, the proposal handed to the writer",
+                  lv["pass1"]["status"] == "done" and lv["pass1"]["proposed"]
+                  and lv["pass1"]["signed"] and lv["pass1"]["tool_steps"] >= 11
+                  and lv["pass1"]["record"]["status"] == "open",
+                  "%d tool calls over a %d-message transcript; %s recorded %s"
+                  % (lv["pass1"]["tool_steps"], lv["pass1"]["transcript_messages"],
+                     "decision_004", lv["pass1"]["record"]["status"]))
+            check("and every number the loop wrote came from core/, recomputed here",
+                  lv["pass1"]["verified"]["checked"]
+                  and lv["pass1"]["verified"]["matched"] == lv["pass1"]["verified"]["total"] >= 8,
+                  "%d of %d results in the written record match the reference by hash"
+                  % (lv["pass1"]["verified"]["matched"], lv["pass1"]["verified"]["total"]))
+            check("an edited transcript is refused before a token is spent",
+                  lv["forged"]["status"] == 403,
+                  "%d: %s" % (lv["forged"]["status"], lv["forged"]["error"]))
+            ak = lv.get("ask")
+            check("a question asked in the session continues the diagnosis's signed "
+                  "transcript, answering its proposal first (decision 157)",
+                  ak is not None and ak["status"] == "done" and not ak["restarted"]
+                  and ak["continued"] and ak["answered_proposal"]
+                  and ak["prior_turns_seen"] == ak["prior_turns"]
+                  == lv["pass1"]["tool_steps"] + 1,
+                  ("the model saw all %d earlier turns; the proposal's tool_result and the "
+                   "question share one message; %d messages now"
+                   % (ak["prior_turns"], ak["transcript_messages"])) if ak else "no ask")
+            rs = lv.get("restart")
+            check("a transcript the function will not accept starts the conversation over "
+                  "rather than ending the turn, and the turn says why",
+                  rs is not None and rs["status"] == "done" and rs["restarted"]
+                  and rs["transcript_messages"] == 2,
+                  ("done on a fresh 2-message transcript; restarted: %s" % rs["restarted"])
+                  if rs else "no restart")
+            check("a push-back continues the same signed transcript -- from the question, "
+                  "not around it -- and writes pass 2",
+                  lv.get("pass2") is not None and lv["pass2"]["continued"]
+                  and lv["pass2"]["after_ask"]
+                  and lv["pass2"]["record"]["n_passes"] == 2
+                  and lv["pass2"]["record"]["answering"] == pb["requested"]
+                  and lv["pass2"]["verified"]["matched"] == lv["pass2"]["verified"]["total"],
+                  ("%d messages, pass 2 answers %s, %d of %d results match"
+                   % (lv["pass2"]["transcript_messages"], lv["pass2"]["record"]["answering"],
+                      lv["pass2"]["verified"]["matched"], lv["pass2"]["verified"]["total"]))
+                  if lv.get("pass2") else "no pass 2")
+
+    print("\nPhase 7: the function is not a proxy for the Claude API")
+    asker = os.path.join(REPO, "web", "scripts", "ask-check.mjs")
+    if not node:
+        check("the function refuses what it must", False, "SKIPPED: needs node")
+    else:
+        proc = subprocess.run([node, asker, "--json"], cwd=REPO, capture_output=True, text=True)
+        fnr = json.loads(proc.stdout) if proc.returncode == 0 else None
+        check("the function answers its probe without a key, and says so",
+              fnr is not None and fnr["probe"]["live"] is False
+              and fnr["probe"]["reason"] == "no key configured"
+              and fnr["probe"]["upstream"] == "anthropic",
+              (fnr["probe"]["reason"] if fnr else (proc.stderr or "")[-200:]))
+        if fnr:
+            ref = fnr["refusals"]
+            check("it refuses a forged transcript, an oversized context, a test outside the "
+                  "library, a model outside the allowlist, and a result nobody asked for",
+                  ref["forged_transcript"]["status"] == 403
+                  and ref["oversized_context"]["status"] == 413
+                  and ref["test_outside_library"]["status"] == 400
+                  and ref["unknown_model"]["status"] == 400
+                  and ref["results_with_nothing_pending"]["status"] == 400
+                  and ref["ruling_names_no_library_test"]["status"] == 400
+                  and fnr["wrong_tool_id_status"] == 400,
+                  "403, 413, 400, 400, 400, 400, 400 -- each before a token could be spent")
+            check("and a transcript it signed is accepted right up to the key",
+                  fnr["signed_accepted_status"] == 503
+                  and ref["well_formed_but_no_key"]["status"] == 503,
+                  "503 no key configured: validation passed, nothing was sent")
+            qp = fnr["question_on_proposal"]
+            check("a question that continues a proposal must carry the proposal's tool "
+                  "result, and then it is one message with the result first",
+                  qp["without_result"] == 400 and qp["with_result"] == 503
+                  and qp["shape"] == ["tool_result", "text"] and qp["messages"] == 3,
+                  "400 without it, 503 with it; the third message is [tool_result, text]")
+            rq = fnr["request"]
+            check("the request it builds is fixed: model allowlisted, effort low, adaptive "
+                  "thinking, fallbacks on, the context block cached",
+                  rq["model"] == "claude-sonnet-5" and rq["effort"] == "low"
+                  and rq["thinking"] == "adaptive" and rq["fallbacks"] == "default"
+                  and rq["betas"] == ["server-side-fallback-2026-07-01"]
+                  and rq["context_cached"] and rq["max_tokens"] == 16000,
+                  "%s, effort %s, max_tokens %d, fallbacks %s"
+                  % (rq["model"], rq["effort"], rq["max_tokens"], rq["fallbacks"]))
+            hk = fnr["haiku_request"]
+            check("and the one model that predates adaptive thinking is asked without it",
+                  hk["model"] == "claude-haiku-4-5-20251001"
+                  and hk["has_thinking"] is False and hk["has_effort"] is False
+                  and hk["fallbacks"] == "default" and hk["betas"] == rq["betas"]
+                  and hk["max_tokens"] == rq["max_tokens"]
+                  and hk["tools"] == rq["tools"]
+                  and hk["system_blocks"] == rq["system_blocks"],
+                  "Haiku 4.5 rejects both fields by name; everything else about its "
+                  "request -- prompt, tools, cap, fallbacks -- is the other model's")
+            check("the model is offered two read tools and one way to hand back, and no way "
+                  "to name a test the template does not permit",
+                  rq["tools"] == ["run_diagnostic", "execute_analysis", "propose_decision"]
+                  and rq["ask_tools"] == ["run_diagnostic", "execute_analysis"]
+                  and rq["chat_tools"] == []
+                  and rq["run_diagnostic_enum"] == list(diagnostics.TESTS)
+                  and rq["run_diagnostic_strict"],
+                  "run_diagnostic's enum is the context's permitted list, strict; a chat "
+                  "gets no tools")
+            check("its system prompt is the skill itself",
+                  rq["system_has_skill"] and rq["system_blocks"] == 3
+                  and fnr["probe"]["skill_sha256"] == hashlib.sha256(
+                      open(os.path.join(REPO, "skills", "adaptive-optimization", "SKILL.md"),
+                           "rb").read()).hexdigest(),
+                  "SKILL.md sha256 %s, as the function carries it -- one file drives Claude "
+                  "Code, Claude Science and the browser" % fnr["probe"]["skill_sha256"][:12])
+
+    print("\nPhase 7: the committed record is two-pass, and the second pass is a gate's")
+    p1, p2 = dec4["passes"][0], (dec4["passes"][1] if dec4["n_passes"] > 1 else None)
+    check("pass 1 was sent back by a named person, naming a library test",
+          p1["ruling"] is not None and p1["ruling"]["verdict"] == "more_evidence_requested"
+          and p1["ruling"]["by"] and p1["ruling"]["requested"]["diagnostic"] in diagnostics.TESTS
+          and len(p1["ruling"]["note"].split()) > 20,
+          "%s asked for %s" % (p1["ruling"]["by"] if p1["ruling"] else "nobody",
+                               p1["ruling"]["requested"]["diagnostic"] if p1["ruling"] else "-"))
+    check("pass 2 answers it: it ran what was asked for and proposed again",
+          p2 is not None and p2["answering"] == p1["ruling"]["requested"]["diagnostic"]
+          and any(h["diagnostic"] == p2["answering"] for h in p2["hypotheses"])
+          and p2["recommendation"]["action"] in
+          ("apply_offset_correction", "drop_wells", "refit_only", "no_action")
+          and len(p2["recommendation"]["if_wrong"].split()) > 20,
+          ("%d hypotheses, recommends %s, confidence %s"
+           % (len(p2["hypotheses"]), p2["recommendation"]["action"],
+              p2["recommendation"]["confidence"])) if p2 else "no second pass")
+    check("and the final ruling is left to a person, so the round still waits",
+          p2 is not None and p2["ruling"] is None and dec4["status"] == "open",
+          "both passes committed; the verdict is not")
+    check("the push-back gate's transcript is committed beside the other two",
+          os.path.isfile(os.path.join(REPO, "gates", "pushback-round4.md"))
+          and os.path.isfile(os.path.join(REPO, "gates", "pushback-round4.jsonl")),
+          "gates/pushback-round4.md")
 
     if FAILS:
         print("\n%d of %d checks FAILED:" % (len(FAILS), TOTAL))

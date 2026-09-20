@@ -17,10 +17,11 @@ import BlankProject from "./BlankProject.jsx";
 import Home from "./Home.jsx";
 import NewProject from "./NewProject.jsx";
 import Project from "./Project.jsx";
+import * as agent from "./agent.js";
 import * as blank from "./blank.js";
 import * as router from "./router.js";
 import * as rt from "./runtime.js";
-import { APP } from "./lib.jsx";
+import { APP, MODELS } from "./lib.jsx";
 
 export default function App() {
   const [boot, setBoot] = useState({ steps: [], done: false, error: null });
@@ -32,8 +33,22 @@ export default function App() {
   // the rail re-read the list without either of them owning it.
   const [epoch, setEpoch] = useState(0);
   const bump = useCallback(() => setEpoch((n) => n + 1), []);
+  // Whether a model is in the centre seat. Replay is the default; the probe
+  // says whether a live session is available and, if not, why in a phrase.
+  // Re-probed after every live turn, because the budget moves.
+  const [live, setLive] = useState({ live: false, reason: "probing…" });
+  const [model, setModel] = useState(MODELS[0].id);
+  const reprobe = useCallback(() => {
+    agent.probe().then((p) => {
+      setLive(p);
+      if (p && p.default_model && MODELS.some((m) => m.id === p.default_model)) {
+        setModel((m) => m || p.default_model);
+      }
+    });
+  }, []);
 
   useEffect(() => router.subscribe(setRoute), []);
+  useEffect(reprobe, [reprobe]);
 
   useEffect(() => {
     let live = true;
@@ -84,7 +99,7 @@ export default function App() {
     );
   }
 
-  const shared = { runtime, campaign, proposal, epoch, bump };
+  const shared = { runtime, campaign, proposal, epoch, bump, live, reprobe, model, setModel };
 
   if (route.kind === "new" || route.kind === "templates") {
     return <NewProject {...shared} />;

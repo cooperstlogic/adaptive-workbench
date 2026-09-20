@@ -127,13 +127,13 @@
     },
     {
       "path": "wb_driver.py",
-      "sha256": "f4ce03d25c3b6f4a2ff86093247875bc757b1dfcb7bac9b8b385c66f6d267785",
+      "sha256": "608fddbfb5e9d26b1ffcf512d4aa78d51bd93f6bffb1d85aa4a4b14106c7ac21",
       "source": "web/py/wb_driver.py",
       "verbatim": false
     }
   ],
-  "commit": "ec246b82efd5929a3b58b4f57d1fafe850fc52ed",
-  "hash": "sha256:73db083d49112fbbd3a20d65d33a5f492b40af699ee18b8a11d6d111ba4eb1aa",
+  "commit": "f602558d8e6b2c0beb3fb97ba3d5e6f6ae0bffec",
+  "hash": "sha256:f03e3f5c9d250ef44d85ed6fa16f751d6c35e9a9513d9f8b1908464f5c878106",
   "kind": "browser_bundle",
   "mount": "/workbench",
   "note": "code is copied byte for byte from the repository and laid out in the same shape, so Pyodide imports the same modules the CLI imports. state is the committed project rewound to before round 4 was submitted. reference is read for replay and never executed",
@@ -145,11 +145,11 @@
     },
     {
       "path": "reference/decision_004.json",
-      "sha256": "c9eb05a91cb1baf50c5faee4a66cf2df6d4e694e04e10f03a33fc906fce1da31"
+      "sha256": "4cd7cf9c3b44c649197e31d524aabbc0cd1eda5108af465330c514d9f03c2ea2"
     },
     {
       "path": "reference/decision_004.proposal.json",
-      "sha256": "9e63a288b4bc932467aa9b33de8f3edba29c0c6f09c61f8d883db3f6cda7081b"
+      "sha256": "3240d4e5edf438b39aebe508fbc101d87b90566504a2d0c572a7333459e53d6d"
     },
     {
       "path": "reference/requirements.json",
@@ -160,7 +160,7 @@
   "state": [
     {
       "path": "lims_store/demo-trastuzumab.json",
-      "sha256": "dd321a651a4bd7cc29a3199fe155cf7ded5b035e23867d79daf176dad90d8ee1"
+      "sha256": "ca7f216ffc82bb614bbe4956e8d850719ac723ce33e917c9f4395855cf2d771e"
     },
     {
       "path": "projects/demo-trastuzumab/batches/batch_001.eval.json",
@@ -248,7 +248,7 @@
     },
     {
       "path": "projects/demo-trastuzumab/rounds.json",
-      "sha256": "5423a31f7f483d8d87eeb3e98a0c2d93eab2d0be55041289f05755d9d21678dd"
+      "sha256": "3acfcb8e24c8e34c735c604e2a7c55d0e8c9234deeb8ba410c1a71ca08518f5a"
     }
   ]
 }

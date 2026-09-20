@@ -7,10 +7,12 @@ can be asserted in a README. They are run, and the transcripts are here.
 | --- | --- | --- |
 | Hour-5 gate | 3 — given the round-4 snapshot, produce a decision record that identifies the offset, rejects the cliff with the evidence that rejects it, and recommends the correction | [`hour5-round4.md`](hour5-round4.md) · [raw](hour5-round4.jsonl) |
 | Full round | 2 — given only the skill and the two connectors, complete one full round unaided | [`criterion2-round1.md`](criterion2-round1.md) · [raw](criterion2-round1.jsonl) |
+| Push-back | 8 — given the round-4 record ruled `more_evidence_requested`, run the test that was asked for, read it against the first pass, and propose again | [`pushback-round4.md`](pushback-round4.md) · [raw](pushback-round4.jsonl) |
 
-Both ran on `claude-opus-5` through headless Claude Code, with both connectors loaded
-from `.mcp.json`. Re-run either with `gates/run_gate.sh round4` or
-`gates/run_gate.sh round1`.
+All three ran on `claude-opus-5` through headless Claude Code, with both connectors loaded
+from `.mcp.json`. Re-run any of them with `gates/run_gate.sh round4`,
+`gates/run_gate.sh round1` or `gates/run_gate.sh round4-pushback`; the markdown is
+rendered from the raw transcript by `gates/render_transcript.py`, mechanically.
 
 A third transcript, [`5b-host-round4.md`](5b-host-round4.md), is the same diagnosis run
 in **Claude Science** in phase 5b, from the installed plugin. It is a demonstration
@@ -41,6 +43,33 @@ Deliberately short, and it names no hypothesis:
 > Round 4 of the project at `projects/demo-trastuzumab` came back flagged and the loop
 > has stopped. Work out what the round means and write a decision record with a
 > recommendation a scientist can rule on.
+
+## The push-back gate, and what its first run taught
+
+The third gate is the second half of acceptance criterion 8. The tree holds the committed
+project *with* `decision_004.json` — pass 1, the hour-5 gate's own record, ruled
+`more_evidence_requested` by d.webster with a note that quotes the record's `if_wrong`
+back at it: the three bridge members all sit on R4P1, so run `residual_by_plate` on the
+fresh designs alone. The prompt names no test and no answer. `record_decision.py` refuses
+a second pass that does not run what was asked for, so the gate cannot be passed by
+restating pass 1.
+
+It was run twice, and the first run is not committed. That run answered the question
+correctly and went one level further — the LIMS export carries a `well` column, and it
+found the bridge sits in one *row* of R4P1 — but its second ad hoc cut read that export
+from `/tmp/r4_readonly.csv`, the path it had handed `pull_assay_results` itself. A
+reviewer on another machine, or the browser replaying the record from its own pull,
+cannot run that. `SKILL.md` now says a cut reads the project directory and the round's
+export where the registry writes it, by relative path, and nothing else; the second run
+read only project files and its two cuts reproduce in the browser, which `check.py`
+verifies. Same diagnosis, same action, one level less deep, and reproducible — that is
+the trade the skill makes on purpose.
+
+The first run also listed the real repository, because the plugin installed in phase 5
+resolves its skill against this checkout, and saw in the listing that `README.md`,
+`SPEC.md`, `DECISIONS.md` and `CLAUDE.md` exist there. It read none of them, and the
+committed run named none of them, but a gate should not depend on restraint: the tree
+now denies reads of the repository and the script greps the transcript for its path.
 
 ## One thing in the transcripts that is not the gate
 

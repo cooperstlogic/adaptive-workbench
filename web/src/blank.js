@@ -86,6 +86,19 @@ export function addTurn(projectId, sessionId, text) {
   return s;
 }
 
+/** The model's answer to a turn, when a live session is available. It is a
+ *  chat with nothing declared, which is what a blank project is; the answer
+ *  is kept as text with the model that wrote it and how the turn ended. */
+export function answer(projectId, sessionId, index, reply) {
+  const doc = read();
+  const p = doc.projects.find((x) => x.id === projectId);
+  const s = p && p.sessions.find((x) => x.id === sessionId);
+  if (!s || !s.turns[index]) return null;
+  s.turns[index].answer = reply;
+  write(doc);
+  return s;
+}
+
 /** The four blank projects the home screen ships with, so the list reads like
  *  a workspace rather than a demo with one row in it. Each is a one-shot
  *  analysis rather than a campaign, which is the contrast: clicking one opens

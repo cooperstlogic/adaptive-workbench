@@ -14,6 +14,14 @@ export const TEMPLATE_TITLES = {
 export const templateTitle = (t) =>
   TEMPLATE_TITLES[t?.id || t] || t?.title || String(t?.id || t || "");
 
+// The two models the function accepts, and what the picker calls them. The
+// ids are the API's; the function refuses any other.
+export const MODELS = [
+  { id: "claude-sonnet-5", label: "Sonnet 5" },
+  { id: "claude-haiku-4-5-20251001", label: "Haiku 4.5" },
+];
+export const MODEL_LABEL = Object.fromEntries(MODELS.map((m) => [m.id, m.label]));
+
 /** What a project is called on screen: the molecule and its target. */
 export function projectTitle(p) {
   if (!p) return "";
@@ -133,16 +141,6 @@ export function CentreHead({ title, sub, children }) {
     </div>
   );
 }
-
-// The speakers in the centre column. `Shannon` is the workbench itself
-// reporting what it ran; `Claude` is the part that read the numbers and had
-// something to say about them. Keeping them apart is the point: one of them
-// produces every figure on screen and the other produces none of them.
-export const SPEAKERS = {
-  you: ["Y", "You"],
-  workbench: ["S", "Shannon"],
-  claude: ["C", "Claude"],
-};
 
 // The one-word label beside an affinity number, and what it means when a
 // reader hovers it. CLAUDE.md failure mode 3: the word "synthetic" in the same

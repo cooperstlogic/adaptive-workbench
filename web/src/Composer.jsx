@@ -6,54 +6,76 @@
 // Everything that only *reads* state — where are we, why did this flag,
 // whether the lab has reported — belongs in here.
 //
-// The suggested asks above it work today and work deterministically: each one
-// is answered by a briefing assembled in `wb_driver` from artifacts on disk,
-// with no model involved and every figure carrying the `core/` function that
-// produced it. Free text is phase 7, when a live model takes the same seat.
-// None of that is said on the page; the page is a composer.
+// Everything in it goes to the model in the centre seat when one is seated:
+// free text as typed, and the suggested asks above the box as the prompt
+// each one shows -- decision 158. The one suggestion that is a call to the
+// laboratory's registry rather than a question about state is marked as such
+// and stays one. When there is no seat, the box says so in a phrase and the
+// suggested asks are answered from artifacts on disk by the briefing
+// `wb_driver` assembles, with nothing over the answer; that is the default a
+// cold visit to the public URL gets once the daily budget is spent, and live
+// is the upgrade.
+//
+// The suggestions are presented as the host presents a choice -- `Choices`
+// -- until the session's first ask or a skip, and a toggle brings them back.
+// The model picker is wired: the function accepts exactly these two ids.
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import Choices from "./Choices.jsx";
+import { MODELS } from "./lib.jsx";
 
-// The working model picker. Opus 5 is selectable because it is what phase 7
-// would run; the others are shown to make the point that the choice exists.
-const MODELS = [
-  { id: "claude-opus-5", label: "Opus 5", live: true },
-  { id: "claude-sonnet-5", label: "Sonnet 5", live: false },
-  { id: "claude-haiku-4-5-20251001", label: "Haiku 4.5", live: false },
-];
-
-export default function Composer({ suggestions = [], onAsk, busy, placeholder, onSend }) {
+export default function Composer({
+  suggestions = [], onAsk, onSend, busy, placeholder, live, model, setModel, asked = 0,
+}) {
   const [text, setText] = useState("");
-  const [model, setModel] = useState(MODELS[0].id);
   const [picking, setPicking] = useState(false);
+  // Open while nothing has been asked in this session, and again whenever the
+  // project's state changes what there is to suggest -- a round comes back,
+  // a round flags -- because that is a new reason rather than the old one
+  // repeated. Closed by hand until then.
+  const signature = suggestions.map((s) => `${s.key}:${s.round ?? ""}`).join(",");
+  const [shown, setShown] = useState(null);
+  const at = useRef(signature);
+  if (at.current !== signature) {
+    at.current = signature;
+    setShown(signature ? true : null);
+  }
+  const canSend = !!(live && live.live && onSend);
+  const open = shown === null ? asked === 0 : shown;
 
   const send = () => {
-    if (!text.trim() || !onSend) return;
-    onSend(text.trim());
+    if (!text.trim() || !canSend) return;
+    onSend(text.trim(), model);
     setText("");
   };
 
+  const pick = (o) => {
+    setShown(false);
+    if (o.registry || !canSend) onAsk && onAsk(o.key, o.round);
+    else onSend(o.question, model, o.title || o.text);
+  };
+
+  const hint = canSend
+    ? placeholder || "Ask anything — @ for artifacts, # for sessions, / for skills, ⌘K to search…"
+    : `Live session unavailable — ${(live && live.reason) || "no function reachable"}`;
+
   return (
     <div className="composer-wrap">
-      {suggestions.length > 0 && (
-        <div className="asks">
-          {suggestions.map((s) => (
-            <button key={s.key} className="ask" disabled={busy}
-                    onClick={() => onAsk && onAsk(s.key, s.round)}>
-              {s.text}
-            </button>
-          ))}
-        </div>
-      )}
+      {suggestions.length > 0 && (open
+        ? <Choices options={suggestions} canSend={canSend} busy={busy} onPick={pick}
+                   onSkip={() => setShown(false)} />
+        : <div className="asks">
+            <button className="ask" onClick={() => setShown(true)}>Suggested asks ▸</button>
+          </div>)}
       <div className="composer">
         <textarea
           className="field" rows={2} value={text}
+          disabled={!canSend}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey && onSend) { e.preventDefault(); send(); }
+            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
           }}
-          placeholder={placeholder
-            || "Ask anything — @ for artifacts, # for sessions, / for skills, ⌘K to search…"}
+          placeholder={hint}
         />
         <div className="composer-bar">
           <span className="composer-left">
@@ -63,14 +85,15 @@ export default function Composer({ suggestions = [], onAsk, busy, placeholder, o
           <span className="composer-right">
             <span className="picker">
               <button className="glyph wide" onClick={() => setPicking(!picking)}>
-                {MODELS.find((m) => m.id === model).label} <span className="chev">⌄</span>
+                {(MODELS.find((m) => m.id === model) || MODELS[0]).label}{" "}
+                <span className="chev">⌄</span>
               </button>
               {picking && (
                 <div className="picker-menu" onMouseLeave={() => setPicking(false)}>
                   {MODELS.map((m) => (
-                    <button key={m.id} className="picker-item" disabled={!m.live}
+                    <button key={m.id} className="picker-item"
                             aria-selected={m.id === model}
-                            onClick={() => { if (m.live) { setModel(m.id); setPicking(false); } }}>
+                            onClick={() => { setModel && setModel(m.id); setPicking(false); }}>
                       <b>{m.label}</b>
                       <span className="mono tiny faint">{m.id}</span>
                     </button>
@@ -79,11 +102,9 @@ export default function Composer({ suggestions = [], onAsk, busy, placeholder, o
               )}
             </span>
             <button className="glyph" disabled title="Dictate">🎙</button>
-            {onSend && (
-              <button className="glyph send" onClick={send} disabled={!text.trim() || busy}>
-                ↑
-              </button>
-            )}
+            <button className="glyph send" onClick={send} disabled={!text.trim() || busy || !canSend}>
+              ↑
+            </button>
           </span>
         </div>
       </div>

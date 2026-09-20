@@ -32,12 +32,20 @@ LIMS and `import_round.py` and requires the returned snapshot to match the
 committed one everywhere except the batch pointer it necessarily carries.
 
 The proposal payload is derived the same way: the committed `decision_004.json`
-with every `result`, `source` and `inputs` block stripped out. What ships is
-the agent's claims, its choice of tests and its reasoning -- and no numbers.
-The browser re-runs all eight diagnostics through `core.diagnostics` and
-`record_decision.py` fills the results back in. A number that appeared in the
-browser without being recomputed there would be exactly the failure mode
-non-negotiable 7 exists to prevent.
+with every `result`, `source` and `inputs` block stripped out, and every ad hoc
+cut's stdout with them, pass by pass. What ships is the agent's claims, its
+choice of tests and its reasoning, the ruling that sent it back, and no
+numbers. The browser re-runs every diagnostic through `core.diagnostics`, runs
+every cut again, and `record_decision.py` fills the results back in. A number
+that appeared in the browser without being recomputed there would be exactly
+the failure mode non-negotiable 7 exists to prevent.
+
+**The model's system prompt is the skill, and it is copied here too.** Phase 7
+puts a model behind `web/netlify/functions/ask.mjs`, and what that function
+hands it is `skills/adaptive-optimization/SKILL.md` -- the same file Claude
+Code and Claude Science load -- written into `web/netlify/functions/lib/skill.mjs`
+as a string with its sha256 beside it, because a function bundler carries a
+module and not a path. `check.py` requires the string to be the file.
 """
 
 import argparse
@@ -82,6 +90,11 @@ CODE = [
 # else's. It calls the scripts above through their main(argv); it computes
 # nothing.
 DRIVER = "web/py/wb_driver.py"
+
+# The skill, which is the model's system prompt on every surface. The function
+# bundler ships modules, so the file becomes a module carrying the file.
+SKILL = "skills/adaptive-optimization/SKILL.md"
+SKILL_MODULE = "web/netlify/functions/lib/skill.mjs"
 
 # The shipped campaign spans weeks, because a campaign that does not is not a
 # campaign. The project was generated in one sitting, so every round carries
@@ -199,31 +212,46 @@ def proposal_payload():
     """decision_004, with every number taken back out of it.
 
     What survives is what the agent contributed: the claims, which test it
-    chose for each, how it read the answer, and the recommendation. The
-    browser recomputes the rest.
+    chose for each, how it read the answer, and the recommendation -- for
+    every pass the record went through, with the ruling that sent it back
+    between them. The browser recomputes the rest: each test through
+    ``run_diagnostic.py``, each ad hoc cut by running its code again, which
+    is why the cut's ``stdout`` is stripped along with the results.
     """
     rec = schema.read_json(os.path.join(REPO, "projects", DEMO, "decisions",
                                         "decision_004.json"))
-    hypotheses = []
-    for h in rec["hypotheses"]:
-        hypotheses.append({
-            "id": h["id"],
-            "claim": h["claim"],
-            "diagnostic": h["diagnostic"],
-            "args": h.get("args") or {},
-            "reading": h["reading"],
-            "reasoning": h["reasoning"],
+    passes = []
+    for p in rec["passes"]:
+        ruling = p.get("ruling")
+        passes.append({
+            "pass": p["pass"],
+            "answering": p.get("answering"),
+            "hypotheses": [{
+                "id": h["id"],
+                "claim": h["claim"],
+                "diagnostic": h["diagnostic"],
+                "args": h.get("args") or {},
+                "reading": h["reading"],
+                "reasoning": h["reasoning"],
+            } for h in p["hypotheses"]],
+            "ad_hoc": [{"question": a["question"], "code": a["code"]}
+                       for a in p.get("ad_hoc", [])],
+            "recommendation": p["recommendation"],
+            "ruling": None if ruling is None else {
+                "verdict": ruling["verdict"], "by": ruling["by"], "note": ruling["note"],
+                "requested": ruling.get("requested"),
+            },
         })
     return {
-        "note": ("the committed round-4 proposal with every result, source and input "
-                 "hash removed. record_decision.py re-runs each named test in the "
-                 "browser and fills the numbers back in"),
+        "note": ("the committed round-4 proposal with every result, source, input hash "
+                 "and ad hoc stdout removed. record_decision.py re-runs each named test "
+                 "in the browser, execute_analysis re-runs each cut, and the numbers are "
+                 "filled back in there"),
         "source_record": rec["hash"],
         "round": rec["round"],
         "trigger": rec["trigger"],
-        "hypotheses": hypotheses,
-        "recommendation": rec["recommendation"],
-        "ad_hoc": rec["ad_hoc"],
+        "n_passes": rec["n_passes"],
+        "passes": passes,
     }
 
 
@@ -386,6 +414,42 @@ def verify_replay(dest_root, verbose=True):
         return again
 
 
+def write_skill_module():
+    """SKILL.md as an ES module: the text, verbatim, and its sha256."""
+    src = os.path.join(REPO, SKILL)
+    with open(src, encoding="utf-8") as fh:
+        text = fh.read()
+    dst = os.path.join(REPO, SKILL_MODULE)
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    with open(dst, "w", encoding="utf-8") as fh:
+        fh.write("// Generated by web/bundle.py from %s. Do not edit; edit the skill.\n"
+                 "// The model in the centre column is given this text as its system\n"
+                 "// prompt, so the browser, Claude Code and Claude Science are driven by\n"
+                 "// one file. check.py requires the string below to be that file.\n"
+                 "export const SKILL_PATH = %s;\n"
+                 "export const SKILL_SHA256 = %s;\n"
+                 "export const SKILL_MD = %s;\n"
+                 % (SKILL, json.dumps(SKILL), json.dumps(sha(src)),
+                    json.dumps(text, ensure_ascii=False)))
+    return dst
+
+
+def check_skill_module():
+    """Is the module the skill as it stands now?"""
+    dst = os.path.join(REPO, SKILL_MODULE)
+    if not os.path.exists(dst):
+        return False, "no %s" % SKILL_MODULE
+    with open(dst, encoding="utf-8") as fh:
+        body = fh.read()
+    marker = "export const SKILL_MD = "
+    if marker not in body:
+        return False, "%s carries no SKILL_MD" % SKILL_MODULE
+    text = json.loads(body.split(marker, 1)[1].rstrip().rstrip(";"))
+    with open(os.path.join(REPO, SKILL), encoding="utf-8") as fh:
+        same = fh.read() == text
+    return same, "" if same else "%s has moved on from %s" % (SKILL, SKILL_MODULE)
+
+
 def build(verbose=True):
     if os.path.exists(OUT):
         shutil.rmtree(OUT)
@@ -395,6 +459,7 @@ def build(verbose=True):
         copy(rel, OUT)
     driver_dst = os.path.join(OUT, "wb_driver.py")
     shutil.copyfile(os.path.join(REPO, DRIVER), driver_dst)
+    write_skill_module()
 
     _, minted = rewind_project(OUT)
     rewind_store(OUT, minted)
@@ -462,6 +527,9 @@ def check():
         return False, "no bundle at web/public/workbench"
     current = schema.read_json(path)
     drifted = []
+    skill_ok, why = check_skill_module()
+    if not skill_ok:
+        drifted.append(why)
     for entry in current["code"]:
         src = os.path.join(REPO, entry.get("source") or entry["path"])
         dst = os.path.join(OUT, entry["path"])

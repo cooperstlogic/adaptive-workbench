@@ -121,6 +121,11 @@ async function bootOnce(onStep) {
 
   step("starting the driver");
   py.runPython(`import sys\nsys.path.insert(0, ${JSON.stringify(MOUNT)})\nimport wb_driver`);
+  // The overlay is a map of path to contents, so a directory still empty when
+  // it was saved -- every subdirectory of a project created here, until its
+  // first round writes into each -- is not in it. The driver re-asserts the
+  // skeleton from schema.SUBDIRS rather than the overlay storing it.
+  call("ensure_dirs");
 
   return {
     resumed: !!overlay,
