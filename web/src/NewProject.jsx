@@ -10,13 +10,13 @@
 //
 // **The declaration runs past the template file.** Three rows below it are
 // the plugin's — the interpreter, the skill and the two stdio connectors with
-// every tool each one exposes and the ones it withholds — and two more are
-// the sandbox grants that no manifest anywhere can express. They used to be a
+// every tool each one exposes and the ones it withholds. They used to be a
 // separate table in the margin, which read as an audit finding parked beside
 // a product screen. In the same locked list as the objectives they are the
 // same sentence continued: this is what the project is, this is what it needs
-// to run, and this is the file each line came out of. The two rows with
-// nothing in that column are gap 109.
+// to run, and this is the file each line came out of. The two rows no
+// manifest can declare — the sandbox grants — are not drawn: they are a
+// finding about the host, and this page is about this project.
 //
 // **Creating it runs three real commands in Pyodide.** `init_project.py` is
 // the CLI's own entry point, mirrored into the bundle, and round 1 then goes
@@ -72,9 +72,9 @@ function declaration(tpl) {
   ];
 }
 
-/** Where a row came from, in the third column: a path, or the finding. */
+/** Where a row came from, in the third column: the file, or a dash for the
+ *  rows that are plausible rather than declared. */
 function Source({ from }) {
-  if (from === "nothing declares this") return <Badge kind="flag">nothing declares this</Badge>;
   if (from === "mock") return <span className="tiny faint">—</span>;
   return <span className="mono tiny faint" title={`read from ${from}`}>{from}</span>;
 }
@@ -127,6 +127,14 @@ export default function NewProject({ bump, campaign }) {
   // Which need is the connectors, without naming them here: the row whose
   // value is the server list itself. check.py holds the two together.
   const connectors = (reqs ? reqs.servers : []).map((s) => s.name).join(", ");
+  // Only the rows a manifest declares. The two the audit found -- the sandbox
+  // grants, which nothing anywhere can express -- are still in
+  // requirements.json and still the sharpest thing phase 5b found, and they
+  // belong in the audit rather than in a configure screen, where a row with
+  // an empty source column is a question about the host asked on a page about
+  // this project. Gap 109 is made in the README and in DECISIONS.md.
+  const declared = (reqs ? reqs.needs : [])
+    .filter((r) => r.declared_in !== "nothing declares this");
 
   const createTemplated = async () => {
     setBusy(true);
@@ -270,7 +278,7 @@ export default function NewProject({ bump, campaign }) {
                           </div>
                         </td>
                       </tr>
-                      {reqs.needs.map((r) => (
+                      {declared.map((r) => (
                         <tr key={r.what} className="locked">
                           <td className="k">{r.what}</td>
                           <td>

@@ -26,8 +26,9 @@ artifact panel drag and the controls that did nothing are gone, and `+ New proje
 Claude Science's dialog with one control added above its three fields — *from a template*
 or *blank*. Blank means the instructions somebody typed reach the seat as a second system
 block; from a template hands off to the template library, whose configure screen is the
-whole locked declaration, the interpreter and the skill and both connectors and the two
-sandbox grants nothing declares included, each row naming the file it was read from.
+whole locked declaration, the interpreter and the skill and both connectors included, each
+row naming the file it was read from. The two sandbox grants no manifest can express are
+in `requirements.json` and in the audit, and not on the screen — decision 172.
 **What phase 8 still owes is the public README**, and then phase 9's demo script. Full
 status, results and commands are in `README.md`; every settled choice and its reasoning is in `DECISIONS.md`. Read both
 before writing code, and read `skills/adaptive-optimization/SKILL.md` before touching

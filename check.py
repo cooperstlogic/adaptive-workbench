@@ -1189,13 +1189,15 @@ def main():
     reqs = schema.read_json(os.path.join(OUT, "reference", "requirements.json"))
     server_names = ", ".join(sv["name"] for sv in reqs["servers"])
     undeclared = [nd for nd in reqs["needs"] if nd["declared_in"] == "nothing declares this"]
-    check("the configure screen's connector row is the server list it draws underneath",
+    check("the configure screen draws what a manifest declares, and its connector row "
+          "is the server list it draws underneath",
           any(nd["value"] == server_names for nd in reqs["needs"])
-          and len(reqs["servers"]) == 2 and len(undeclared) == 2
-          and all(sv["tools"] for sv in reqs["servers"]),
-          "%s, and the %d rows nothing declares are %s -- gap 109, in the same locked "
-          "table as the objectives" % (server_names, len(undeclared),
-                                       " and ".join(nd["value"] for nd in undeclared)))
+          and len(reqs["servers"]) == 2 and all(sv["tools"] for sv in reqs["servers"])
+          and len(reqs["needs"]) - len(undeclared) == 3 and len(undeclared) == 2,
+          "%s under the three declared rows; the %d the manifests cannot express (%s) "
+          "stay in requirements.json and are made in the audit, not on a project's "
+          "configure screen -- decision 172" % (server_names, len(undeclared),
+                                                ", ".join(nd["value"] for nd in undeclared)))
     check("nothing under web/src/ is Python, and no driver logic hides in the page",
           not [f for _d, _s, fs in os.walk(os.path.join(REPO, "web", "src"))
                for f in fs if f.endswith(".py")],

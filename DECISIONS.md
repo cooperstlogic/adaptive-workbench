@@ -1489,3 +1489,15 @@ description arrive in the configure screen — a templated project is created fr
 shows its description on the home card, and a blank one created beside it carries its
 instructions in the rail under *Instructions for Claude*. The configure table scrolls
 inside its own card at phone width rather than taking the page with it.
+
+---
+
+## The sandbox grants are a finding about the host — decision 172
+
+Moving the requirements table into the configure screen (170) brought two rows with it
+that do not belong on a project's page: *read access to the code and the project* and
+*write access, and only here*, each badged **nothing declares this**.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 172 | **The configure screen draws only the rows a manifest declares** — the interpreter, the skill and the two connectors. The two sandbox grants stay in `requirements.json`, where `bundle.py` still assembles them with what each one cost by hand in Claude Science, and `check.py` still counts them; they are not on the screen. Amends 170 | The other rows answer *what is this project?* The grants answer *what did installing this cost in someone else's host?*, which is a real question about Claude Science and a non sequitur beside an antibody's editable region. Gap 109 is not weakened by taking it off a product screen: it is the sharpest finding of the phase-5b audit and it is made in `DECISIONS.md`, in the README's gap table and in `requirements.json` itself, which is where a reader who wants it goes. What was on the page was a badge saying something was missing, on a list of things that are present |
