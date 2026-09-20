@@ -19,7 +19,10 @@ over rounds.** Frame it as that positive vision, not as a gap in the product.
 
 **The build is complete and deployed** — https://adaptive-workbench-iota.vercel.app, on
 Vercel rather than Netlify because the proposal turn runs 70 to 110 seconds and Netlify's
-streaming limit is a hard 60.
+streaming limit is a hard 60. **Deploys come from GitHub**: a push to `main` is production
+and every other branch gets a preview. The Vercel project's Root Directory is `web`, so
+the CLI is run from the repository root, and the key and the budget variables are set on
+Production only — a preview runs without a seat and spends nothing.
 
 ## Commands
 

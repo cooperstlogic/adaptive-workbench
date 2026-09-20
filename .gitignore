@@ -24,5 +24,6 @@ web/.env
 web/.env.*
 
 # The Vercel CLI's working directory: the linked project's ids and the local
-# build output. Regenerable.
-web/.vercel/
+# build output. Regenerable. It sits at the repository root because the Vercel
+# project's Root Directory is `web`, and the CLI resolves that from the root.
+.vercel/
