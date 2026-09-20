@@ -111,8 +111,11 @@ live seat can, and that beat is deliberately not in the harness.
 
 ## How the interface is shaped
 
-**The web app wears the Claude Science interface**, because the claim is that this is a
-layer inside it rather than a product beside it. It is **two shells**: a home screen that
+**The app is called Shannon Science** — `web/src/lib.jsx`'s `APP`, the tab title, the home
+brandmark with `Beta` beneath, and the first sentence of the model's system prompt in
+`web/function/ask.mjs`. It is this repository's layer; Claude Science is the host it is
+arguing about. **It wears the Claude Science interface**, because the claim is that this is
+a layer inside it rather than a product beside it. It is **two shells**: a home screen that
 is full-bleed and owns no project, and a project shell with a rail, a centre conversation
 and a right artifact panel. **A session is a unit of work** — a round starts one, and a
 person can start an ad-hoc one at any time.

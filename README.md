@@ -3,7 +3,8 @@
 A scientist-governed system that takes an antibody lead, learns from each round of
 experimental results, and recommends the next batch of variants to test.
 
-**Live demo: [adaptive-workbench-iota.vercel.app](https://adaptive-workbench-iota.vercel.app)**
+**Live demo — Shannon Science:
+[adaptive-workbench-iota.vercel.app](https://adaptive-workbench-iota.vercel.app)**
 — the real Python runs in your browser. Nothing is sent anywhere.
 
 > ### Everything laboratory here is simulated
@@ -38,14 +39,31 @@ That layer is thin. It is four things:
   code paths.
 
 The reason that layer matters is that it is what lets a model exercise judgment *across*
-rounds instead of answering one question at a time. The web app in this repository is a
-demonstration of what Claude Science looks like with that template installed — its shell
-deliberately wears the host's interface, because the claim is that this is a layer inside
-it rather than a product beside it.
+rounds instead of answering one question at a time.
+
+### The layer has a name: Shannon Science
+
+The web app in this repository is a demonstration of what Claude Science looks like with
+that template installed, so its shell deliberately wears the host's interface — the claim
+is that this is a layer *inside* Claude Science rather than a product beside it, and the
+name is the same man's other one. **Shannon Science** is what the deployed site is titled
+and what its home screen is branded, `Beta` beneath.
+
+It is also how the model in the centre seat is told where it is sitting. This is the
+opening of the system prompt `web/function/ask.mjs` builds, ahead of `SKILL.md` itself:
+
+> You are Claude, seated in a project session of Shannon Science: a thin layer over Claude
+> Science that keeps persistent decision state across the experimental rounds of an
+> antibody lead-optimization campaign. **The skill below is the same file you would load in
+> Claude Code or in Claude Science.** Here its scripts are reachable as tools, and nothing
+> else is.
+
+Everything under that name is this repository's. Claude Science is the host it is arguing
+about, not a thing it ships.
 
 **This is a prototype built in a day.** The skill, the connectors, the optimization code
 and the decision records are real and run in three places. The laboratory underneath them
-is simulated, and the web app's outer chrome is a wireframe.
+is simulated, and Shannon Science's outer chrome is a wireframe.
 
 ### The two things worth looking at
 
@@ -731,8 +749,8 @@ The model produces no numbers, and that is structural rather than instructed:
 
 ### The same science in the browser
 
-The web app boots Pyodide, **mounts the repository's own modules** into its filesystem, and
-runs the round loop against the visitor's own copy of the project. `core/` is never ported
+Shannon Science boots Pyodide, **mounts the repository's own modules** into its filesystem,
+and runs the round loop against the visitor's own copy of the project. `core/` is never ported
 to JavaScript — that fork is the one mistake that would undermine the whole demo.
 
 | | |
@@ -794,7 +812,7 @@ live model seat can diagnose it, and that beat is deliberately not in the test h
 | Structure prediction | **Stubbed.** `predict_structures` returns nulls and a note saying it predicted nothing. It invents no confidence score, and nothing downstream reads it |
 | The ad hoc sandbox | **A guard, not a sandbox, and labelled so in the source.** Model-written numpy runs read-only against the project directory behind a read-only `open`, an import denylist, a token check and a line budget. The claim is that `core/` never reads the oracle and that ad hoc output never enters a code path, which `record_decision.py` enforces on its own |
 | The function behind the live seat | **Real, stateless, and not a proxy.** It builds every request itself, accepts only transcripts it signed, reserves each call's maximum against a daily cap and a per-address counter before the call and settles to actual usage after, and opens the live seat only to a page carrying the link's access code |
-| The web app's chrome | **A wireframe.** It renders the layer the host audit found missing, in the host's own grammar; the panels, the Python, the state and the hashes inside it are real and are running in your tab. The rail's host-only items are drawn and inert, with a tooltip saying so |
+| Shannon Science's chrome | **A wireframe.** It renders the layer the host audit found missing, in the host's own grammar; the panels, the Python, the state and the hashes inside it are real and are running in your tab. The rail's host-only items are drawn and inert, with a tooltip saying so |
 | The proof chart | **Real, and the evaluator's.** Twenty simulated campaigns per arm, drawn as the *template's* validation — never on a project's own progress chart, which draws only what that project measured. A project cannot be compared against a random arm it never ran |
 | Round dates in the shipped campaign | **Display-level.** The shipped round graph's `updated` stamps are spread over about six weeks. No simulated date is written into a project artifact and no measurement moves |
 | The four other projects on the home screen | **Scenery, and empty.** Plausible titles with no template and no content, so the list reads like a workspace. Opening one shows exactly what it is |
