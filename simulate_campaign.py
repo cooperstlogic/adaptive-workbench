@@ -10,8 +10,8 @@ the diagnostic line -- the line that asks what each arm actually picked,
 before the simulated assay added noise to the answer. Nothing on a product
 path may do this.
 
-The threshold it scores against was pre-registered in DECISIONS.md and
-committed before this file first ran. If guided does not separate from
+The threshold it scores against was pre-registered (README.md, "Pre-registered
+landscape parameters") and committed before this file first ran. If guided does not separate from
 random, the deliverable is a sentence saying it did not.
 """
 
@@ -439,7 +439,7 @@ def report(ctx, summary, comparisons, arms, elapsed):
 def gate_verdict(ctx, summary, comparison):
     """The hour-3 gate, stated as a pass or a failure and nothing in between.
 
-    The criterion is the one written in SPEC.md before any of this ran:
+    The criterion is the one written down before any of this ran:
     guided reaches the pre-registered threshold in measurably fewer rounds
     than random over twenty seeds per arm, and the interquartile bands
     separate. Because the twenty runs are paired -- same landscape, same
@@ -552,8 +552,8 @@ def main(argv=None):
         "unit": schema.UNIT,
         "landscape_build_hash": ctx.manifest["build_hash"],
         "threshold_pkd": ctx.threshold,
-        "threshold_provenance": ("99th percentile of the landscape, pre-registered in "
-                                 "DECISIONS.md and recorded before any campaign ran"),
+        "threshold_provenance": ("99th percentile of the landscape, pre-registered and "
+                                 "committed before any campaign ran"),
         "detection_limit_pkd": ctx.detection_limit,
         "n_seeds": args.seeds,
         "n_rounds": args.rounds,

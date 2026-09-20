@@ -1,9 +1,8 @@
 // The single stateless model proxy. One model turn per invocation; the loop
 // lives in the browser, where the data and the sandbox already are.
 //
-// **It is not a proxy for the Claude API.** SPEC.md calls that the single
-// most important line in its section, and it is enforced here rather than
-// promised. The function builds the request itself: a system prompt that is
+// **It is not a proxy for the Claude API.** That is the single most important
+// line about this file, and it is enforced here rather than promised. The function builds the request itself: a system prompt that is
 // the skill file (`lib/skill.mjs`, generated from SKILL.md by web/bundle.py),
 // a fixed tool list, a model from a two-entry allowlist, fixed effort and
 // a fixed output cap. A caller supplies four typed things -- which kind of

@@ -8,14 +8,14 @@
 #
 # It builds a throwaway tree holding only what the gate is entitled to -- the
 # code, the skill, the connectors and the project -- and points a headless
-# Claude Code session at it. README.md, SPEC.md, DECISIONS.md and CLAUDE.md are
-# deliberately absent, because all four discuss round 4 and the gate would
-# otherwise be testing whether an agent can find an answer already written down.
+# Claude Code session at it. README.md and CLAUDE.md are deliberately absent,
+# because both discuss round 4 and the gate would otherwise be testing whether
+# an agent can find an answer already written down.
 #
 # `data/` has to be present, because the registry connector imports the oracle.
 # The gate tree denies Read on it and the prompt says it is off limits, and the
 # transcript is grepped afterwards to confirm nothing reached it. That is a
-# guard rather than a sandbox, and DECISIONS.md decision 97 says so plainly.
+# guard rather than a sandbox, and gates/README.md says so plainly.
 
 set -e
 WHICH="${1:-round4}"
@@ -34,7 +34,7 @@ rsync -a --exclude='__pycache__' --exclude='.DS_Store' \
       skills/adaptive-optimization "$TREE/.claude/skills/"
 # The repository itself is denied too: the plugin installed in phase 5 resolves
 # its skill against this checkout, and the first push-back run listed the real
-# repository -- and saw that README, SPEC, DECISIONS and CLAUDE.md exist there
+# repository -- and saw that README.md and CLAUDE.md exist there
 # -- before working in its own tree. It read none of them, and the transcript
 # is grepped for the path below, but a gate should not depend on restraint.
 cat > "$TREE/.claude/settings.json" <<JSON

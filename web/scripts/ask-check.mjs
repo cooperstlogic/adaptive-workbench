@@ -3,7 +3,7 @@
 //     node web/scripts/ask-check.mjs            # readable
 //     node web/scripts/ask-check.mjs --json     # what check.py reads
 //
-// SPEC.md's single most important line is that the function is not a proxy
+// The single most important line about the function is that it is not a proxy
 // for the Claude API. This calls the handler in-process with no key in the
 // environment and no upstream, and reports what it refused and what it would
 // have sent: every refusal happens before a token could be spent, and the

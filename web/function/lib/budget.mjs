@@ -1,6 +1,6 @@
 // The daily spend cap and the per-address counter.
 //
-// SPEC.md: a global daily spend cap and a per-IP counter live in a store the
+// A global daily spend cap and a per-IP counter live in a store the
 // host provides. Under the cap the session runs live; over it the site
 // returns to replay, which is the default that live calls temporarily
 // upgrade. The cap exists so a public URL cannot run up a bill, not to meter

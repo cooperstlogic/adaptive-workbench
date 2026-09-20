@@ -11,7 +11,7 @@ makes round 4 genuinely ambiguous.
 ``run_seed`` selects an independent replay of the same lab: same landscape,
 same pre-registered noise parameters, different draws. It is what makes twenty
 seeds per arm twenty independent runs rather than twenty copies of one. It is
-not a landscape parameter and changes nothing in DECISIONS.md.
+not a landscape parameter and changes nothing that was pre-registered.
 """
 
 import hashlib

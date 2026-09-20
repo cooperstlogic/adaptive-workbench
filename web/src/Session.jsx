@@ -25,7 +25,7 @@
 //
 // What the turns say is what ran and what came back. They do not say why the
 // interface is shaped the way it is; that reasoning lives here and in
-// DECISIONS.md, and a turn that recites it is a turn in the way of the round.
+// README.md, and a turn that recites it is a turn in the way of the round.
 
 import { useEffect, useState } from "react";
 import AgentStream, { agentBadge } from "./AgentStream.jsx";

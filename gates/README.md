@@ -21,8 +21,8 @@ rather than a gate, and the difference is recorded below because it matters.
 ## What the session was given, and what it was not
 
 The gate builds a throwaway tree holding the code, the skill, the connectors and the
-project. **`README.md`, `SPEC.md`, `DECISIONS.md` and `CLAUDE.md` are absent**, because
-all four discuss round 4 and the gate is supposed to test whether `SKILL.md` and the five
+project. **`README.md` and `CLAUDE.md` are absent**, because both discuss round 4 and
+the gate is supposed to test whether `SKILL.md` and the five
 diagnostics are sufficient — not whether an agent can find an answer already written
 down. `decision_004.json` is removed for the same reason; the round-4 run writes it.
 
@@ -33,8 +33,8 @@ flagged round would read the last one too. It contains no round-4 numbers.
 `data/` has to be in the tree, because the registry connector imports the oracle. The
 gate denies `Read` on it and the prompt says it is off limits; afterwards the transcript
 is grepped for any access. Both runs came back clean, and the round-1 session volunteered
-"I did not read `data/`" without being asked. This is a guard and not a sandbox, and
-`DECISIONS.md` says so rather than overclaiming it.
+"I did not read `data/`" without being asked. This is a guard and not a sandbox, and it
+is stated as one rather than overclaimed.
 
 ## The prompt
 
@@ -66,8 +66,8 @@ verifies. Same diagnosis, same action, one level less deep, and reproducible —
 the trade the skill makes on purpose.
 
 The first run also listed the real repository, because the plugin installed in phase 5
-resolves its skill against this checkout, and saw in the listing that `README.md`,
-`SPEC.md`, `DECISIONS.md` and `CLAUDE.md` exist there. It read none of them, and the
+resolves its skill against this checkout, and saw in the listing that `README.md` and
+`CLAUDE.md` exist there. It read none of them, and the
 committed run named none of them, but a gate should not depend on restraint: the tree
 now denies reads of the repository and the script greps the transcript for its path.
 

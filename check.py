@@ -5,7 +5,7 @@ any phase that builds on an earlier one.
     python check.py
 
 Every check here corresponds to a rule in CLAUDE.md or a number recorded in
-DECISIONS.md. A failure means the state has drifted from what is documented,
+README.md. A failure means the state has drifted from what is documented,
 not that a test is being fussy.
 """
 
@@ -224,7 +224,7 @@ def main():
     check("core/ uses no scipy, sklearn or pandas", not (imported & banned),
           "found %s" % sorted(imported & banned) if imported & banned else "numpy only")
 
-    print("\nLandscape (DECISIONS.md pre-registered parameters)")
+    print("\nLandscape (the pre-registered parameters)")
     out = subprocess.run([sys.executable, "-m", "data.build_oracle"], cwd=REPO,
                          capture_output=True, text=True)
     rebuilt = schema.read_json(os.path.join(REPO, "data", "landscape_manifest.json"))
@@ -425,7 +425,7 @@ def main():
           ", ".join("%s %dkB" % (c, os.path.getsize(os.path.join(assets, c)) // 1024)
                     for c in charts))
 
-    print("\nPhase 2 gate (SPEC.md acceptance criterion 1)")
+    print("\nPhase 2 gate: guided separates from random")
     gate = camp["gate"]
     check("the campaign scored the pre-registered threshold on the built landscape",
           abs(camp["threshold_pkd"] - 10.762) < 0.001
@@ -949,7 +949,7 @@ def main():
           "snapshot %s" % schema.short_hash(snap2["hash"]))
 
 
-    print("\nPhase 5 gate: round 4's decision record (SPEC.md acceptance criterion 3)")
+    print("\nPhase 5 gate: round 4's decision record, written by an agent")
     # Written by a Claude Code session given only the skill and the connectors,
     # in a tree with no README, SPEC, DECISIONS or CLAUDE.md in it. What is
     # checked here is the record, not the transcript: the claim is that the
@@ -1012,7 +1012,7 @@ def main():
           and project.unruled_flagged_rounds(demo) == [4],
           "round 4 is still waiting on a named human, which is the product working")
 
-    print("\nPhase 5: the registry connector (SPEC.md acceptance criterion 6)")
+    print("\nPhase 5: the registry connector cannot create a sample")
     import lims as lims_mod
     from core import scoring
 
@@ -1377,7 +1377,7 @@ def main():
                & set(out["tools"])),
           "submit, export, check, list, pull, get, attach -- and nothing that authors data")
 
-    print("\nPhase 6: the browser and the CLI (SPEC.md acceptance criterion 7)")
+    print("\nPhase 6: the browser and the CLI write the same bytes")
     node = shutil.which("node")
     harness = os.path.join(REPO, "web", "scripts", "pyodide-check.mjs")
     staged = os.path.join(REPO, "web", "public", "pyodide", "pyodide.mjs")
@@ -1564,7 +1564,7 @@ def main():
                   % (v1["ad_hoc"], v1["of_ad_hoc"]))
             pb = browser["pushback"]
             check("the recorded push-back rules more_evidence_requested and the recorded "
-                  "answer replays it (SPEC.md acceptance criterion 8, without a key)",
+                  "answer replays it (the push-back round trip, without a key)",
                   pb is not None and pb["ruled_status"] == "awaiting_evidence"
                   and pb["n_passes"] == 2 and pb["answering"] == pb["requested"]
                   and pb["replay_status"] == "done"

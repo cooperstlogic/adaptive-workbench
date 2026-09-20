@@ -5,8 +5,9 @@ first- and second-order terms are ever reachable from the parent, so a model
 with higher-order interactions would carry terms that can never fire. Pairwise
 is exactly expressive enough.
 
-Every parameter here was pre-registered in DECISIONS.md and committed before
-this file first ran. See non-negotiable 8 in CLAUDE.md.
+Every parameter here was pre-registered and committed before this file first
+ran -- the table is in README.md under "Pre-registered landscape parameters",
+and non-negotiable 9 in CLAUDE.md is the rule.
 """
 
 import numpy as np
@@ -113,7 +114,7 @@ class Landscape:
 
     def calibrate(self, pool, tol=0.002, iters=60):
         """Solve beta so a one-hot linear model explains the pre-registered
-        fraction of variance. The target is fixed in DECISIONS.md; only beta
+        fraction of variance. The target is pre-registered in README.md; only beta
         moves, and it moves to hit that number -- not to hit a result."""
         target = self.params["target_linear_r2"]
         A = self.linear_part(pool)

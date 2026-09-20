@@ -132,7 +132,7 @@ export default function NewProject({ bump, campaign }) {
   // requirements.json and still the sharpest thing phase 5b found, and they
   // belong in the audit rather than in a configure screen, where a row with
   // an empty source column is a question about the host asked on a page about
-  // this project. Gap 109 is made in the README and in DECISIONS.md.
+  // this project. Gap 109 is made in the README.
   const declared = (reqs ? reqs.needs : [])
     .filter((r) => r.declared_in !== "nothing declares this");
 

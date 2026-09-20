@@ -1657,7 +1657,7 @@ def _batch_context(state, r):
 def agent_context(project=None, round_id=None):
     """Everything the model in the centre seat is handed, read from disk.
 
-    This is the ~20k-token stable prefix SPEC.md describes: the objectives,
+    This is the ~20k-token stable prefix the design calls for: the objectives,
     the round graph with every round's anomaly, frame, calibration and model
     summary, the focus round's batch table scored against what came back,
     and every decision record with every pass. It computes nothing -- each

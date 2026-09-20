@@ -191,7 +191,7 @@
     }
   ],
   "detection_limit_pkd": 6.860511,
-  "elapsed_seconds": 36.824302,
+  "elapsed_seconds": 34.449687,
   "feasible_pool": 7294,
   "gate": {
     "criterion": "guided reaches the pre-registered threshold in measurably fewer rounds than random over 20 paired seeds, and the interquartile bands separate",
@@ -222,7 +222,7 @@
     "sign_test_significant_at_0.05": true,
     "statement": "GATE PASSED: guided selection reaches the pre-registered threshold in fewer rounds than random over 20 paired seeds, and the interquartile bands separate. The landscape is synthetic, so this shows the loop converges and not that the method finds better antibodies."
   },
-  "hash": "sha256:829b62874ae035cec2a089b2d68645e1c27cb697a2662cb170f1963dee90bf06",
+  "hash": "sha256:dbd940af90834ae85904b9fce3003799d1dfdd68e04e6fa412e3043f4b7358ad",
   "kind": "campaign_comparison",
   "landscape_build_hash": "sha256:c9b2566abc75f0dba893f4c6628c9bb1213dd2921fa4317b8751be03d2ce3318",
   "n_rounds": 6,
@@ -15102,6 +15102,6 @@
   "synthetic": true,
   "synthetic_note": "The landscape is invented. This chart shows that the decision loop converges; it does not show that the method finds better antibodies.",
   "threshold_pkd": 10.76156,
-  "threshold_provenance": "99th percentile of the landscape, pre-registered in DECISIONS.md and recorded before any campaign ran",
+  "threshold_provenance": "99th percentile of the landscape, pre-registered and committed before any campaign ran",
   "unit": "pKD"
 }

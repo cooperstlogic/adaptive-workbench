@@ -1,8 +1,8 @@
 // An ad-hoc session: a unit of work inside a project that is not a round.
 //
 // The reference screenshot shows both kinds in one rail — *Diagnose Round 4…*
-// beside *List Designs Registry Connector*. That is the amendment to
-// `SPEC.md`'s "a session is a round", and it is where the thesis gets
+// beside *List Designs Registry Connector*. That is the amendment to the
+// original "a session is a round", and it is where the thesis gets
 // demonstrated rather than asserted:
 //
 //   Open a project you have never opened. Click `+ New`. Ask *where are we?*
