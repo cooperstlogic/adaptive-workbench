@@ -183,7 +183,7 @@ say(`round history     round 3 reads back as [${report.history.past[2]}] from `
 // offers nothing, a quiet round offers the one ask decision 66 is about.
 const keysOf = (r) => call("suggested_asks", { round_id: r }).map((a) => a.key);
 report.suggested = { awaiting_approval: keysOf(4), settled: keysOf(2), quiet: keysOf(3),
-                     adhoc: keysOf(null) };
+                     seed: keysOf(1), adhoc: keysOf(null) };
 
 bringBackRound4(call, timing, report);
 
@@ -401,6 +401,28 @@ lab.context = (() => {
   const r = c.rounds.find((x) => x.round === 5);
   return { has_lab: !!r.lab, status: r.lab && r.lab.status };
 })();
+// A round that came back quiet and has not been carried forward is the one
+// state the quiet ask belongs in, and the project created above is where one
+// can be had: round 1 carries no model predictions, so it cannot flag. Its
+// files were compared against the CLI before any of this ran.
+const made5 = made.id;
+call("approve", { round_id: 1, by: BY, project: made5 });
+call("release_run", { round_id: 1, project: made5 });
+call("check_results", { round_id: 1, project: made5 });
+const quietRound = call("view", { project: made5 }).rounds.find((r) => r.round === 1);
+lab.quiet = {
+  status: quietRound.status, flagged: quietRound.flagged,
+  asks: call("suggested_asks", { project: made5, round_id: 1 }).map((a) => a.key),
+};
+call("continue_unflagged", { round_id: 1, project: made5 });
+const settledRound = call("view", { project: made5 }).rounds.find((r) => r.round === 1);
+lab.settled = {
+  status: settledRound.status,
+  asks: call("suggested_asks", { project: made5, round_id: 1 }).map((a) => a.key),
+};
+say(`quiet round       ${made5} round 1 ${lab.quiet.status}: [${lab.quiet.asks}]; once `
+  + `fitted (${lab.settled.status}): [${lab.settled.asks}]`);
+
 report.lab = lab;
 say(`agent tool        ${lab.tool.commands.length} commands, round 5 flagged=`
   + `${lab.tool.flagged} at ${Number(lab.tool.mean_signed_residual).toFixed(6)}; asked `

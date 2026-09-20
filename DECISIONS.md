@@ -1401,3 +1401,24 @@ pKD below prediction at z −8.11, 46% outside an 80% interval, the bridge estim
 against the −1.014 carried from round 4's ruling, *"the opposite pattern from round 4,
 where the bridge only explained about half the gap"*, and the loop stopped where the skill
 says to stop — flagged, unruled, no refit. Four calls, $0.23.
+
+---
+
+## A settled round has no open question in it — decision 165
+
+Rounds 1 and 3 stopped being blank (162) and immediately showed what had been wrong with
+the card over the composer all along: under the round's whole history — proposed, signed,
+ordered, returned, scored, fitted, next batch out — sat *Round 3 came back and did not
+flag. Anything to decide in round 3?* Nothing, and the page had just spent nine paragraphs
+saying so.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 165 | **The quiet-round ask is offered only while the round is still the open question.** `suggested_asks` gates it on `status == "imported"` — the round came back, it did not flag, and nobody has fitted it yet, which is exactly the state where the column is still offering *Fit round N and propose round N+1*. Once that button is pressed the round is `complete` and earns nothing, like every other settled round. Amends 66 and 158 | Decision 66 is that the agent speaks on quiet rounds too, and it is right about the moment it was written for: a round has just come back, the flag says nothing is wrong, and *is it as quiet as the flag says?* is a real question with a real answer. It is not a question about a round from six weeks ago with three rounds behind it. 158 already said a settled round earns nothing; the quiet ask was gated on `flagged is False`, which is true of a settled round forever, so the rule and the code disagreed and nobody could see it until the column had something else in it |
+
+`check.py` 195 → 196, and one existing assertion changed rather than relaxed: the harness
+used to require `["live", "agent"]` on round 3 and now requires `[]` on rounds 1, 2 and 3
+alike. The positive case is round 1 of a project created in the browser, imported and not
+yet fitted — it cannot flag, because round 1 carries no model predictions — which offers
+`["live", "agent"]`, and offers nothing once `continue_unflagged` has run. Both directions
+of the rule, on real state, in the same harness pass.

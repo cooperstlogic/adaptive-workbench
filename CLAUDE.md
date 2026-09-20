@@ -27,7 +27,7 @@ before writing code, and read `skills/adaptive-optimization/SKILL.md` before tou
 anything in the round loop.
 
 - Use `.venv/bin/python`, never `python3` — the system interpreter has no numpy.
-- Run `.venv/bin/python check.py` before and after any phase. It verifies 195 invariants
+- Run `.venv/bin/python check.py` before and after any phase. It verifies 196 invariants
   that correspond to rules here and numbers in `DECISIONS.md`; a failure means the state
   drifted from what is documented. It takes about forty seconds, because it runs two full
   six-round campaigns through the CLI, checks them against the evaluator, drives both
@@ -74,13 +74,15 @@ wireframe banner is gone (superseding 60) and that a session is no longer only a
 typed controls outside the composer — that is decision 65 and it is why the approval
 primitive is not a chat interrupt. Everything that only *reads* state belongs in the
 composer, as a contextual suggested ask. **Suggested asks go to the model, and only
-when the state gives a reason to suggest one** — decision 158. A round at the lab, a
-flagged round nobody has ruled on, a round that came back quiet: those earn a card
+when the state gives a reason to suggest one** — decision 158. A round at the lab or one
+whose results are in unpulled, a flagged round nobody has ruled on, a round that came back
+quiet **and has not been carried forward yet** (decision 165): those earn a card
 (`Choices.jsx` — options each showing the prompt it sends, headed by the state that
 earned it with Skip beside it, then *Let the agent decide*; numbered only when there is
 more than one). A batch awaiting
 approval, a settled round and a new session earn nothing, and the composer stands
-alone; do not put a generic ask back under it. Every option goes to the seat when there
+alone; do not put a generic ask back under it. A round is settled the moment it is fitted
+and the next batch is out, however quietly it came back. Every option goes to the seat when there
 is one, except the results check, which is a call to the registry and says so where it
 sits. The deterministic briefing `wb_driver.ask` assembles from artifacts on disk is
 what answers them when there is no seat, and it is not to be removed: it is the no-key

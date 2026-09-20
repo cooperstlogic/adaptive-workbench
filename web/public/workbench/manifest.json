@@ -127,13 +127,13 @@
     },
     {
       "path": "wb_driver.py",
-      "sha256": "434c705b3299508e34206296231ca60780156878948e16bace024f5d2398827d",
+      "sha256": "8d90f095019864ff3d1474208c102a79252f6043f0b2547dfad20eb6a24088c9",
       "source": "web/py/wb_driver.py",
       "verbatim": false
     }
   ],
-  "commit": "89deccbe96ac2c688b05b40b750bdf62781a39c8",
-  "hash": "sha256:204bcc9fe6fb726b3b7b2bb04e9470ae32f0f9c457ed1ad0309104ca9a40c82f",
+  "commit": "2956f1f11053bb222076069af9a68c8aab764367",
+  "hash": "sha256:6a8593302f580a84672d4590c0b4e80bc712460c4553dbd65786d9b52b836386",
   "kind": "browser_bundle",
   "mount": "/workbench",
   "note": "code is copied byte for byte from the repository and laid out in the same shape, so Pyodide imports the same modules the CLI imports. state is the committed project rewound to before round 4 was submitted. reference is read for replay and never executed",
@@ -160,7 +160,7 @@
   "state": [
     {
       "path": "lims_store/demo-trastuzumab.json",
-      "sha256": "da64e9abf5d9fb7d93ca95d575a8b09e12148c492c37193d83812157a782d4ad"
+      "sha256": "489867c5479fd201f30c41b6f1d57e7d53f75753c1c1900961120f69bba31da0"
     },
     {
       "path": "projects/demo-trastuzumab/batches/batch_001.eval.json",
@@ -248,7 +248,7 @@
     },
     {
       "path": "projects/demo-trastuzumab/rounds.json",
-      "sha256": "94fffa8c9899dd472be191aabd2e3fe83b03cde006fbd003677ad6ada75cc624"
+      "sha256": "4e1b01387f8e814b4c6df9a260cb6d861af95c4a8d6be40b45d551cd076ffad8"
     }
   ]
 }

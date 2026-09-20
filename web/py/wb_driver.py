@@ -1203,11 +1203,14 @@ def round_history(round_id, project=None):
 def suggested_asks(project=None, round_id=None):
     """What to offer over the composer, when the project's state gives a reason to.
 
-    Offered only when there is something to suggest: a round at the lab, a
-    flagged round nobody has ruled on, a round that came back quiet. A new
+    Offered only when there is something to suggest: a round at the lab or one
+    whose results are in and unpulled, a flagged round nobody has ruled on, a
+    round that came back quiet and has not been carried forward yet. A new
     session with nothing pending gets nothing over the composer -- *where are
     we?* and *what does this template declare?* are questions a person types,
-    not ones the workbench presses (decision 158).
+    not ones the workbench presses (decision 158). Neither does a settled
+    round: once it is fitted and the next batch is out, there is no open
+    question in it to press on anybody (decision 165).
 
     Each entry is a prompt for the model in the centre seat -- ``title`` is
     what the card shows and the bubble repeats, ``question`` is the text that
@@ -1267,7 +1270,14 @@ def suggested_asks(project=None, round_id=None):
     # rather than an alarm -- a live question the person can put to the model
     # about a round that did not flag. The page offers it only when a live
     # session is available, because nothing on disk answers it.
-    if focus is not None and focus["flagged"] is False:
+    #
+    # Only while the round is still the open question, though -- decision 165.
+    # "Came back and did not flag" describes a round from the moment it is
+    # imported until someone fits it and moves on, and after that it describes
+    # a round from six weeks ago with the next three behind it. A settled
+    # round earns nothing (158), and the status is what says which: `imported`
+    # is the state where the column is still offering to fit it.
+    if focus is not None and focus["flagged"] is False and focus["status"] == "imported":
         out.append({"key": "live", "round": focus["round"],
                     "lead": "Round %d came back and did not flag." % focus["round"],
                     "text": "Anything to decide in round %d?" % focus["round"],

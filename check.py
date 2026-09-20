@@ -1486,6 +1486,16 @@ def main():
                   "four commands from one tool call; round 5 comes back flagged at "
                   "%.6f pKD, the same number the product path gets"
                   % lab["tool"]["mean_signed_residual"])
+            check("a round that came back quiet earns an ask only until it is carried "
+                  "forward, and then it earns nothing",
+                  lab["quiet"]["status"] == "imported"
+                  and lab["quiet"]["flagged"] is False
+                  and lab["quiet"]["asks"] == ["live", "agent"]
+                  and lab["settled"]["status"] == "complete"
+                  and lab["settled"]["asks"] == [],
+                  "round 1 of a project created here: [%s] while the column is still "
+                  "offering to fit it, [] once it has"
+                  % ", ".join(lab["quiet"]["asks"]))
             check("it refuses a round already imported and a round never submitted, and "
                   "the refusal goes back as a result rather than ending the turn",
                   lab["tool_refusals"]["imported"]["refused"]
@@ -1552,12 +1562,13 @@ def main():
                       pb["verified"]["of_diagnostics"])) if pb else "no recorded push-back")
             sg = browser.get("suggested") or {}
             check("the composer suggests nothing until the project's state earns it, and "
-                  "a flagged round earns it (decision 158)",
+                  "a flagged round earns it (decisions 158 and 165)",
                   sg.get("awaiting_approval") == [] and sg.get("settled") == []
-                  and sg.get("adhoc") == [] and sg.get("quiet") == ["live", "agent"]
+                  and sg.get("adhoc") == [] and sg.get("quiet") == []
+                  and sg.get("seed") == []
                   and sg.get("flagged") == ["why_flagged", "whats_waiting", "agent"],
-                  ("nothing on a batch awaiting approval, a settled round or an ad-hoc "
-                   "session; [%s] once round 4 flags, led by %r"
+                  ("nothing on a batch awaiting approval, an ad-hoc session, or any of "
+                   "rounds 1 to 3, which are settled; [%s] once round 4 flags, led by %r"
                    % (", ".join(sg.get("flagged", [])), sg.get("lead"))) if sg else "none")
             check("and every suggested ask is a prompt for the model, the agent's option "
                   "last, with the briefing still answering each keyed one without a seat",
