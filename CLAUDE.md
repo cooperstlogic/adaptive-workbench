@@ -23,7 +23,7 @@ before writing code, and read `skills/adaptive-optimization/SKILL.md` before tou
 anything in the round loop.
 
 - Use `.venv/bin/python`, never `python3` — the system interpreter has no numpy.
-- Run `.venv/bin/python check.py` before and after any phase. It verifies 180 invariants
+- Run `.venv/bin/python check.py` before and after any phase. It verifies 181 invariants
   that correspond to rules here and numbers in `DECISIONS.md`; a failure means the state
   drifted from what is documented. It takes about forty seconds, because it runs two full
   six-round campaigns through the CLI, checks them against the evaluator, drives both

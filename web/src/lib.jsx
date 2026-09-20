@@ -14,11 +14,10 @@ export const TEMPLATE_TITLES = {
 export const templateTitle = (t) =>
   TEMPLATE_TITLES[t?.id || t] || t?.title || String(t?.id || t || "");
 
-// The three models the function accepts, and what the picker calls them. The
+// The two models the function accepts, and what the picker calls them. The
 // ids are the API's; the function refuses any other.
 export const MODELS = [
   { id: "claude-sonnet-5", label: "Sonnet 5" },
-  { id: "claude-opus-5", label: "Opus 5" },
   { id: "claude-haiku-4-5-20251001", label: "Haiku 4.5" },
 ];
 export const MODEL_LABEL = Object.fromEntries(MODELS.map((m) => [m.id, m.label]));

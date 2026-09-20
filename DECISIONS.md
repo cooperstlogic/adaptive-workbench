@@ -1157,3 +1157,27 @@ invisible to every check that boots once and drives forward — which is all of 
 now. And `MAX_CREATED` is 3, so a visitor could brick their own copy of the demo three
 clicks in; the fix is what makes the New project screen safe to show on a public URL,
 which phase 8 is about to do.
+
+---
+
+## Opus comes off the picker, and the picker is tested rather than assumed — decision 156
+
+The picker was wired in decision 151 and never exercised past the allowlist. Asked
+whether it actually works, the answer turned out to be yes and no in the same breath:
+selecting Haiku 4.5 and asking a question returned `400 adaptive thinking is not
+supported on this model`, which is itself the proof that the selection reaches the
+upstream — the error is model-specific and could not have been produced by a request
+built for anything else. Probing the rest of the shape found a second rejection behind
+the first: `This model does not support the effort parameter`. Both fields have been sent
+on every request since phase 7, so that entry had never once worked.
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 156 | **The picker offers Sonnet 5 and Haiku 4.5, and the function accepts those two.** `claude-opus-5` is off the allowlist and off the picker. Haiku's request omits `thinking` and `output_config.effort` and is otherwise byte-identical in shape — same prompt, same three tools, same cap, same `fallbacks: "default"` under the same beta, which that model does accept. `ask-check.mjs` builds both requests and `check.py` asserts the Haiku one drops exactly those two fields and nothing else — check 181. Amends 151 and 154 | Two reasons, and only one of them is cost. Opus at $5/$25 against Sonnet 5 at $2/$10 is a daily cap that buys two and a half times as many sessions, and decision 154 already moved the seat; leaving Opus on the picker left the expensive path one click from any visitor on a public URL. The other reason is that a picker with a broken entry is worse than no picker — CLAUDE.md's first failure mode is a mock dressed up as real, and an entry that 400s every time is exactly that. Fixing it cost a spread and a named list; the alternative was a one-entry picker, which is a label |
+
+What this says about the other claims on the staged table. This one read **Wired** for a
+phase without anyone selecting a non-default model and pressing send. The allowlist was
+tested — `check.py` has refused `gpt-9` since phase 7 — and the allowlist was not the
+part that was broken. A test that a request is *refused* is not a test that a request is
+*served*, and the two live requests behind this entry now are the only reason it can say
+*both entries run*.

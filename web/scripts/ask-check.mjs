@@ -104,6 +104,19 @@ report.request = {
 };
 say(`request           ${req.model} effort ${req.output_config.effort}, thinking ${req.thinking.type}, `
   + `max_tokens ${req.max_tokens}, fallbacks ${req.fallbacks} under ${req.betas.join(",")}`);
+
+// The one model on the list that predates adaptive thinking and effort, and
+// rejects both by name. Everything else about its request is the same.
+const haiku = buildRequest(validate({ kind: "diagnose", model: "claude-haiku-4-5-20251001",
+                                      context: ctx, turn: { type: "diagnose" } }));
+report.haiku_request = {
+  model: haiku.model, has_thinking: "thinking" in haiku,
+  has_effort: "output_config" in haiku, fallbacks: haiku.fallbacks, betas: haiku.betas,
+  max_tokens: haiku.max_tokens, tools: haiku.tools.map((t) => t.name),
+  system_blocks: haiku.system.length,
+};
+say(`haiku             ${haiku.model}: no thinking, no effort, `
+  + `fallbacks ${haiku.fallbacks}, same ${haiku.tools.length} tools and ${haiku.system.length} system blocks`);
 say(`tools             diagnose: ${report.request.tools.join(", ")}; ask: ${report.request.ask_tools.join(", ")}; chat: none`);
 say(`system            ${req.system.length} blocks, skill present, context block cached`);
 

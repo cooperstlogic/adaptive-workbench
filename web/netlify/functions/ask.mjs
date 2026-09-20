@@ -5,7 +5,7 @@
 // most important line in its section, and it is enforced here rather than
 // promised. The function builds the request itself: a system prompt that is
 // the skill file (`lib/skill.mjs`, generated from SKILL.md by web/bundle.py),
-// a fixed tool list, a model from a three-entry allowlist, fixed effort and
+// a fixed tool list, a model from a two-entry allowlist, fixed effort and
 // a fixed output cap. A caller supplies four typed things -- which kind of
 // turn, the project's state as `wb_driver.agent_context` read it, the
 // transcript so far, and one new user turn -- and every one of them is
@@ -35,8 +35,17 @@ import { createHmac, createHash, timingSafeEqual } from "node:crypto";
 import { account, check, costOf } from "./lib/budget.mjs";
 import { SKILL_MD, SKILL_PATH, SKILL_SHA256 } from "./lib/skill.mjs";
 
-export const MODELS = ["claude-sonnet-5", "claude-opus-5", "claude-haiku-4-5-20251001"];
+export const MODELS = ["claude-sonnet-5", "claude-haiku-4-5-20251001"];
 export const DEFAULT_MODEL = "claude-sonnet-5";
+// Haiku 4.5 predates adaptive thinking and the effort parameter, and rejects
+// both by name -- `adaptive thinking is not supported on this model`, then
+// `This model does not support the effort parameter`. It is the one model on
+// the list that needs the request shaped for it rather than for the family,
+// so the two fields are omitted for it and nothing else changes: the same
+// prompt, the same tools, the same cap, the same signed transcript. Probed
+// against the live API before it was written down -- `fallbacks: "default"`
+// it does accept.
+export const NO_THINKING = ["claude-haiku-4-5-20251001"];
 export const KINDS = ["diagnose", "ask", "chat"];
 export const TURNS = ["diagnose", "question", "tool_results", "ruling"];
 export const FALLBACK_BETA = "server-side-fallback-2026-07-01";
@@ -344,8 +353,9 @@ export function buildRequest({ kind, model, context, messages }) {
   return {
     model,
     max_tokens: MAX_TOKENS[kind],
-    thinking: { type: "adaptive" },
-    output_config: { effort: EFFORT },
+    ...(NO_THINKING.includes(model)
+      ? {}
+      : { thinking: { type: "adaptive" }, output_config: { effort: EFFORT } }),
     betas: [FALLBACK_BETA],
     fallbacks: "default",
     system: systemFor(kind, context),

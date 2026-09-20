@@ -14,7 +14,7 @@
 // the default a cold visit to the public URL gets once the daily budget is
 // spent, and live is the upgrade.
 //
-// The model picker is wired: the function accepts exactly these three ids.
+// The model picker is wired: the function accepts exactly these two ids.
 
 import { useState } from "react";
 import { MODELS } from "./lib.jsx";

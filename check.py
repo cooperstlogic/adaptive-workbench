@@ -1533,6 +1533,16 @@ def main():
                   and rq["context_cached"] and rq["max_tokens"] == 16000,
                   "%s, effort %s, max_tokens %d, fallbacks %s"
                   % (rq["model"], rq["effort"], rq["max_tokens"], rq["fallbacks"]))
+            hk = fnr["haiku_request"]
+            check("and the one model that predates adaptive thinking is asked without it",
+                  hk["model"] == "claude-haiku-4-5-20251001"
+                  and hk["has_thinking"] is False and hk["has_effort"] is False
+                  and hk["fallbacks"] == "default" and hk["betas"] == rq["betas"]
+                  and hk["max_tokens"] == rq["max_tokens"]
+                  and hk["tools"] == rq["tools"]
+                  and hk["system_blocks"] == rq["system_blocks"],
+                  "Haiku 4.5 rejects both fields by name; everything else about its "
+                  "request -- prompt, tools, cap, fallbacks -- is the other model's")
             check("the model is offered two read tools and one way to hand back, and no way "
                   "to name a test the template does not permit",
                   rq["tools"] == ["run_diagnostic", "execute_analysis", "propose_decision"]
