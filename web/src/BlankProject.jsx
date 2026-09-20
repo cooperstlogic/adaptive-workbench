@@ -1,8 +1,8 @@
 // A project with no template. The control arm.
 //
-// Same chrome as a templated project — rail header, New / Search / Customize
-// / Files / Compute, settings at the bottom, composer pinned with a working
-// model picker — and nothing in it, because nothing has declared what it
+// Same chrome as a templated project — rail header, New / Files, settings at
+// the bottom, composer pinned with a working model picker — and nothing in
+// it, because nothing has declared what it
 // means. There is no Rounds item because there is no round graph. There is no
 // artifact panel because there are no artifacts. There is no approval,
 // because there is nothing to approve.
@@ -27,10 +27,7 @@ import { CentreHead, MODEL_LABEL, elapsed } from "./lib.jsx";
 
 const RAIL = [
   { id: "new", icon: "✦", label: "New" },
-  { id: "search", icon: "⌕", label: "Search" },
-  { id: "customize", icon: "◉", label: "Customize" },
   { id: "files", icon: "▤", label: "Files" },
-  { id: "compute", icon: "⚙", label: "Compute" },
 ];
 
 export default function BlankProject({ route, project, bump, live, reprobe, model, setModel }) {
@@ -138,7 +135,7 @@ export default function BlankProject({ route, project, bump, live, reprobe, mode
                href={item.id === "new"
                  ? router.href({ kind: "session", project: pid, id: "new" }) : "#"}
                onClick={(e) => { if (item.id !== "new") e.preventDefault(); }}>
-              <span className="ic">{item.icon}</span>{item.label}
+              <span className="ic">{item.icon}</span><span>{item.label}</span>
             </a>
           ))}
 
@@ -162,7 +159,7 @@ export default function BlankProject({ route, project, bump, live, reprobe, mode
           </div>
 
           <div className="rail-foot hide-narrow">
-            <button className="rail-item"><span className="ic">⚙</span>Settings</button>
+            <button className="rail-item"><span className="ic">⚙</span><span>Settings</span></button>
           </div>
         </nav>
 

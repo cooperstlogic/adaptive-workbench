@@ -1441,3 +1441,15 @@ table more room or a long diagnosis less.
 Verified in a browser at 1400, 1000, 820 and 390 pixels: the drag clamps at both ends and
 survives a reload, the sheet closes three ways, and the strip across the top no longer
 wraps the project id. `check.py` unchanged at 196; nothing it reads moved.
+
+---
+
+## Both edges drag, and nothing is drawn that does not work — decision 167
+
+| # | Decided | Why |
+| --- | --- | --- |
+| 167 | **The rail drags from its right edge the way the panel drags from its left** — 180 to 420 pixels, persisted per browser, double-click resets, no grip while collapsed or under the narrow breakpoint — and the panel's cap now subtracts whatever the rail was dragged to, so the centre keeps its four hundred pixels whichever edge moved. **The controls that did nothing are gone**: Search, Customize and Compute from both rails, Search from the home header, and the attach, tools and dictate glyphs from the composer, which is now the model picker and the send arrow. The default placeholder is *Ask anything…*; a round's composer still says which round. Files stays, drawn and unwired, as the one host item the rail keeps | A disabled button with a tooltip saying it is not wired was decision 60's honesty in miniature, and it fails the same way the banner did: it tells instead of showing, and it invites a click the page cannot answer. The host's chrome was imitated to make the claim that this is a layer inside it; the claim does not need every item on the host's rail to make it, and each unwired one was a place a sceptic could press and get nothing. The rail drag is there because the session list carries titles that do not fit 232 pixels |
+
+Along the way the collapsed rail was found spilling its labels — the rule hid
+`span:not(.ic)` and the labels were bare text — and its Reset button wrapping into three
+lines. Both are wrapped now, and a collapsed rail is icons and nothing else.

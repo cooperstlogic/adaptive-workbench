@@ -165,10 +165,10 @@ h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
 }
 
 /* The panel is as wide as it was last dragged, and never so wide that the
-   centre column drops under about four hundred pixels; below the narrow
-   breakpoint it stops being a column at all. */
+   centre column drops under about four hundred pixels whatever the rail was
+   dragged to; below the narrow breakpoint it stops being a column at all. */
 .panel {
-  width: min(var(--panel-w), max(340px, 100% - 700px)); flex: none;
+  width: min(var(--panel-w), max(340px, 100% - var(--rail-w) - 420px)); flex: none;
   border-left: 1px solid var(--line);
   background: var(--panel); display: flex; flex-direction: column; min-height: 0;
 }
@@ -445,7 +445,7 @@ a.block:hover, a.card:hover { border-color: var(--muted); }
 .rail.is-collapsed { width: 58px; }
 .rail.is-collapsed .rail-item span:not(.ic), .rail.is-collapsed .rail-group,
 .rail.is-collapsed .rail-sub, .rail.is-collapsed .rail-project,
-.rail.is-collapsed .rail-foot > div { display: none; }
+.rail.is-collapsed .rail-foot > * { display: none; }
 a.rail-item { text-decoration: none; }
 
 /* --- the composer, and the asks above it --------------------------------- */
@@ -491,9 +491,9 @@ a.rail-item { text-decoration: none; }
 .choice-con { color: var(--flag); }
 
 
-.composer-bar { display: flex; align-items: center; justify-content: space-between;
+.composer-bar { display: flex; align-items: center; justify-content: flex-end;
   margin-top: 6px; }
-.composer-left, .composer-right { display: flex; align-items: center; gap: 4px; }
+.composer-right { display: flex; align-items: center; gap: 4px; }
 .glyph {
   border: 0; background: none; color: var(--faint); border-radius: 7px; padding: 4px 7px;
   font-size: 13px; line-height: 1;

@@ -2,17 +2,19 @@
 //
 // Everything in here is scoped to a single project id out of the route. The
 // rail header is the *project* -- back arrow, name, chevron, collapse -- and
-// New / Search / Customize / Files / Compute are project-scoped items beneath
-// it, which is what the host does. The product name is not in this rail,
-// because the product and the project are not one object.
+// New and Files are project-scoped items beneath it, which is what the host
+// does. The product name is not in this rail, because the product and the
+// project are not one object.
 //
 // Below those sits Rounds, the one item that is new, and then the session
 // list. A session is a unit of work: a round starts one, and a person can
 // start an ad-hoc one at any time. Both kinds are in the same list.
 //
-// The four host items are drawn and not wired: nothing in this build is
-// behind Search, Customize, Files or Compute, and a rail item that opens an
-// essay about what the host does there is an essay in the way of the round.
+// Files is drawn and not wired: nothing in this build is behind it, and a
+// rail item that opens an essay about what the host does there is an essay in
+// the way of the round. The host's Search, Customize and Compute were drawn
+// too, and are gone: a button that does nothing is a claim the page cannot
+// keep.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AdHoc from "./AdHoc.jsx";
@@ -25,18 +27,13 @@ import * as rt from "./runtime.js";
 import { Badge, Hash, elapsed, projectTitle, templateTitle } from "./lib.jsx";
 
 const RAIL = [
-  { id: "search", icon: "⌕", label: "Search" },
-  { id: "customize", icon: "◉", label: "Customize" },
   { id: "files", icon: "▤", label: "Files" },
-  { id: "compute", icon: "⚙", label: "Compute" },
 ];
 
 // Under this width the artifact panel is a sheet over the conversation rather
 // than a column beside it. The same number is in styles.css; the stylesheet
 // decides how the sheet is drawn and this decides whether it starts open.
 const NARROW = "(max-width: 980px)";
-const PANEL_MIN = 340;
-const PANEL_KEY = "wb.panel-w";
 
 function useMedia(query) {
   const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
@@ -50,16 +47,40 @@ function useMedia(query) {
   return matches;
 }
 
-// The width a person last dragged the panel to, or null for the stylesheet's
-// default. A per-browser convenience, so storage that is missing or refused
-// just means the default.
-function storedPanelWidth() {
-  try {
-    const w = Number(localStorage.getItem(PANEL_KEY));
-    return w >= PANEL_MIN ? w : null;
-  } catch {
-    return null;
-  }
+// One draggable edge: the rail's right, the panel's left. `measure` turns
+// the pointer's x into the width that edge implies; the result is clamped,
+// kept per browser under `key`, and null means the stylesheet's default.
+// Storage that is missing or refused just means the default. The grip
+// captures the pointer, so the drag keeps going when it leaves the strip;
+// double-click puts the width back.
+function useDragWidth({ key, min, max, measure }) {
+  const [width, setWidth] = useState(() => {
+    try {
+      const w = Number(localStorage.getItem(key));
+      return w >= min ? w : null;
+    } catch {
+      return null;
+    }
+  });
+  const [dragging, setDragging] = useState(false);
+  useEffect(() => {
+    if (dragging) return;
+    try {
+      if (width) localStorage.setItem(key, String(width));
+      else localStorage.removeItem(key);
+    } catch { /* the width lasts until the reload, then */ }
+  }, [dragging, key, width]);
+  const grip = {
+    onPointerDown: (e) => { e.currentTarget.setPointerCapture(e.pointerId); setDragging(true); },
+    onPointerMove: (e) => {
+      if (!dragging) return;
+      setWidth(Math.round(Math.min(Math.max(measure(e.clientX), min), max())));
+    },
+    onPointerUp: () => setDragging(false),
+    onPointerCancel: () => setDragging(false),
+    onDoubleClick: () => setWidth(null),
+  };
+  return { width, dragging, grip };
 }
 
 export default function Project({ route, runtime, campaign, proposal, live, reprobe,
@@ -96,37 +117,24 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
   // and is opened from the title bar. Crossing the breakpoint resets it.
   const narrow = useMedia(NARROW);
   const [panelOpen, setPanelOpen] = useState(!narrow);
-  const [panelW, setPanelW] = useState(storedPanelWidth);
-  const [resizing, setResizing] = useState(false);
   useEffect(() => { setPanelOpen(!narrow); }, [narrow]);
+  // Both edges drag. The rail's left is the viewport's, so its width is the
+  // pointer's x; the panel is flush with the right edge, so its width is the
+  // distance from the pointer to that edge.
+  const rail = useDragWidth({ key: "wb.rail-w", min: 180,
+                              max: () => Math.min(420, window.innerWidth * 0.3),
+                              measure: (x) => x });
+  const panel = useDragWidth({ key: "wb.panel-w", min: 340,
+                               max: () => window.innerWidth * 0.6,
+                               measure: (x) => window.innerWidth - x });
+  const resizing = rail.dragging || panel.dragging;
   useEffect(() => {
     if (!(narrow && panelOpen)) return undefined;
     const onKey = (e) => { if (e.key === "Escape") setPanelOpen(false); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [narrow, panelOpen]);
-  useEffect(() => {
-    if (resizing) return;
-    try {
-      if (panelW) localStorage.setItem(PANEL_KEY, String(panelW));
-      else localStorage.removeItem(PANEL_KEY);
-    } catch { /* the width lasts until the reload, then */ }
-  }, [resizing, panelW]);
   const togglePanel = useCallback(() => setPanelOpen((o) => !o), []);
-  // The grip captures the pointer, so the drag keeps going when it leaves the
-  // eight-pixel strip. The panel is flush with the viewport's right edge, so
-  // its width is the distance from the pointer to that edge.
-  const grip = {
-    onPointerDown: (e) => { e.currentTarget.setPointerCapture(e.pointerId); setResizing(true); },
-    onPointerMove: (e) => {
-      if (!resizing) return;
-      const w = window.innerWidth - e.clientX;
-      setPanelW(Math.round(Math.min(Math.max(w, PANEL_MIN), window.innerWidth * 0.6)));
-    },
-    onPointerUp: () => setResizing(false),
-    onPointerCancel: () => setResizing(false),
-    onDoubleClick: () => setPanelW(null),
-  };
 
   const refresh = useCallback(() => {
     try {
@@ -395,11 +403,13 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
   );
 
   const showPanel = route.kind === "session" && panelOpen;
+  const widths = {};
+  if (rail.width) widths["--rail-w"] = `${rail.width}px`;
+  if (panel.width) widths["--panel-w"] = `${panel.width}px`;
 
   return (
     <div className="shell">
-      <div className={`body${resizing ? " is-resizing" : ""}`}
-           style={panelW ? { "--panel-w": `${panelW}px` } : undefined}>
+      <div className={`body${resizing ? " is-resizing" : ""}`} style={widths}>
         <nav className={`rail${collapsed ? " is-collapsed" : ""}`}>
           <div className="rail-head">
             <a className="rail-back" href="#/" title="All projects">←</a>
@@ -415,16 +425,16 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
 
           <a className="rail-item" href={router.href({ kind: "session", project: pid,
                                                        id: "new" })}>
-            <span className="ic">✦</span>New
+            <span className="ic">✦</span><span>New</span>
           </a>
           {RAIL.map((item) => (
             <button key={item.id} className="rail-item" title="Not wired in this prototype">
-              <span className="ic">{item.icon}</span>{item.label}
+              <span className="ic">{item.icon}</span><span>{item.label}</span>
             </button>
           ))}
           <a className="rail-item is-new" aria-current={route.kind === "rounds"}
              href={router.href({ kind: "rounds", project: pid })}>
-            <span className="ic">⌸</span>Rounds
+            <span className="ic">⌸</span><span>Rounds</span>
           </a>
 
           <div className="rail-group hide-narrow">
@@ -449,6 +459,10 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
             </button>
           </div>
         </nav>
+        {!collapsed && !narrow && (
+          <div className="grip" role="separator" aria-orientation="vertical"
+               title="Drag to resize; double-click to reset" {...rail.grip} />
+        )}
 
         <main className={`centre${route.kind === "rounds" ? " wide" : ""}`}>
           {route.kind === "rounds" && (
@@ -467,7 +481,7 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
         {showPanel && narrow && <div className="scrim" onClick={togglePanel} />}
         {showPanel && !narrow && (
           <div className="grip" role="separator" aria-orientation="vertical"
-               title="Drag to resize; double-click to reset" {...grip} />
+               title="Drag to resize; double-click to reset" {...panel.grip} />
         )}
         {showPanel && (
           <Panel tab={tab} setTab={setTab} ctx={ctx} onClose={narrow ? togglePanel : null} />

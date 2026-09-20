@@ -88,9 +88,6 @@ export default function Home({ epoch }) {
           </div>
         </div>
         <div className="row">
-          <button className="btn small" disabled title="Not wired in this prototype">
-            ⌕ Search
-          </button>
           <a className="btn small" href={router.href({ kind: "templates" })}>Templates</a>
           <a className="btn small primary" href={router.href({ kind: "new" })}>
             + New project
