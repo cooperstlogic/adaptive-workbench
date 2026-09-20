@@ -381,6 +381,7 @@ pre.code {
     overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); }
   .rail-sub { white-space: nowrap; padding: 0 8px; }
   .rail-collapse, .rail-sessions, .rail-foot, .rail-group.hide-narrow, .grip { display: none; }
+  .rail-head, .rail-item { width: auto; flex: none; }
   .panel {
     position: fixed; top: 0; right: 0; bottom: 0; z-index: 25;
     width: min(100%, max(var(--panel-w), 380px));

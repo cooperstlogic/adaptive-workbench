@@ -1,8 +1,8 @@
 // A project with no template. The control arm.
 //
-// Same chrome as a templated project — rail header, New / Files, settings at
-// the bottom, composer pinned with a working model picker — and nothing in
-// it, because nothing has declared what it
+// Same chrome as a templated project — rail header, New, settings at the
+// bottom, composer pinned with a working model picker — and nothing in it,
+// because nothing has declared what it
 // means. There is no Rounds item because there is no round graph. There is no
 // artifact panel because there are no artifacts. There is no approval,
 // because there is nothing to approve.
@@ -24,11 +24,6 @@ import * as agent from "./agent.js";
 import * as blank from "./blank.js";
 import * as router from "./router.js";
 import { CentreHead, MODEL_LABEL, elapsed } from "./lib.jsx";
-
-const RAIL = [
-  { id: "new", icon: "✦", label: "New" },
-  { id: "files", icon: "▤", label: "Files" },
-];
 
 export default function BlankProject({ route, project, bump, live, reprobe, model, setModel }) {
   const [rec, setRec] = useState(project);
@@ -130,14 +125,10 @@ export default function BlankProject({ route, project, bump, live, reprobe, mode
             <button className="rail-collapse" title="Collapse">▤</button>
           </div>
           <div className="rail-sub tiny faint">No template</div>
-          {RAIL.map((item) => (
-            <a key={item.id} className="rail-item"
-               href={item.id === "new"
-                 ? router.href({ kind: "session", project: pid, id: "new" }) : "#"}
-               onClick={(e) => { if (item.id !== "new") e.preventDefault(); }}>
-              <span className="ic">{item.icon}</span><span>{item.label}</span>
-            </a>
-          ))}
+          <a className="rail-item" href={router.href({ kind: "session", project: pid,
+                                                       id: "new" })}>
+            <span className="ic">✦</span><span>New</span>
+          </a>
 
           <div className="rail-group hide-narrow">
             <div className="rail-label">Sessions</div>

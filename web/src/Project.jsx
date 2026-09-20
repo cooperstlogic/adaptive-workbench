@@ -2,19 +2,17 @@
 //
 // Everything in here is scoped to a single project id out of the route. The
 // rail header is the *project* -- back arrow, name, chevron, collapse -- and
-// New and Files are project-scoped items beneath it, which is what the host
-// does. The product name is not in this rail, because the product and the
-// project are not one object.
+// New is the project-scoped item beneath it, which is what the host does.
+// The product name is not in this rail, because the product and the project
+// are not one object.
 //
 // Below those sits Rounds, the one item that is new, and then the session
 // list. A session is a unit of work: a round starts one, and a person can
 // start an ad-hoc one at any time. Both kinds are in the same list.
 //
-// Files is drawn and not wired: nothing in this build is behind it, and a
-// rail item that opens an essay about what the host does there is an essay in
-// the way of the round. The host's Search, Customize and Compute were drawn
-// too, and are gone: a button that does nothing is a claim the page cannot
-// keep.
+// The host's Search, Customize, Files and Compute were drawn here once, and
+// are gone: nothing in this build is behind them, and a button that does
+// nothing is a claim the page cannot keep.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AdHoc from "./AdHoc.jsx";
@@ -25,10 +23,6 @@ import * as agent from "./agent.js";
 import * as router from "./router.js";
 import * as rt from "./runtime.js";
 import { Badge, Hash, elapsed, projectTitle, templateTitle } from "./lib.jsx";
-
-const RAIL = [
-  { id: "files", icon: "▤", label: "Files" },
-];
 
 // Under this width the artifact panel is a sheet over the conversation rather
 // than a column beside it. The same number is in styles.css; the stylesheet
@@ -427,11 +421,6 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
                                                        id: "new" })}>
             <span className="ic">✦</span><span>New</span>
           </a>
-          {RAIL.map((item) => (
-            <button key={item.id} className="rail-item" title="Not wired in this prototype">
-              <span className="ic">{item.icon}</span><span>{item.label}</span>
-            </button>
-          ))}
           <a className="rail-item is-new" aria-current={route.kind === "rounds"}
              href={router.href({ kind: "rounds", project: pid })}>
             <span className="ic">⌸</span><span>Rounds</span>
