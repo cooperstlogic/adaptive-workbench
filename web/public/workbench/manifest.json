@@ -127,13 +127,13 @@
     },
     {
       "path": "wb_driver.py",
-      "sha256": "f4ce03d25c3b6f4a2ff86093247875bc757b1dfcb7bac9b8b385c66f6d267785",
+      "sha256": "37c96662104b2f499449cce6a9ebaf249263dd7c493308abfbc209f423361c0d",
       "source": "web/py/wb_driver.py",
       "verbatim": false
     }
   ],
-  "commit": "ec246b82efd5929a3b58b4f57d1fafe850fc52ed",
-  "hash": "sha256:73db083d49112fbbd3a20d65d33a5f492b40af699ee18b8a11d6d111ba4eb1aa",
+  "commit": "02b214d934ba215dfe41d0304d730b2bdc99bc3b",
+  "hash": "sha256:e7cc77ea71430fce5197140268bd4ea7429f412210ddde7335a0be7c6bb158ea",
   "kind": "browser_bundle",
   "mount": "/workbench",
   "note": "code is copied byte for byte from the repository and laid out in the same shape, so Pyodide imports the same modules the CLI imports. state is the committed project rewound to before round 4 was submitted. reference is read for replay and never executed",
@@ -145,11 +145,11 @@
     },
     {
       "path": "reference/decision_004.json",
-      "sha256": "c9eb05a91cb1baf50c5faee4a66cf2df6d4e694e04e10f03a33fc906fce1da31"
+      "sha256": "4cd7cf9c3b44c649197e31d524aabbc0cd1eda5108af465330c514d9f03c2ea2"
     },
     {
       "path": "reference/decision_004.proposal.json",
-      "sha256": "9e63a288b4bc932467aa9b33de8f3edba29c0c6f09c61f8d883db3f6cda7081b"
+      "sha256": "3240d4e5edf438b39aebe508fbc101d87b90566504a2d0c572a7333459e53d6d"
     },
     {
       "path": "reference/requirements.json",
@@ -160,7 +160,7 @@
   "state": [
     {
       "path": "lims_store/demo-trastuzumab.json",
-      "sha256": "dd321a651a4bd7cc29a3199fe155cf7ded5b035e23867d79daf176dad90d8ee1"
+      "sha256": "abe6f0ed7d9ca50e9f2585cfb78bb43f759d898bcf517810e4b2dea98bbf7020"
     },
     {
       "path": "projects/demo-trastuzumab/batches/batch_001.eval.json",
@@ -248,7 +248,7 @@
     },
     {
       "path": "projects/demo-trastuzumab/rounds.json",
-      "sha256": "5423a31f7f483d8d87eeb3e98a0c2d93eab2d0be55041289f05755d9d21678dd"
+      "sha256": "f8cb6a4c0edb72140c3db51e725b3e5d3fa3b097ea6788d8924aa8dafb245a8d"
     }
   ]
 }

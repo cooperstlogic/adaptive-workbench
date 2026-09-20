@@ -38,7 +38,7 @@ in `core/` has heard of it.
 ```bash
 python3.12 -m venv .venv
 .venv/bin/pip install numpy matplotlib mcp
-.venv/bin/python check.py      # 160 invariant checks, all should pass
+.venv/bin/python check.py      # 179 invariant checks, all should pass
 ```
 
 `.venv/` is gitignored. Everything else needed — including the generated landscape — is
@@ -111,9 +111,25 @@ node scripts/pyodide-check.mjs          # run the browser's Python path without 
 
 `npm run sync` is two steps. `python ../web/bundle.py` copies `core/`, `data/`, `lims.py`
 and the seven skill scripts into `web/public/workbench/` byte for byte, in the repo's own
-directory shape, with a sha256 per file; `check.py` fails if any of them drifts.
-`scripts/stage-pyodide.mjs` puts the Python runtime and the numpy wheel on this site's own
-origin, checking the wheel against pyodide's lock file before writing it.
+directory shape, with a sha256 per file; `check.py` fails if any of them drifts. It also
+writes `SKILL.md` into `web/netlify/functions/lib/skill.mjs`, which is the model's system
+prompt, and `check.py` fails if that string is not the file. `scripts/stage-pyodide.mjs`
+puts the Python runtime and the numpy wheel on this site's own origin, checking the wheel
+against pyodide's lock file before writing it.
+
+And the model in the centre seat, which is a live seat only when the site's one function
+has a key. The dev server mounts the function at the path Netlify serves it from:
+
+```bash
+cd web && ANTHROPIC_API_KEY=sk-ant-... npm run dev   # live: Opus 5 diagnoses in the session
+cd web && npm run dev                                # no key: the page stays in replay, says so
+node scripts/ask-check.mjs                           # what the function refuses, without a key
+node scripts/pyodide-check.mjs                       # replay, push-back, and the loop, scripted
+```
+
+`WORKBENCH_DAILY_CAP_USD` and `WORKBENCH_IP_CAP` bound the spend; the function's probe
+reports where the day stands. `WORKBENCH_UPSTREAM=scripted` swaps the model for the
+harness's test double, which the probe and every turn's badge report as such.
 
 Installing the same skill and connectors elsewhere uses the host's own distribution
 mechanism, described in the host's own words — *"Save any pipeline as a reusable skill,
@@ -213,7 +229,7 @@ live git tree, and it splits the project directory in two, which is the one thin
 beat 5 cannot survive — the batch hashes only mean something if both surfaces read the
 same state.
 
-`check.py` runs 160 checks in about half a minute and is the handoff contract. Every
+`check.py` runs 179 checks in about forty seconds and is the handoff contract. Every
 check in it corresponds to a rule in `CLAUDE.md` or a number recorded in `DECISIONS.md`,
 so a failure means the state has drifted from what is documented.
 
@@ -393,7 +409,7 @@ diagnostics itself and refuses any payload that arrives carrying its own numbers
 | 6 | Web app: Pyodide boot, the Claude Science-shaped shell, artifact tabs, approve loop | **Done** — the round loop runs in the browser on the repository's own modules, approve in 1.5 s and advance in 2.7 s, and the browser and the CLI write byte-identical artifacts |
 | 6b | Redesign: two shells, the project boundary, the session model, project creation in the browser, the lab round trip | **Done — decisions 122 to 133.** Home is its own shell; the rail belongs to the project; a session is a unit of work and an ad-hoc one answers *where are we?* from artifacts on disk; projects are created here from a locked configuration screen or blank; and approving a batch sends it to a laboratory that has to be waited on |
 | 6c | Show, don't tell: the page's commentary on itself removed, empty sessions reduced to a title and a composer, the benchmark moved to the template surfaces, Fraunces / Public Sans / IBM Plex Mono | **Done — decisions 134 to 136.** No footnotes, no captions under tool calls, no rail essays, no synthetic paragraph; the one-word tag and the staged table carry the claim. The Progress tab draws only the project's own line; the twenty-seed benchmark is the template's Validation |
-| 7 | The agent in the session: tool-call stream, two tools, push-back round trip, budget cap, verified replay | Not started |
+| 7 | The agent in the session: tool-call stream, the tools, push-back round trip, budget cap, verified replay | **Done — decisions 137 to 152.** A model in the centre seat behind one stateless function, driven by `SKILL.md` as its system prompt; the same stream component steps the committed record without a key, every test re-run and hash-compared; the round-4 record is two-pass, its second pass written by a third headless gate; `check.py` drives the whole loop through a scripted upstream and went from 160 checks to 179 |
 | 8 | Committed demo project at round 3, Netlify deploy, public README | Not started |
 | 9 | Demo script and rehearsal | Not started |
 
@@ -898,6 +914,66 @@ cross-surface byte-identity claim, which is load-bearing, survives intact. A rec
 no `release_on_check` key is complete. The release schedule is a demo device and reads as
 one in the source, which is where it should be obvious.
 
+### Phase 7 results — the agent in the session
+
+A model sits in the centre column. Given a flagged round it chooses which test to run
+next, reads what came back, writes a short numpy cut when the library has no test for
+the question, and hands back a proposal that `record_decision.py` recomputes before it
+writes. A named person rules with the same four verbs, and `more_evidence_requested`
+sends the work back. Without a key the same column steps the committed record through
+the same component, every test re-run and hash-compared, and the badge on the byline
+says which happened. Nothing in `core/` moved and no published number changed.
+
+| | |
+| --- | --- |
+| The seat | `claude-opus-5`, adaptive thinking, effort `low`, behind one stateless function; three models the picker can choose and the function accepts |
+| Its prompt | `SKILL.md`, verbatim, behind a preamble that maps the skill's scripts onto three tools — the same file Claude Code and Claude Science load |
+| Its tools | `run_diagnostic` (the five tests, strict enum), `execute_analysis` (read-only numpy in the visitor's sandbox), `propose_decision` (`record_decision.py --propose`, which refuses any number in the payload) |
+| Its context | About 92 KB read from artifacts by `wb_driver.agent_context` — objectives, the round graph, 48 scored wells, every decision record — and computed by nothing; cached as the last system block |
+| Replay | The record's claims stepped through the same component; **8 of 8 results match, 3 of 3 cuts reproduce** on pass 1, **5 of 5 and 2 of 2** on pass 2, counted by the driver on the Python side of the JSON boundary |
+| The push-back | Live, the ruling continues the same signed transcript; replayed, the recorded pass 2 answers the recorded request, which the ruling form locks to |
+| The function | Accepts only transcripts it signed (HMAC), a tool result only for a call the model made, a model only from the allowlist; prices each call from its own usage against a daily cap and a per-address counter; sends `fallbacks: "default"` on every request and turns a refusal into a badge |
+| In `check.py` | 19 new invariants: the replay's counts, the loop round-tripping through a scripted upstream with no key, seven refusals and the request the function would build, and the shape of the two-pass record |
+
+**The round-4 record is two-pass, and a third gate wrote the second pass.** The hour-5
+transcript had closed with a caveat of its own — *all four cross-version anchors sit on
+plate R4P1 … the clean route is a ruling of `more_evidence_requested`* — so that is the
+ruling d.webster gave, naming `residual_by_plate` and asking for the fresh designs alone.
+`gates/run_gate.sh round4-pushback` put a headless Claude Code session in a tree with the
+ruled record and none of the four documents, and it answered: R4P2, which carries no
+bridge member and no incumbent, is displaced by −2.011 pKD against R4P1's −2.089, a gap of
+0.079 against a standard error of 0.218; the plate reading is 4.3 standard errors from
+what was measured and the run reading 0.4. Recommendation unchanged, and two things the
+ruling had not asked for: `assign_plates` puts every round's whole bridging set on plate 1
+by construction, and the snapshot records a measurement's plate and not its well. 33
+turns, $2.64, `gates/pushback-round4.md`. The final ruling is not committed; it is the
+visitor's to give, and round 4 stays deliberately unruled.
+
+**The first real-key run, in the browser, on the day it was built.** Opus 5 diagnosed
+round 4 live in about a minute: the bridge first with the plate check in parallel, then
+the counterfactual and the class cut *because* the bridge explained only half, then
+replicate concordance, then one ad hoc cut on G102L — which failed on a guessed key,
+after which it read the file's keys and redid it — and a six-hypothesis proposal for
+`apply_offset_correction` at confidence medium. Sent back with the same ruling as the
+committed record, it continued its own transcript, ran `residual_by_plate --scope fresh`,
+got 0.079 pKD at z 0.36, and proposed again. Then **round 5, which nothing in this
+repository had diagnosed**: *"Round 5 repeats round 4's shape: a concordant,
+already-characterized v1.3 shift plus a one-mutation monoculture (Y104H, 38 of 45) that
+underperforms"* — `decision_005`, six hypotheses, the correction recommended, and an
+`if_wrong` that names drift between the two v1.3 estimates as the thing that would break
+it. All three diagnoses together: 16 calls, $1.92, under the cap. The context now names
+each artifact's shape so a cut needs no discovery turn.
+
+**Round 5 is still nobody's in the repository.** It flags at −0.818 pKD on the product
+path, no record exists for it, and only a live seat can read it. Without a key the page
+offers the five tests by hand and says nothing more. That is the unscripted beat, and it
+is not in the harness on purpose.
+
+**What phase 8 has to verify on the deployed site.** Netlify's streaming-function limits
+under a proposal turn that can run a minute; that the Blobs store is reachable from the
+function; that `ANTHROPIC_API_KEY` is set. The probe reports all three, and the page's
+default without them is replay.
+
 ## Repo map
 
 | Path | Contents |
@@ -930,16 +1006,22 @@ one in the source, which is where it should be obvious.
 | `simulate_campaign.py` | The evaluator. The only thing permitted to read landscape values |
 | `web/public/assets/campaign.json` | The proof chart's data, written by the evaluator |
 | `web/bundle.py` | Copies the repository into the browser's bundle, derives the demo state, and proves the derivation by replaying round 4 |
-| `web/py/wb_driver.py` | The browser's hands: calls each script's `main(argv)` and computes nothing |
+| `web/py/wb_driver.py` | The browser's hands: calls each script's `main(argv)` and computes nothing. Since phase 7 also the context the model is handed, the ad hoc guard, and the replay's verification |
+| `web/netlify/functions/ask.mjs` | The one function: a stateless model turn. Builds every request itself from the skill, signs every transcript it returns, and refuses what it did not sign |
+| `web/netlify/functions/lib/` | `skill.mjs` (SKILL.md as a string, generated), `budget.mjs` (the daily cap), `scripted.mjs` (the harness's test double) |
+| `web/src/agent.js` | The loop: `runLive` owns `while stop_reason == "tool_use"`; `runReplay` steps the record through the same emitter. Takes `call` as an argument, so the harness drives it too |
+| `web/src/AgentStream.jsx` | One component, two sources: text, chips, the proposal card, and the badge that says which |
 | `web/src/` | The shell. React, a 60-line hash router, no state library, no charting library |
 | `web/src/router.js` | Seven routes, parsed into plain objects. Also where a project opens, given what is pending in it |
 | `web/src/blank.js` | Blank projects: `localStorage` only, never Python. The control arm for decision 108 |
 | `web/src/Briefing.jsx` | Renders a briefing's typed figures. Computes nothing; every number arrives with its `core/` function attached |
 | `web/public/workbench/` | The bundle: the repository's modules, the rewound project, and the reference records |
-| `web/scripts/pyodide-check.mjs` | Runs the browser's Python path outside a browser, for `check.py` to compare against the CLI |
+| `web/scripts/pyodide-check.mjs` | Runs the browser's Python path outside a browser, for `check.py` to compare against the CLI — and, since phase 7, the replay, the push-back and the live loop through the scripted upstream |
+| `web/scripts/ask-check.mjs` | Calls the function in-process with no key: what it refuses, and the request it would build |
+| `gates/render_transcript.py` | Renders a headless Claude Code transcript as the gate's markdown, mechanically |
 | `plot_campaign.py` | Renders the proof chart from `campaign.json`. matplotlib lives here, never in `core/` |
-| `gates/` | The two agent gates: the transcripts, and the script that re-runs them |
-| `check.py` | Invariant verification, 160 checks. Run it after any phase |
+| `gates/` | The three agent gates: the transcripts, and the script that re-runs them |
+| `check.py` | Invariant verification, 179 checks. Run it after any phase |
 
 ## What is real and what is staged
 
@@ -948,8 +1030,8 @@ one in the source, which is where it should be obvious.
 | Surrogate fitting, calibration, constraint filtering, batch acquisition | **Real.** Pure numpy, every round, browser and CLI |
 | The five pipeline scripts and the round graph | **Real.** Six rounds through the CLI, selecting the same wells as the evaluator |
 | The five diagnostics | **Real.** Pure numpy, read-only, run from the CLI over the committed project |
-| The decision record | **Real, and exercised twice.** Round 2 carries a full record with a ruling. Round 4's was written by an agent that had only the skill and the connectors, and is deliberately unruled |
-| The push-back round trip | **Real in code, not yet committed.** `check.py` drives a two-pass record end to end; the committed one lands with round 4 |
+| The decision record | **Real, and exercised three times.** Round 2 carries a full record with a ruling. Round 4's pass 1 was written by an agent that had only the skill and the connectors, its pass 2 by another after a named person sent it back, and it is deliberately unruled |
+| The push-back round trip | **Real, both ways, and committed.** Live, the ruling continues the same signed transcript; replayed, the recorded pass 2 answers the recorded request. The committed round-4 record is two-pass — d.webster sent it back naming `residual_by_plate`, and a third headless gate answered, `gates/pushback-round4.md` |
 | `drop_wells` | **Real, exercised in `check.py` and not in the demo.** `import_round.py --drop-plate` runs under a ruling that recommends it, and refuses without one. No round in this campaign needs it |
 | Both model recipes and the bake-off between them | **Real.** `ridge_onehot` against `gp_pca64` over the one-hot block |
 | Developability and liability scores | **Real** deterministic calculations, labelled computed throughout |
@@ -958,13 +1040,16 @@ one in the source, which is where it should be obvious.
 | The LIMS | **Staged, and reachable over MCP.** `lims.py` mints identifiers, lays out plates, exports orders and rows, and answers whether a run has reported; the write path attaches a link and nothing more. `connectors/registry_server.py` serves those same seven functions over stdio and `check.py` compares the two exports byte for byte. The two added tools — `export_submission` and `check_run_status` — are reads a real LIMS unambiguously owns, so they widen the tool list without widening the write path |
 | Sequence embeddings | **Not built.** One-hot only. The provider interface is real and served over MCP; `esm_live` is declared and unwired, and asking for it returns an error naming what is missing rather than one-hot in disguise |
 | Structure prediction | **Stubbed.** `predict_structures` returns nulls and a note saying it predicted nothing. It invents no confidence score, and nothing downstream reads it |
-| The agent's reasoning in the browser | **Phase 7.** The browser replays the committed round-4 sequence with every number recomputed in Pyodide, and offers the five library tests read-only on a round it has no record for. Live Claude choosing the sequence is what phase 7 adds |
-| The composer's free text | **Phase 7.** The suggested asks beneath it work today and work deterministically: each is answered by a briefing assembled from artifacts on disk, no model involved, every figure naming the `core/` function behind it. Typing into the box is what phase 7 turns on |
+| The agent's reasoning in the browser | **Real when a live seat is available, replayed otherwise, and the byline says which.** Live: `claude-opus-5` behind the site's one function, with `SKILL.md` as its system prompt, choosing tests from the template's list, running short numpy cuts read-only in the visitor's sandbox, and handing a proposal to `record_decision.py`, which recomputes every number before it writes. Replayed: the committed record's claims stepped through the same component, every test re-run and hash-compared, every cut re-executed — *8 of 8 results match · 3 of 3 cuts reproduce* is a count the driver made. Over the daily cap, without a key, or on a refusal the whole chain declined, the page stays in replay and the badge says why |
+| The composer's free text | **Real when a live seat is available.** Free text goes to the model with the project's state as context and the two read tools; the suggested asks beneath it stay deterministic, answered from artifacts on disk with no model involved. Without a seat the box says so in a phrase and the asks keep working |
+| The function behind the seat | **Real, stateless, and not a proxy.** It builds every request itself, accepts only transcripts it signed, prices each call from the response's own usage against a daily cap and a per-address counter, and sends `fallbacks: "default"` on every request. `check.py` drives it without a key: seven refusals, a signed round trip, and the request it would build |
+| The scripted upstream | **A test double, labelled in three places.** On only under an environment variable Netlify never sets; reported by the probe and on every turn's badge as *scripted · harness*. It lets `check.py` prove the live loop round-trips without spending anything, and every number it leads to is still computed in Pyodide, because the script names tests and carries none |
+| The ad hoc sandbox | **A guard, not a sandbox, and labelled so in the source.** `execute_analysis` runs model-written numpy read-only against the project directory and the round's results export, behind a read-only `open`, an import denylist, a token check and a line budget. The oracle ships in the bundle because the simulated laboratory runs client-side, and anyone can read it by URL; the claim is that `core/` never does and that ad hoc output never enters a code path, which `record_decision.py` enforces on its own |
 | The web app's chrome | **A wireframe.** It renders the layer the phase-5b audit found missing, in the host's own grammar; the panels, the Python, the state and the hashes inside it are real and are running in your tab. The rail's host-only items are drawn and inert, with a tooltip saying so. **Decision 125 removed the on-page banner, so this row is where the claim lives**, and decision 134 removed the rest of the page's commentary on itself: the interface shows and does not tell |
 | The proof chart | **Real, and the evaluator's.** Twenty simulated campaigns per arm, drawn as the template's Validation on the Objectives tab and the New project screen — never on a project's own Progress chart, which draws only what that project measured (decision 135) |
-| The working model picker | **Drawn.** Opus 5 is selectable; Sonnet 5 and Haiku 4.5 are shown and are not. Nothing is wired to the choice |
+| The working model picker | **Wired.** Three ids the function accepts — Opus 5 by default, Sonnet 5, Haiku 4.5 — and it refuses any other |
 | The lab round trip | **Staged, deliberately, and the staging is in the source.** Approving submits the batch and writes the order file; `check_run_status` is what releases the run, and it releases on the second ask rather than on a clock. `lims.py`'s `submit_batch` takes `--stagger`, off by default, so every CLI path writes byte-for-byte what it always did. The refusal a pull gets while a run is going is real, and it is run and shown rather than described |
-| Blank projects | **Real, and deliberately empty.** They live in `localStorage`, never touch Python, and open on a chat — because nothing has declared what they mean. That is the control arm for decision 108, not a gap |
+| Blank projects | **Real, and deliberately empty.** They live in `localStorage`, never touch Python, and open on a chat — because nothing has declared what they mean. With a live seat that chat is a real one: the same model, no tools, no context, and a one-paragraph prompt that says nothing has been declared. That is the control arm for decision 108, not a gap |
 | Projects created in the browser | **Real, and checked against the CLI.** `init_project.py` and round 1's two scripts run in Pyodide; `check.py` requires five of six files to match a project the CLI instantiates from the same template with the same pinned timestamp |
 | The assay platform and plate format on the configuration screen | **Mock, and labelled so on the row.** Every other locked row on that screen is read out of `template.json` |
 | Round dates in the shipped campaign | **Display-level.** `web/bundle.py` re-dates the shipped round graph's `updated` stamps to span about six weeks — the field `check.py` already excludes from byte-identity as "the times the graph was rewritten". No simulated date is written into a project artifact and no measurement moves |
@@ -974,8 +1059,8 @@ one in the source, which is where it should be obvious.
 | The agent's reasoning in the CLI | **Real, and the transcripts are committed.** Two headless Claude Code sessions on `claude-opus-5`: one diagnosed round 4 and wrote its record, one ran a full round unaided. `gates/` |
 | Rounds run in the browser | **Real, and checked against the CLI.** The repository's own modules, mounted into Pyodide byte for byte and imported rather than ported. Approve, import, diagnose, rule, correct, refit and select all run client-side; `check.py` compares the artifacts they write against a CLI run of the same sequence and requires 26 of 28 to be byte-identical. State lives in the browser and is never written back |
 | The browser's tool-call stream | **Real commands.** Each chip is a script that ran against the visitor's copy of the project, with its exit code and both output streams. It is not an animation |
-| The browser's diagnosis | **Recomputed, not replayed.** The shipped proposal carries the agent's claims and no numbers; `record_decision.py` re-runs all eight tests in the browser. The reasoning itself is the hour-5 gate's, written by Claude Code, and the page says so |
-| The agent choosing what to run in the browser | **Not built — phase 7.** Round 4 replays a recorded sequence with the evidence recomputed. A round with no recorded diagnosis gets the five library tests read-only and an honest sentence, and stays open |
+| The browser's replayed diagnosis | **Recomputed, and checked.** The shipped proposal carries the agent's claims for both passes and no numbers — every result, input hash and ad hoc stdout stripped; the browser re-runs every test through `run_diagnostic.py`, every cut through `execute_analysis`, and compares each to the committed record by content hash. The reasoning itself is the gates', written by Claude Code, and the badge says *replayed* |
+| The agent choosing what to run in the browser | **Real with a key.** Round 5 flags at −0.818 pKD, has no record, and only a live seat can diagnose it; without one the page offers the five tests by hand and stays open. That beat is deliberately not in the harness |
 
 Rows for components that do not exist yet describe what they will be, and the build
 status table above says which of them are built.

@@ -209,6 +209,15 @@ beside the number in the decision record's `ad_hoc` list, labelled one-off and
 unversioned. An ad hoc result is evidence a human reads. It is never an input
 to a code path.
 
+**A cut is recorded so it can be run again**, by a reviewer on another machine
+or by another surface replaying the record. So it reads only the project
+directory and the round's own results export, by path relative to the
+repository root: `projects/<name>/...`, and
+`lims_store/exports/<name>_round<N>.csv`, which is where the registry writes a
+pull when you leave `out` to it. A cut that reads a temporary file or an
+absolute path is a number nobody can reproduce, and the record is worth
+exactly what can be reproduced from it.
+
 ## Four rules you do not break
 
 1. **Never change objectives without explicit approval.** `objectives.json`

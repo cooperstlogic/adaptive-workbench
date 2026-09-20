@@ -11,21 +11,29 @@
 //   question in a chat product gets a summary of the transcript, because
 //   there is no state to read.
 //
-// Until phase 7 there is no live model, so the asks are the vocabulary and a
-// briefing assembled in `wb_driver` is the answer. That is decision 62's
-// one-surface, two-sources pattern applied to status rather than diagnosis.
+// The suggested asks are answered by a briefing assembled in `wb_driver`;
+// free text goes to the model in the centre seat when one is available, with
+// the same two read-only tools the diagnosis has and the project's state as
+// its context. Both kinds of answer are stored in the session, and the
+// byline says which produced each.
 //
 // An empty one is a title and a composer. Nothing on the page says any of
 // the above; the asks under the composer are the whole invitation.
 
+import AgentStream, { agentBadge } from "./AgentStream.jsx";
 import Briefing from "./Briefing.jsx";
 import Composer from "./Composer.jsx";
 import Turn from "./Turn.jsx";
 import { CentreHead, projectTitle } from "./lib.jsx";
 
 export default function AdHoc({ ctx, stored, suggestions }) {
-  const { view, sessionId, busy, error, onAsk } = ctx;
-  const turns = stored?.turns || [];
+  const { view, sessionId, busy, error, onAsk, onAskLive, live, model, setModel, agentTurn,
+          log } = ctx;
+  const turns = (stored?.turns || [])
+    .map((t) => (agentTurn && t.kind === "agent" && agentTurn.id === t.id ? agentTurn : t));
+  if (agentTurn && !turns.some((t) => t.kind === "agent" && t.id === agentTurn.id)) {
+    turns.push(agentTurn);
+  }
 
   return (
     <>
@@ -36,17 +44,31 @@ export default function AdHoc({ ctx, stored, suggestions }) {
         {error && <div className="err" style={{ marginBottom: 14 }}>{error}</div>}
 
         {turns.map((t, i) => (
-          <div key={i}>
-            <Turn who="you"><p>{t.question}</p></Turn>
-            <Turn who="workbench"><Briefing data={t.answer} ctx={ctx} /></Turn>
-          </div>
+          t.kind === "agent" ? (
+            <div key={t.id || i}>
+              <Turn who="you"><p>{t.label || t.question}</p></Turn>
+              <Turn who="claude" badge={agentBadge(t)}>
+                <AgentStream turn={t} log={log}
+                             live={!!(agentTurn && agentTurn.id === t.id)} ctx={ctx} />
+              </Turn>
+            </div>
+          ) : (
+            <div key={i}>
+              <Turn who="you"><p>{t.question}</p></Turn>
+              <Turn who="workbench"><Briefing data={t.answer} ctx={ctx} /></Turn>
+            </div>
+          )
         ))}
 
-        {busy && <Turn who="workbench"><p className="muted"><span className="busy" /> reading
-          the project…</p></Turn>}
+        {busy && !agentTurn && (
+          <Turn who="workbench"><p className="muted"><span className="busy" /> reading
+            the project…</p></Turn>
+        )}
 
         <Composer suggestions={suggestions} busy={busy}
-                  onAsk={(key, round) => onAsk(key, round, sessionId)} />
+                  live={live} model={model} setModel={setModel}
+                  onAsk={(key, round) => onAsk(key, round, sessionId)}
+                  onSend={(text, chosen, label) => onAskLive(text, chosen, label)} />
       </div>
     </>
   );

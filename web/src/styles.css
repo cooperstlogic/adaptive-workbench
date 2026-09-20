@@ -473,3 +473,31 @@ table.grid.config tr.locked td.k { color: var(--faint); }
 @media (max-width: 1020px) {
   .home-grid, .new-grid { grid-template-columns: 1fr; gap: 22px; }
 }
+
+/* --- the agent's seat ------------------------------------------------------
+   The badge on a Claude byline is the one place the mode is stated: live,
+   replayed with its verification count, or stopped with the reason. A chip
+   that ran model-written code carries its source. */
+
+.mode { margin-left: 4px; padding: 1px 7px; border-radius: 999px; font-size: 10.5px;
+  border: 1px solid var(--line); color: var(--muted); background: var(--panel);
+  white-space: nowrap; }
+.mode.live { color: var(--good); border-color: transparent; background: var(--line-soft); }
+.mode.replay { color: var(--accent); border-color: transparent; background: var(--accent-soft); }
+.mode.stop { color: var(--flag); border-color: transparent; background: var(--flag-soft); }
+
+.stream > * + * { margin-top: 8px; }
+.stream .reading { padding-left: 10px; border-left: 2px solid var(--line); }
+.stream .reading.supported { border-left-color: var(--good); }
+.stream .reading.partially-supported { border-left-color: var(--flag); }
+.stream .proposal { margin-top: 10px; }
+
+.tool.adhoc .tool-cmd::before { content: "ad hoc · "; color: var(--faint); }
+.ok-text { color: var(--good); }
+
+.caret { display: inline-block; width: 6px; height: 13px; margin-left: 2px; vertical-align: -2px;
+  background: var(--accent); animation: caret 0.9s steps(2, start) infinite; }
+@keyframes caret { to { visibility: hidden; } }
+
+.ask.live { border-style: dashed; }
+.composer textarea:disabled { color: var(--faint); cursor: not-allowed; }
