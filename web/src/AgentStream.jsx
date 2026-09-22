@@ -74,11 +74,39 @@ export default function AgentStream({ turn, log, live, ctx }) {
                 <span className="mono">record_decision.py</span>, every result recomputed. The
                 rationale, the alternatives and the <i>if_wrong</i> line are in the Decision tab.
               </p>
+              {s.amendment && (
+                <p className="small" style={{ margin: "6px 0 0" }}>
+                  It also asks to move <span className="mono">{s.amendment.field}</span> from{" "}
+                  <span className="num">{s.amendment.from}</span> to{" "}
+                  <span className="num">{s.amendment.to}</span>, which changes what the next
+                  batch is made of. Nothing moves until it is ruled on.
+                </p>
+              )}
+            </div>
+          );
+        }
+        if (s.type === "revision") {
+          const c = s.composition;
+          return (
+            <div key={i} className="card proposal">
+              <div className="spread">
+                <b>Round {s.round} re-composed</b>
+                <Badge kind="attn">
+                  {s.overrides.map((o) => o.field.split(".").pop()).join(", ")}
+                </Badge>
+              </div>
+              <p className="small" style={{ margin: "6px 0 0" }}>
+                {s.overrides.map((o) => `${o.field} ${o.from} → ${o.to}`).join("; ")}. The
+                batch is now {c.control} control, {c.replicate} replicate, {c.exploration}{" "}
+                exploration and {c.pick} fresh picks. This batch only —{" "}
+                <span className="mono">objectives.json</span> is unchanged, and nobody has
+                approved it.
+              </p>
             </div>
           );
         }
         if (s.type === "refused") {
-          return <p key={i} className="err small">The writer refused it: {s.text}</p>;
+          return <p key={i} className="err small">Refused: {s.text}</p>;
         }
         if (s.type === "malformed") {
           return <p key={i} className="err small">Not run: {s.text}</p>;

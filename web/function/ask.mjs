@@ -73,6 +73,20 @@ const TESTS = ["offset_from_controls", "residual_by_plate", "residual_by_mutatio
 const READINGS = ["supported", "partially supported", "not supported", "inconclusive"];
 const ACTIONS = ["apply_offset_correction", "drop_wells", "refit_only", "no_action"];
 const CONFIDENCE = ["high", "medium", "low", "refuses"];
+// The one part of the declaration a seat may ask to move. It mirrors
+// `core.amend.AMENDABLE`, which is where the bounds are enforced; check.py
+// asserts the two lists are the same, the same way it asserts the diagnostic
+// enum is the library's. The value the model names is checked there and is
+// inert until a named person rules on it, so the enum here is a shortlist and
+// not a permission.
+const AMENDABLE = ["batch.controls", "batch.diversity_weight", "batch.exploration_slots",
+                   "batch.replicates", "editable_region.end", "editable_region.start"];
+// The subset that can also be set for one unapproved batch, mirroring
+// `core.amend.ROUND_SCOPED`: everything that only decides how the wells are
+// spent. The two that move the candidate pool are absent, because
+// re-enumerating under a fitted model run would index every prediction
+// against the wrong sequence.
+const ROUND_SCOPED = AMENDABLE.filter((f) => f.startsWith("batch."));
 
 // --- the prompt -----------------------------------------------------------
 
@@ -81,7 +95,12 @@ export const PREAMBLE = `You are Claude, seated in a project session of Shannon 
 - \`run_diagnostic\` is skills/adaptive-optimization/scripts/run_diagnostic.py: one named test from core/diagnostics.py, read-only. The template's permitted tests are the only names the tool accepts, and every argument is one of the values the script takes.
 - \`execute_analysis\` is the ad hoc escape hatch the skill describes: a short read-only numpy analysis run against the project's own files, in the visitor's browser. The paths it can read are listed under \`paths\` in the context, relative to the working directory. It cannot reach the simulated laboratory or the registry. Its output is evidence a person reads and is never an input to a code path.
 - \`check_lab_results\` is steps 5 to 8 of the round loop: the registry's check_run_status, and, if the assay has reported, the pull and the import and the scoring that follow it. Asking is what moves a run that is being held, so ask when someone wants to know where a round is rather than to fill the context. Each round's \`lab\` line in the context says where it stood when this turn began. You supply no number to it: the values were measured by the assay when the batch was submitted, and import_round.py and evaluate_prior.py write what they reconcile and score.
+- \`revise_batch\` is select_batch.py --set: it runs the optimizer again for a batch nobody has approved yet, under a changed policy. When someone asks for the proposed batch to be composed differently — more exploration, a wider bridge — this is the tool, and you should just use it and then say what changed. It writes the batch record and nothing else; the declaration is untouched and the next round reverts to it. It refuses a round that has already gone to the laboratory.
 - \`propose_decision\` is record_decision.py --propose, and it is how you hand a diagnosis back. Name the tests; the script re-runs them itself and writes the numbers it gets. It refuses a payload that carries a result. List every ad hoc cut you ran, with its code and the stdout you received. It writes nothing else and it does not rule.
+
+There are two ways the policy moves and they are for different situations. **A batch nobody has approved yet you simply re-compose, with \`revise_batch\`** — nothing has gone to a laboratory, so there is nothing to rule on, and the approval that gates every batch has not happened. **An \`amendment\` on a recommendation changes the declaration from that round on**, and that one needs evidence behind it and a named person to rule. If someone asks you to change the batch in front of them, the first is the answer; do not tell them it has to go through a ruling.
+
+The recommendation's \`action\` says what should happen to the round's data. Its \`amendment\` is separate and optional, and it is how you ask for the declaration itself to change: one field of it to move, and the value to move it to. \`amendable\` in the context lists the fields, what each is now, and the bounds it is held to; the writer enforces those bounds and refuses anything else, including every field that is not on the list. Two of them re-enumerate the candidate pool rather than re-spend the wells, and the context says which. Propose one when the round's evidence says the present value is what cost it -- the skill's own table answers "the model extrapolated into a region it has not seen" with refit and widen exploration, and this is how that is carried out. Say in \`why\` what the evidence shows the current value costing. The value is a decision and not a measurement, which is why it may come from you; it is also inert until a named person rules for it, and they may set a different number.
 
 You cannot select or submit a batch, and you cannot rule. A named person rules on what you propose, with four verbs, outside this conversation. If the ruling comes back as more_evidence_requested, run what was asked for and propose again; the record keeps both passes.
 
@@ -221,6 +240,44 @@ export function toolsFor(kind, permitted) {
       additionalProperties: false,
     },
   };
+  // The one tool that changes what the optimizer recommended, and it changes
+  // it by running the optimizer again. Nothing about the declaration moves and
+  // nothing reaches a laboratory: the batch is still unapproved, and approval
+  // is still a typed control outside this conversation.
+  const revise_batch = {
+    name: "revise_batch",
+    description: "Re-run the optimizer for a batch that has not been approved yet, under a "
+      + "changed policy: more or fewer exploration slots, replicates or controls, or a "
+      + "different diversity weight. Use it when someone asks for the proposed batch to be "
+      + "composed differently. `amendable` in the context gives each field's current value "
+      + "and bounds; the fields that move the candidate pool cannot be set this way. It "
+      + "writes the batch record only -- objectives.json is untouched and the next round "
+      + "reverts to the declaration -- and it refuses a round that has already been "
+      + "submitted. It does not approve anything.",
+    strict: true,
+    input_schema: {
+      type: "object",
+      properties: {
+        round: { type: "integer", description: "the batch to re-compose" },
+        changes: {
+          type: "array", minItems: 1,
+          items: {
+            type: "object",
+            properties: {
+              field: { type: "string", enum: ROUND_SCOPED },
+              to: { type: "number" },
+            },
+            required: ["field", "to"],
+            additionalProperties: false,
+          },
+        },
+        why: { type: "string", description: "what the change is for, one sentence; it goes "
+                 + "into the batch record beside what moved" },
+      },
+      required: ["round", "changes", "why"],
+      additionalProperties: false,
+    },
+  };
   const propose_decision = {
     name: "propose_decision",
     description: "Hand the diagnosis to record_decision.py --propose. Name every hypothesis "
@@ -254,6 +311,23 @@ export function toolsFor(kind, permitted) {
             rationale: { type: "string" },
             alternative_considered: { type: "string" },
             if_wrong: { type: "string" },
+            amendment: {
+              type: "object",
+              description: "Optional, and the only thing here that changes what the "
+                + "optimizer will recommend next. One field of objectives.json to move, and "
+                + "the value to move it to; `amendable` in the context says what each one is "
+                + "now and the bounds it is held to. It is a choice and not a measurement, "
+                + "it is checked in code before it is written down, and it applies only if "
+                + "a named person rules for it -- who may dial the number.",
+              properties: {
+                field: { type: "string", enum: AMENDABLE },
+                to: { type: "number" },
+                why: { type: "string",
+                       description: "what this round's evidence says the present value is "
+                         + "costing, in a sentence or two" },
+              },
+              required: ["field", "to", "why"],
+            },
           },
           required: ["action", "confidence", "rationale", "alternative_considered", "if_wrong"],
         },
@@ -262,8 +336,8 @@ export function toolsFor(kind, permitted) {
     },
   };
   return kind === "diagnose"
-    ? [run_diagnostic, execute_analysis, check_lab_results, propose_decision]
-    : [run_diagnostic, execute_analysis, check_lab_results];
+    ? [run_diagnostic, execute_analysis, check_lab_results, revise_batch, propose_decision]
+    : [run_diagnostic, execute_analysis, check_lab_results, revise_batch];
 }
 
 // --- the signature --------------------------------------------------------

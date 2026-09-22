@@ -47,7 +47,12 @@
     },
     {
       "path": "core/project.py",
-      "sha256": "a776a037a52437a2fd495208364fd1a485e23e1fb39888f62c0e11411e7861e0",
+      "sha256": "a2daadee5552885c128ea67af09fb836dc68b961751edf2f4d8cd84b17ce4f05",
+      "verbatim": true
+    },
+    {
+      "path": "core/amend.py",
+      "sha256": "087b1229464504529c32c02ac3b9aa1e4049e28467b4452cb506b6f218d0de35",
       "verbatim": true
     },
     {
@@ -87,7 +92,7 @@
     },
     {
       "path": "skills/adaptive-optimization/scripts/select_batch.py",
-      "sha256": "3698035d42a64af7f3f4540a1cdc76b32c902f341520ff7ddf6813bfeed8018c",
+      "sha256": "f3b1bf5f08de63485500f170e71952a3be96d27e5743c4a35a3dd12d9e0e2669",
       "verbatim": true
     },
     {
@@ -102,7 +107,7 @@
     },
     {
       "path": "skills/adaptive-optimization/scripts/fit_surrogates.py",
-      "sha256": "53b5c27547842a99d016f11b56bcd36dd6265b563f6a46cf6fb9e5fdb9588a5b",
+      "sha256": "ab27225572fa31601af32ab7fcad0d5fa1a35275429f5f356609e1c7b3fbd5e8",
       "verbatim": true
     },
     {
@@ -112,7 +117,12 @@
     },
     {
       "path": "skills/adaptive-optimization/scripts/record_decision.py",
-      "sha256": "84d7daf5f427440c9df306c952002b6f47b0ce861abf98a0b243fb2953ecb7cf",
+      "sha256": "0d006170306dc1783cbe8689bbaea8932af216fd073ff528d94c48f7b078109e",
+      "verbatim": true
+    },
+    {
+      "path": "skills/adaptive-optimization/scripts/amend_objectives.py",
+      "sha256": "b958137de946dd4d3c3066e9438a7cbd8c3937e8c88676d9f94c89df95a2074b",
       "verbatim": true
     },
     {
@@ -127,13 +137,13 @@
     },
     {
       "path": "wb_driver.py",
-      "sha256": "d7d489081a4b698c57fcd327d7c3489caa2f8d042ed5c67c854863ee8e8bf4b4",
+      "sha256": "c43e688211efb798abda67bdee65812e56114dc079bc329046e66daf08c8db3e",
       "source": "web/py/wb_driver.py",
       "verbatim": false
     }
   ],
-  "commit": "257b8ffa30599a4020756308b8eb78944866a220",
-  "hash": "sha256:81e7f1dbe504975346f56955d9333e61ea9720e344512256e394269a0b5f4d69",
+  "commit": "abbb028b8f158302dc7ba29a4c00b919a2a67a9b",
+  "hash": "sha256:7380ae42826bf6ad622d9266f9e66d395369c9105e917dc762c3bb8b275b37dd",
   "kind": "browser_bundle",
   "mount": "/workbench",
   "note": "code is copied byte for byte from the repository and laid out in the same shape, so Pyodide imports the same modules the CLI imports. state is the committed project rewound to before round 4 was submitted. reference is read for replay and never executed",
@@ -160,7 +170,7 @@
   "state": [
     {
       "path": "lims_store/demo-trastuzumab.json",
-      "sha256": "23d50274bc2e5b2665d2285cc4c5090f8c98e52226b0b3d5d4d9bb9c7b29c7e6"
+      "sha256": "ece8d539bc52978929ce69337eb434c07ff498feabe8ab271d5cea78277a6aff"
     },
     {
       "path": "lims_store/exports/demo-trastuzumab_round1_order.csv",
@@ -260,7 +270,7 @@
     },
     {
       "path": "projects/demo-trastuzumab/rounds.json",
-      "sha256": "7fb71ec9092be989fee4fdee79b622370f7ada73968e0cdb730705a241b45ef5"
+      "sha256": "5a081bb2f6b84816d18026bb5a20b00c95b1d8cb93c45e0a693590cdf6f751e6"
     }
   ]
 }

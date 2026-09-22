@@ -23,6 +23,14 @@ and surfaced in the batch table.
 
 The run stores one prediction per member of the candidate pool, in the pool's
 hashed order, which is what the next round's selection consumes.
+
+Which pool that is normally goes without saying: enumeration is a pure
+function of the declaration, so round N's pool and round N+1's hash
+identically and either will do. An amendment to the editable region is the
+one thing that separates them, and then the round has to be fitted against
+the pool the *next* batch will be chosen from or every prediction is indexed
+against the wrong sequence. ``--pool N`` names that pool. It defaults to the
+round's own, so every existing store is byte-for-byte unaffected.
 """
 
 import argparse
@@ -41,22 +49,26 @@ def main(argv=None):
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--project", required=True)
     ap.add_argument("--round", type=int, required=True)
+    ap.add_argument("--pool", type=int, default=None, metavar="N",
+                    help="predict over round N's candidate pool instead of this round's; "
+                         "needed after an amendment moved the pool")
     args = ap.parse_args(argv)
 
     state = project.load(args.project)
     obj = state["objectives"]
     region = obj["editable_region"]
 
-    pool_rec = project.read_artifact(state, "candidates", args.round)
+    pool_round = args.round if args.pool is None else args.pool
+    pool_rec = project.read_artifact(state, "candidates", pool_round)
     if pool_rec is None:
-        print("no candidate pool for round %d; run generate_candidates.py first" % args.round,
+        print("no candidate pool for round %d; run generate_candidates.py first" % pool_round,
               file=sys.stderr)
         return 2
     kept, _, _ = project.feasible_pool(state)
     fingerprint = project.pool_fingerprint(kept)
     if fingerprint != pool_rec["pool_fingerprint"]:
         print("the feasible pool no longer hashes to what pool_%03d.json recorded"
-              % args.round, file=sys.stderr)
+              % pool_round, file=sys.stderr)
         return 2
 
     snaps = project.snapshots(state, through=args.round)
@@ -85,7 +97,7 @@ def main(argv=None):
     # never moved. Whether a human has ruled is read from the decision record.
     unruled = project.unruled_flagged_rounds(state, through=args.round)
 
-    record = schema.stamp({
+    body = {
         "schema_version": schema.SCHEMA_VERSION,
         "round": int(args.round),
         "unit": obj["unit"],
@@ -114,7 +126,14 @@ def main(argv=None):
         "prediction_decimals": PREDICTION_DECIMALS,
         "pool_mean": [round(float(v), PREDICTION_DECIMALS) for v in run["pool_mean"]],
         "pool_sd": [round(float(v), PREDICTION_DECIMALS) for v in run["pool_sd"]],
-    }, inputs={
+    }
+    if pool_round != int(args.round):
+        # Present only when the two differ, which is only after an amendment
+        # moved the pool. Every run fitted before this flag existed hashes to
+        # exactly what it hashed to, which is the whole reason for the
+        # condition rather than a null.
+        body["pool_round"] = int(pool_round)
+    record = schema.stamp(body, inputs={
         "objectives": obj["hash"], "pool": pool_rec["hash"],
         "snapshots": schema.content_hash([s["hash"] for s in snaps]),
     })
@@ -125,6 +144,9 @@ def main(argv=None):
                        model=project.artifact_ref(state["paths"]["root"], path, record))
 
     print("round           %d" % args.round)
+    if "pool_round" in record:
+        print("pool            round %d's, %d candidates -- the amended one the next batch "
+              "is chosen from" % (pool_round, len(kept)))
     print("trained on      %d designs from rounds %s, %d censored"
           % (record["n_observations"], record["rounds_included"], record["n_censored"]))
     print("feature block   %s, %d principal components" % (record["feature_block"],

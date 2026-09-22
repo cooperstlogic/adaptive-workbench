@@ -72,7 +72,7 @@ import lims as lims_mod  # noqa: E402
 # argument, and a module shadowed by a parameter is a bug waiting for the
 # one code path that does not pass it.
 from core import project as project_mod  # noqa: E402
-from core import reconcile, schema  # noqa: E402
+from core import amend, reconcile, schema  # noqa: E402
 
 DEMO = "demo-trastuzumab"
 PROJECTS_DIR = os.path.join(MOUNT, "projects")
@@ -89,7 +89,7 @@ TEMPLATES = os.path.join(MOUNT, "templates")
 MAX_CREATED = 3
 
 STEPS = ("generate_candidates", "select_batch", "import_round", "evaluate_prior",
-         "fit_surrogates", "run_diagnostic", "record_decision")
+         "fit_surrogates", "run_diagnostic", "record_decision", "amend_objectives")
 _loaded = {}
 
 
@@ -541,6 +541,56 @@ def delete_project(project):
 # --- the loop --------------------------------------------------------------
 
 
+def _override_args(batch):
+    """The `--set` flags that reproduce a batch record's policy overrides."""
+    moved = (batch or {}).get("policy_overrides") or []
+    if not moved:
+        return []
+    argv = []
+    for rec in moved:
+        argv += ["--set", "%s=%s" % (rec["field"], rec["to"])]
+    argv += ["--set-note", moved[0].get("note") or ""]
+    if moved[0].get("by"):
+        argv += ["--set-by", moved[0]["by"]]
+    return argv
+
+
+def revise_batch(round_id, changes, why="", by=None, project=None, session=None):
+    """Re-compose an unapproved batch under a changed policy.
+
+    The other half of the override story, and the everyday half. An amendment
+    says the declaration is wrong from here on, needs evidence behind it and a
+    named person to rule on it. This says *this* batch should have been put
+    together differently -- more wells on uncertainty, a wider bridge -- and
+    it needs none of that, because nothing has gone anywhere. What gates it is
+    the approval that gates every batch and has not happened yet.
+
+    ``changes`` is a list of {"field", "to"}. The bounds are the same ones an
+    amendment is held to, checked in ``core.amend`` before selection re-runs,
+    and ``select_batch.py`` refuses a round the laboratory already has.
+    """
+    r = int(round_id)
+    pid = project or DEMO
+    moved = [(c["field"], c["to"]) for c in (changes or [])]
+    if not moved:
+        raise RuntimeError("name at least one policy field to change")
+    argv = ["--project", _root(pid), "--round", r]
+    for field, to in moved:
+        argv += ["--set", "%s=%s" % (field, to)]
+    argv += ["--set-note", why or ""]
+    if by:
+        argv += ["--set-by", by]
+    entry = _call("script", "select_batch", argv, round_id=r, project=pid, session=session,
+                  label="re-select batch %03d: %s" % (r, ", ".join("%s=%s" % m for m in moved)),
+                  note="the same bounds an amendment is held to, checked before selection "
+                       "re-runs; objectives.json is untouched and the next round reverts "
+                       "to it")
+    record = artifact("batches", r, project=pid)
+    return {"round": r, "composition": record["composition"],
+            "policy_overrides": record.get("policy_overrides") or [],
+            "hash": record["hash"], "log": entry}
+
+
 def approve(round_id, by=None, drops=None, drop_notes=None, project=None, stagger=True,
             session=None):
     """Sign the batch, send it to the registry, and write the order for the lab.
@@ -570,6 +620,11 @@ def approve(round_id, by=None, drops=None, drop_notes=None, project=None, stagge
     for i, d in enumerate(drops or []):
         argv += ["--drop", d, "--drop-note", (drop_notes or [])[i] if
                  i < len(drop_notes or []) else ""]
+    # Approving re-runs selection so the record carries who signed it, which
+    # means any policy override the batch was re-composed under has to be
+    # passed again or signing it would quietly put it back. The batch record
+    # is where they live, so it is where they are read from.
+    argv += _override_args(project_mod.read_artifact(_state(pid), "batches", r))
     _call("script", "select_batch", argv, round_id=r, project=pid, session=session,
           label=("approve batch %03d" % r) if by else ("re-select batch %03d" % r),
           note=("re-run with the approver named, so the record carries who signed it"
@@ -764,14 +819,24 @@ def propose(round_id, payload, project=None, session=None):
     return artifact("decision", r, project=pid)
 
 
-def rule(round_id, verdict, by, note="", request=None, project=None, session=None):
-    """The ruling. Four verbs, a named person, and nothing else moves data."""
+def rule(round_id, verdict, by, note="", request=None, amend_to=None, project=None,
+         session=None):
+    """The ruling. Four verbs, a named person, and nothing else moves data.
+
+    ``amend_to`` is the one number a ruling carries, and it belongs to
+    ``accepted_with_modification``: a recommendation that proposes an
+    amendment proposes a value, and the person ruling on it dials that value
+    rather than only taking or leaving it. The writer re-validates it against
+    the same declared bounds the proposal was checked against.
+    """
     r = int(round_id)
     pid = project or DEMO
     argv = ["--project", _root(pid), "--round", r, "--rule", verdict, "--by", by,
             "--note", note]
     if request:
         argv += ["--request", request]
+    if amend_to is not None:
+        argv += ["--amend-to", str(amend_to)]
     _call("script", "record_decision", argv, round_id=r, project=pid, session=session,
           label="ruling: %s" % verdict,
           note="a named approver, recorded with the time; no action is taken on an "
@@ -822,12 +887,53 @@ def act_and_advance(round_id, next_round=True, project=None, session=None):
             _call("script", "evaluate_prior", ["--project", root, "--round", r],
                   round_id=r, project=pid, session=session, label="re-score round %d" % r)
 
-    _call("script", "fit_surrogates", ["--project", root, "--round", r],
-          round_id=r, project=pid, session=session, label="fit round %d" % r,
-          note="two recipes compete; the winner is the lowest held-out negative log "
-               "predictive density")
-    if next_round:
-        advance(r + 1, project=pid, session=session)
+    # An amendment is the other half of a ruling: the action says what happens
+    # to this round's data, the amendment says how the next round's wells are
+    # spent or what they may be spent on. They are independent, so a record
+    # can carry both and this runs both.
+    amendment = (dec["recommendation"] or {}).get("amendment")
+    if amendment:
+        _call("script", "amend_objectives", ["--project", root, "--authority", authority],
+              round_id=r, project=pid, session=session,
+              label="amend %s under %s" % (amendment["field"], authority),
+              note="the bounds are declared in core/amend.py and checked before the write; "
+                   "the superseded value stays in the amendments block")
+        state = _state(pid)
+        moved = bool((state["objectives"].get("amendments") or [])[-1]["effects"]
+                     ["pool_changes"])
+    else:
+        moved = False
+
+    if not moved:
+        _call("script", "fit_surrogates", ["--project", root, "--round", r],
+              round_id=r, project=pid, session=session, label="fit round %d" % r,
+              note="two recipes compete; the winner is the lowest held-out negative log "
+                   "predictive density")
+        if next_round:
+            advance(r + 1, project=pid, session=session)
+        return view(pid)
+
+    # The window moved, so the pool moved, and a model run holds one
+    # prediction per pool member in pool order. The next round's pool has to
+    # exist before this round can be fitted against it, which inverts the two
+    # steps `advance` does in the ordinary case -- so the three commands are
+    # spelled out here rather than reached through it.
+    if not next_round:
+        return view(pid)
+    _call("script", "generate_candidates", ["--project", root, "--round", r + 1],
+          round_id=r + 1, project=pid, session=session,
+          label="re-enumerate for round %d under the amended window" % (r + 1),
+          note="every declared constraint is enforced here, in code, before any model runs")
+    _call("script", "fit_surrogates", ["--project", root, "--round", r,
+                                       "--pool", r + 1],
+          round_id=r, project=pid, session=session,
+          label="fit round %d over the amended pool" % r,
+          note="the amended pool is what the next batch is chosen from, so it is the pool "
+               "this run has to predict over")
+    _call("script", "select_batch", ["--project", root, "--round", r + 1],
+          round_id=r + 1, project=pid, session=session, label="select round %d" % (r + 1),
+          note="no approver named, so the record is a pure function of its inputs and "
+               "hashes the same on every surface")
     return view(pid)
 
 
@@ -1605,6 +1711,27 @@ def agent_context(project=None, round_id=None):
         "focus_round": focus,
         "batch": None if focus is None else _batch_context(state, focus),
         "decisions": decisions,
+        # What the seat may ask to change, and the bounds it will be held to.
+        # Read out of core/amend.py rather than described, so the prompt and
+        # the writer cannot disagree about it -- and the current value comes
+        # off the project, because a proposal has to know what it is moving
+        # from even though it never gets to say so.
+        "amendable": {
+            "fields": [{
+                "field": f,
+                "now": amend.current(obj, f),
+                "kind": kind, "low": low, "high": high,
+                "moves_the_pool": f in amend.POOL_FIELDS,
+            } for f, (kind, low, high) in sorted(amend.AMENDABLE.items())],
+            "min_fresh_picks": amend.MIN_FRESH_PICKS,
+            "max_feasible_pool": amend.MAX_FEASIBLE_POOL,
+            "amendments": obj.get("amendments") or [],
+            "note": "one field per proposal, on the recommendation's `amendment`. The "
+                    "bounds are enforced in code before the record is written, and nothing "
+                    "is applied until a named person rules -- who may dial the number. "
+                    "Everything else in objectives.json is the template's declaration and "
+                    "is not amendable from this seat",
+        },
         "tests": {
             "permitted": obj["diagnostics"],
             "arguments": {

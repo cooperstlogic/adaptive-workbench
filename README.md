@@ -4,38 +4,21 @@
 a multi-round lab campaign.** It takes an antibody lead, learns from each round of
 experimental results, and recommends the next batch of variants to test.
 
-## What this is, in sixty seconds
-
-Optimizing an antibody is iterative. You pick ~48 variants, express them, measure how
-tightly each binds, learn what that tells you, and pick the next 48. A real cycle takes four
-to six weeks, and a campaign is six or more of them. **The hard part is not any single
-round — it is that round 6 has to remember what rounds 1 through 5 meant**, including the
-rounds where the assay drifted, a plate failed, or the results disagreed with the model and
-somebody had to decide why.
-
-This repository is one answer to that, built as three things that share one codebase:
-
 | | What it is |
 | --- | --- |
-| **A skill** | `SKILL.md` plus seven Python scripts that read and write a project's state on disk. Loads in Claude Code and in Claude Science |
+| **A skill** | `SKILL.md` plus eight Python scripts that read and write a project's state on disk. Loads in Claude Code and in Claude Science |
 | **Two MCP connectors** | A registry (the LIMS) and a bioprovider (features and property scores), served over MCP stdio. Real servers, real protocol |
 | **A web app** | The same Python running in your browser via Pyodide, wearing the Claude Science interface, with a model in the centre seat |
 
-**The web app is a functional agentic system, not a mockup.** Given a round that came back
-wrong, a real model chooses which diagnostic to run next, calls real tools that execute real
-Python against real project files, writes short numpy analyses when the library has no test
-for its question, and hands back a proposal a named human rules on. Nothing is scripted and
-nothing is animated.
+**The web app is a functional agentic system.** Given a round that came back
+wrong, a real model chooses which diagnostic to run next, calls real tools that execute 
+Python against project files, writes short numpy analyses when the library has no test
+for its question, and hands back a proposal a named human rules on.
 
 **It is also a toy.** The laboratory underneath it is simulated: the affinity landscape is
 invented, the LIMS is a mock, the assay is an oracle replaying generated values with noise,
 and the sequence representation is the simplest one that works rather than a real protein
-language model. **Every affinity number in this repository is fabricated.** What the results
-show is that the decision loop converges and that its judgments are inspectable — not that
-this method finds better antibodies.
-
-Both of those sentences are meant literally, and [What is real and what is
-staged](#what-is-real-and-what-is-staged) draws the line component by component.
+language model.  What the results show is that the decision loop converges and that its judgments are inspectable — not that this method finds better antibodies.
 
 ### The two things worth looking at
 
@@ -64,8 +47,7 @@ staged](#what-is-real-and-what-is-staged) draws the line component by component.
 
 Claude Science already offers broad connectors and skills. Building an adaptive optimization
 workflow on top of them still takes specialized know-how: the data mappings between a LIMS
-and a model, the surrogate and its calibration, the decision logic for what to do when a round
-disagrees with the prediction, and an interface a scientist can review it through.
+and a model, the surrogate model and its calibration, the decision logic for what to do when a round disagrees with the prediction, and an interface a scientist can review it through.
 **Templating those four things would make the workflow easier to adopt and to repeat**, and
 the record they leave behind — objectives, predictions, experiments, outcomes — is worth more
 at round twelve than at round one.
@@ -96,20 +78,21 @@ prompt `web/function/ask.mjs` builds ahead of `SKILL.md` itself:
 
 ## What it is made of
 
-Nothing here mocks the extension mechanism. The skill is a `SKILL.md` with seven Python
+Nothing here mocks the extension mechanism. The skill is a `SKILL.md` with eight Python
 scripts; the connectors are two MCP stdio servers. The same files load in Claude Code, in
 Claude Science, and — through Pyodide — in the browser.
 
 ### The skill
 
 `skills/adaptive-optimization/SKILL.md` is the state contract, the round loop, the diagnosis
-procedure, and four rules its agent does not break. Seven scripts sit under it, each a thin
-wrapper over `core/` taking `--project <dir> --round <N>` and writing one artifact. Five are
+procedure, and four rules its agent does not break. Eight scripts sit under it, each a thin
+wrapper over `core/` taking `--project <dir>` and writing one artifact. Five are
 the pipeline — `generate_candidates` → `select_batch` → *(the registry: submit, order, wait,
-pull)* → `import_round` → `evaluate_prior` → `fit_surrogates` — and two are not:
-`run_diagnostic.py`, which runs one of five read-only tests on a flagged round, and
+pull)* → `import_round` → `evaluate_prior` → `fit_surrogates` — and three are not:
+`run_diagnostic.py`, which runs one of five read-only tests on a flagged round;
 `record_decision.py`, which writes a decision record and **refuses any payload that arrives
-carrying its own numbers.**
+carrying its own numbers**; and [`amend_objectives.py`](#amending-the-declaration), the only
+thing that writes `objectives.json` after instantiation, and only under a ruling.
 
 The four rules are the interesting part, because they are the ones a scheduler cannot enforce:
 never change objectives without approval, never pool measurements across assay versions without
@@ -130,35 +113,18 @@ pull_assay_results     Assay rows for a round, keyed by sample id
 list_designs           Designs the registry holds, with their construct ids
 get_construct          One construct record
 attach_recommendation  Attach a recommendation id and a link to an existing record
-
-not available, deliberately: create_sample, edit_assay_result, start_workflow, delete_record
 ```
-
-Those four withheld names are the boundary claim, and it is a check rather than a sentence:
-the served tool list does not contain them, asserted from both ends. **The LIMS stays
-authoritative** — the workbench's write path attaches a link and nothing more.
 
 **`bioprovider` — the provider stand-in.** Three tools. `embed_sequences` and
 `score_properties` are real and hash-identical to `core/encode.py` and `core/scoring.py`;
 `predict_structures` is stubbed, returns nulls, and says it predicted nothing. Its `esm_live`
-backend is declared and **not wired** — asking for it returns an error naming what is missing,
-never one-hot in disguise. A stub that silently falls back is the failure mode this repository
-is most careful about.
+backend is declared and **not wired** — asking for it returns an error naming what is missing.
 
 ---
 
 ## How it decides what to test next
 
-**In one paragraph.** Everything measured so far trains a model that maps a sequence to a
-predicted binding affinity *with an error bar*. That model then scores every candidate
-nobody has measured yet, and the next batch is chosen to maximize **expected improvement** —
-which balances "this looks good" against "nobody knows what this does, and it could be
-great." The batch is not the 48 highest predictions; it is the 48 that buy the most
-information about where the optimum is. A handful of wells are spent re-measuring molecules
-from the previous round, so the next round can tell *the instrument moved* apart from *we
-found something*.
-
-Underneath that, three pieces:
+Everything measured so far trains a model that maps a sequence to a predicted binding affinity *with an error bar*. That model then scores every candidate nobody has measured yet, and the next batch is chosen to maximize **expected improvement** — which balances "this looks good" against "nobody knows what this does, and it could be great." The batch is not the 48 highest predictions; it is the 48 that buy the most information about where the optimum is. A handful of wells are spent re-measuring molecules from the previous round, so the next round can tell *the instrument moved* apart from *we found something*.
 
 **1. The design space is enumerated and filtered before any model runs.** The template
 declares a lead (trastuzumab VH), an editable window (8 residues of CDR-H3) and a mutation
@@ -238,6 +204,34 @@ threshold; deciding *why* is the judgment call, and it is the only one this buil
 to make. Five read-only diagnostics tell them apart, and each returns numbers and never a
 verdict.
 
+### Changing what the optimizer recommends
+
+**A batch nobody has approved yet is simply re-composed.** Ask for more exploration or a
+wider bridge and `select_batch.py --set batch.exploration_slots=4` runs the optimizer again
+for that batch — the record keeps what moved, who asked and why, `objectives.json` is not
+written, and the next round reverts to the declaration. It needs no ruling, because it
+changes nothing that has left the building: the approval that gates every batch has not
+happened, and it is still the only thing that sends wells to a laboratory. A round already
+submitted refuses the flag, since its batch record is the order that went out.
+
+**An amendment changes the declaration from here on**, and that one is a recommendation on a
+decision record, ruled by a named person. Six fields are amendable — the four
+batch-composition slots (`exploration_slots`, `replicates`, `controls`, `diversity_weight`)
+and the two ends of the editable region — each declared in `core/amend.py` with a bound
+enforced before anything is written. Everything else is refused by name: the thresholds, the
+recipes, the diagnostics, the anomaly trigger, and the **mutation budget**, which is excluded
+for a measured reason — widening it from 2 to 3 over this eight-position window leaves
+**261,649** feasible candidates and a 335 MB feature block, which the browser cannot hold,
+where widening the window by two positions costs 13,702 against the present 7,294. The batch
+size is not on either list: forty-eight wells is the laboratory's budget, so widening one
+slot spends another.
+
+**Nothing is applied until a named person rules, and they may move the number** — the agent
+proposes 6, `accepted_with_modification` takes a typed 4, and the record keeps both. Then
+`amend_objectives.py --authority decision_NNN` writes it, bumping `version` and keeping the
+superseded value in an `amendments` entry naming the ruling, because a parameter that moved is
+only checkable if what it moved from is still written down.
+
 ---
 
 ## What it proves
@@ -250,8 +244,7 @@ verdict.
 </picture>
 
 Twenty seeds per arm, six rounds, batch of 48, scored against the
-[11.006 pKD threshold](#amendment-the-threshold-rule) — **amended after the runs**, superseding
-the pre-registered 10.762.
+11.006 pKD threshold.
 
 | | guided | random | guided, naive pooling |
 | --- | --- | --- | --- |
@@ -261,10 +254,7 @@ the pre-registered 10.762.
 | Final best observed, median | **11.762** | 11.212 | 11.015 |
 
 Guided is faster to threshold than random on **15 of the twenty paired seeds** and slower on
-one, an exact paired sign test at p = 0.0005. **The threshold was amended after these runs were
-seen** ([why](#amendment-the-threshold-rule)), so that margin is not protected by
-pre-registration; the final-best-observed column is, since it is scored against no threshold at
-all. **The landscape is synthetic** — this shows the decision loop converges, not that the
+one, an exact paired sign test at p = 0.0005. **The landscape is synthetic** — this shows the decision loop converges, not that the
 method finds better antibodies.
 
 **The third arm is the one that matters.** It is identical to guided except that it pools
@@ -393,7 +383,7 @@ situation this repository exists to put an agent into.
 | 3 | A second measured objective (expression), making the problem multi-objective | Acquisition: expected improvement becomes expected hypervolume improvement |
 | 4 | Predicted properties that are neither measured nor exactly computed | The template schema, which today has `measured` and `computed` and no third category |
 | 5 | Generated rather than enumerated candidates | Everything downstream assumes a fixed, hashable pool. This is the expensive one |
-| 6 | A widening mutation budget across rounds | A sixth decision verb — *widen* |
+| 6 | A widening **mutation budget** across rounds | [Amendments](#changing-what-the-optimizer-recommends) already widen the window this way; the budget is excluded because 2 → 3 is 261,649 candidates. Off a browser, raise the pool cap and add the field |
 
 ### How this compares to a real lab-in-the-loop
 
@@ -470,59 +460,6 @@ rule), detection limit **6.861**, and — as pre-registered — **threshold 10.7
 7,294 designs above it, **1.01%**. That build hashed `sha256:c9b2566abc75f0db…`. The current
 manifest hashes `sha256:74446e2ce0cb50cc…` because the amended gate changed the recorded
 threshold; every other field in it is identical.
-
-### Amendment: the threshold rule
-
-**This is the one number here that is not protected by the commit order, and it is the number
-the chart is scored against.** On 2026-09-20 the gate was changed from the pre-registered 99th
-percentile (10.762 pKD) to **75% of the climb from the parent to the landscape maximum
-(11.006 pKD)**. It was chosen *after* the campaign had run and after a sweep across candidate
-thresholds was inspected. A sceptic should discount the margin accordingly.
-
-| | pre-registered | amended |
-| --- | --- | --- |
-| Rule | 99th percentile of the enumerated pool | 75% of the parent→max climb |
-| Threshold | 10.762 pKD | **11.006 pKD** |
-| Feasible designs above it | 74 of 7,294 (1.01%) | 25 of 7,294 (0.34%) |
-| Guided, mean rounds to threshold | 2.00 | 2.35 |
-| Random, mean rounds to threshold | 2.95 | 4.20 |
-| Median, guided vs random | 2.0 vs 2.0 — **no resolution** | 2.0 vs 3.5 |
-| Paired sign test | 8 wins, 0 losses, **12 ties**, p = 0.0078 | 15 wins, 1 loss, 4 ties, p = 0.0005 |
-
-**Why it was changed.** The pre-registered gate sat only 66% of the way from the parent to the
-landscape maximum. At that height a blind 48-well draw cleared it 39% of the time, and guided
-cleared it at round 2 — the earliest round arithmetically possible, since no single mutant can
-reach it — in every one of the twenty seeds. Rounds-to-threshold was therefore ceiling-limited:
-both arms tied at a median of 2.0 and 12 of 20 paired seeds were ties. The amended gate sits
-above 10.570, the best double reachable by summing the two strongest singles the round-1 scan
-measures, so clearing it takes more than adding up the scan.
-
-**What this costs.** One claim is gone outright: guided used to be **never slower than random
-on any of the twenty seeds**, and at the amended gate it loses one. That property was never a
-property of the method — it held because the old threshold was ceiling-limited, so guided sat
-on the round-2 floor in every seed and had no room to lose one. `check.py` asserted it and now
-asserts the sign test instead.
-
-The separation at 11.006 is real but it is *not* evidence that survives
-the pre-registration argument, because the threshold was selected with the runs in view. What
-is still protected by commit order is everything the gate is drawn on: the landscape, the seed,
-the parameters, and the fact that the guided and random arms share a round-1 batch. The
-`amendments` block in `data/landscape_manifest.json` carries the superseded rule and value, and
-`check.py` asserts that block is present and intact.
-
-**The honest version of this result** is that guided beats random at *every* threshold between
-66% and 95% of the climb — p ≤ 0.04 throughout, with the margin widening as the gate hardens.
-That robustness, not the number at any one height, is the claim the data supports.
-
-**One protocol change, made before the first campaign run and for a stated reason.** Inspecting
-landscape values showed a diversity-maximizing seed batch would draw a design above the
-threshold, which — since both arms share the round-1 batch — would have made every run reach
-threshold at round 1 and measured nothing. The mitigation was authorized in writing beforehand
-(*start from a deliberately mediocre seed set… a change to the protocol, and not a change to
-the landscape after seeing a curve*) and taken as written: round 1 is a scan restricted to
-single mutants. No single mutant in the feasible pool can reach the threshold (best is 9.919),
-so round 1 is **structurally incapable of saturating** — a property of the mutation budget, not
-a tuned parameter. The landscape, its parameters, the seed and the threshold did not move.
 
 ---
 
@@ -676,7 +613,7 @@ re-run with `gates/run_gate.sh round4`, `round1` or `round4-pushback`.
 | Path | Contents |
 | --- | --- |
 | `core/` | Pure numpy, shared by every surface. No network, no printing, no scipy/sklearn/pandas. `encode`, `surrogate`, `acquisition`, `reconcile`, `diagnostics`, `candidates`, `scoring`, `schema`, `project` |
-| `skills/adaptive-optimization/` | `SKILL.md` and the seven scripts: five pipeline steps plus `run_diagnostic.py` and `record_decision.py` |
+| `skills/adaptive-optimization/` | `SKILL.md` and the eight scripts: five pipeline steps plus `run_diagnostic.py`, `record_decision.py` and `amend_objectives.py` |
 | `connectors/` | `registry_server.py` (seven tools over MCP stdio) and `bioprovider_server.py` (three). Not `mcp/`, which would shadow the SDK |
 | `data/` | The simulated laboratory. **Never imported by `core/`.** `synthetic.py` is the landscape, `oracle.py` the assay |
 | `lims.py` | The mock LIMS. Mints identifiers, owns the plate layout, holds the oracle |

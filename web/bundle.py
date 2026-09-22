@@ -7,7 +7,7 @@
 Two jobs, and both exist to stop the browser from becoming a second
 implementation of anything -- CLAUDE.md non-negotiable 2.
 
-**Copy, never port.** The bundle is `core/`, `data/`, `lims.py` and the seven
+**Copy, never port.** The bundle is `core/`, `data/`, `lims.py` and the eight
 skill scripts, byte for byte, laid out in the same directory shape so that
 every `sys.path` walk and every `dirname(__file__)` inside them resolves the
 way it does on a laptop. Pyodide then runs the same modules the CLI runs. A
@@ -72,6 +72,7 @@ CODE = [
     "core/__init__.py", "core/schema.py", "core/encode.py", "core/scoring.py",
     "core/candidates.py", "core/surrogate.py", "core/acquisition.py",
     "core/reconcile.py", "core/diagnostics.py", "core/project.py",
+    "core/amend.py",
     "data/__init__.py", "data/synthetic.py", "data/oracle.py",
     "data/landscape_manifest.json",
     "lims.py",
@@ -83,6 +84,7 @@ CODE = [
     "skills/adaptive-optimization/scripts/fit_surrogates.py",
     "skills/adaptive-optimization/scripts/run_diagnostic.py",
     "skills/adaptive-optimization/scripts/record_decision.py",
+    "skills/adaptive-optimization/scripts/amend_objectives.py",
     "templates/antibody-affinity-maturation/template.json",
     "templates/enzyme-thermostability/template.json",
 ]
@@ -243,6 +245,22 @@ def proposal_payload():
     """
     rec = schema.read_json(os.path.join(REPO, "projects", DEMO, "decisions",
                                         "decision_004.json"))
+
+    def recommendation(r):
+        """The recommendation with the writer's own contribution taken back out.
+
+        An amendment carries what the field was, the bounds it was checked
+        against and what the change would cost the pool -- all read off the
+        project by `core.amend` and none of it the agent's. Replaying a record
+        means handing back what the agent named, so those come out with the
+        results, and the writer fills them in again. Round 4 carries no
+        amendment; this is here so that a record which does still replays.
+        """
+        if not r.get("amendment"):
+            return r
+        am = r["amendment"]
+        return dict(r, amendment={k: am[k] for k in ("field", "to", "why") if k in am})
+
     passes = []
     for p in rec["passes"]:
         ruling = p.get("ruling")
@@ -259,7 +277,7 @@ def proposal_payload():
             } for h in p["hypotheses"]],
             "ad_hoc": [{"question": a["question"], "code": a["code"]}
                        for a in p.get("ad_hoc", [])],
-            "recommendation": p["recommendation"],
+            "recommendation": recommendation(p["recommendation"]),
             "ruling": None if ruling is None else {
                 "verdict": ruling["verdict"], "by": ruling["by"], "note": ruling["note"],
                 "requested": ruling.get("requested"),

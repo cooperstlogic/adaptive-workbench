@@ -289,6 +289,19 @@ def read_decision(state, round_id):
     return read_artifact(state, "decisions", round_id)
 
 
+def decision_by_id(state, authority):
+    """The record an ``--authority decision_NNN`` names, or None.
+
+    The round is in the name, so this is ``read_decision`` reached from the
+    other end -- and it goes through ``names_decision`` so that an authority
+    string is parsed in exactly one place however it arrives.
+    """
+    name = names_decision(authority)
+    if name is None:
+        return None
+    return read_decision(state, int(name[len("decision_"):]))
+
+
 def is_ruled(state, round_id):
     """Has a human ruled on this round?
 

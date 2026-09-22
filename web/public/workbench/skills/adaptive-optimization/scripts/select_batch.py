@@ -4,6 +4,8 @@
     python select_batch.py --project projects/demo-trastuzumab --round 2
     python select_batch.py --project ... --round 2 \
         --approved-by d.webster --drop 4f2a91c3e8d0 --drop-note "known expression risk"
+    python select_batch.py --project ... --round 2 \
+        --set batch.exploration_slots=4 --set-note "two slots is not enough coverage"
 
 Reads candidates/pool_NNN.json and the previous model run, writes
 batches/batch_NNN.json.
@@ -13,6 +15,17 @@ what the optimizer returned, ``approved`` is what a named person let through,
 and ``overrides`` records each removal with a note and a timestamp. That is
 the governance claim in one file: the system proposes, a person disposes, and
 the evaluation step scores predictions for what was actually tested.
+
+``--drop`` overrides the optimizer's *output*. ``--set`` overrides its
+*input*: re-compose this batch with a different number of exploration slots,
+replicates, controls, or a different diversity weight, bounded by the same
+`core.amend` list an amendment is held to. It touches nothing but this batch
+-- ``objectives.json`` is not written, and the next round reverts to the
+declaration -- so it needs no ruling behind it. **What gates it is the
+approval that gates every batch**, which has not happened yet and is the only
+thing that sends wells to a laboratory. A round that has been submitted
+refuses the flag outright, because its batch record is the order that went
+out.
 
 Round 1 needs no separate script. With no model run on disk there is nothing
 to exploit, so the seed branch returns the template's round-1 policy batch and
@@ -28,7 +41,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 
 import numpy as np  # noqa: E402
 
-from core import acquisition, candidates, encode, project, reconcile, schema, surrogate  # noqa: E402
+from core import (acquisition, amend, candidates, encode, project, reconcile, schema,  # noqa: E402
+                  surrogate)
 
 
 def _now():
@@ -70,11 +84,49 @@ def main(argv=None):
                     help="remove a recommended design from the approved list; repeatable")
     ap.add_argument("--drop-note", action="append", default=[], metavar="NOTE",
                     help="the reason for the matching --drop")
+    ap.add_argument("--set", action="append", default=[], metavar="FIELD=VALUE",
+                    dest="set_",
+                    help="re-compose this batch under a changed policy field, e.g. "
+                         "batch.exploration_slots=4; repeatable. The declaration is not "
+                         "touched and the next round reverts to it")
+    ap.add_argument("--set-note", default="", metavar="NOTE",
+                    help="why the policy was overridden for this batch")
+    ap.add_argument("--set-by", default=None, metavar="WHO",
+                    help="who asked for the override")
     args = ap.parse_args(argv)
 
     state = project.load(args.project)
     obj = state["objectives"]
     parent, region, policy = state["designs"]["parent"], obj["editable_region"], obj["batch"]
+
+    # A policy override re-composes *this* batch and nothing else. It is only
+    # available while the round is still here: once it has been submitted, the
+    # batch record is what the laboratory's order was built from, and
+    # rewriting it would be falsifying the account of what was sent.
+    overrides_policy = []
+    if args.set_:
+        entry = next((e for e in state["rounds"]["rounds"]
+                      if int(e["round"]) == int(args.round)), None)
+        if entry and entry.get("submission"):
+            print("round %d has been submitted, so its batch is the order the laboratory "
+                  "received and is not re-composable. A policy change from here is an "
+                  "amendment on a decision record" % args.round, file=sys.stderr)
+            return 2
+        pairs = []
+        for item in args.set_:
+            if "=" not in item:
+                print("--set takes FIELD=VALUE; %r has no '='" % item, file=sys.stderr)
+                return 2
+            field, _, raw = item.partition("=")
+            pairs.append((field.strip(), raw.strip()))
+        try:
+            policy, overrides_policy = amend.plan_overrides(obj, pairs)
+        except amend.Refused as why:
+            print("refused: %s" % why, file=sys.stderr)
+            return 2
+        stamped = _now()
+        for rec in overrides_policy:
+            rec.update(by=args.set_by, note=args.set_note, at=stamped)
 
     pool_rec = project.read_artifact(state, "candidates", args.round)
     if pool_rec is None:
@@ -112,7 +164,15 @@ def main(argv=None):
             features, policy, parent=parent, observed=observed,
             previous_batch=(prev or {}).get("approved_sequences"),
             mean=mean, sd=sd, incumbent=incumbent, objectives=obj["objectives"],
-            mode="guided")
+            mode="guided",
+            # Absent from a project the template instantiated, so the module
+            # default stands and every existing store is byte-for-byte
+            # unaffected. It is here because it is amendable: the diversity
+            # penalty is the other half of "explore more", and a policy that
+            # can add exploration slots but not loosen the penalty can only
+            # ask for uncertainty it has already ranked.
+            diversity_weight=float(policy.get("diversity_weight",
+                                              acquisition.DIVERSITY_WEIGHT)))
         batch["min_pairwise_distance"] = float(
             candidates.max_min_distance(batch["sequences"], region))
         winner = prior_run["winner"]
@@ -146,11 +206,16 @@ def main(argv=None):
     approved = [d for d in recommended if d not in dropped]
     by_id = {r["design_id"]: r for r in slots}
 
-    record = schema.stamp({
+    body = {
         "schema_version": schema.SCHEMA_VERSION,
         "round": int(args.round),
         "unit": obj["unit"],
         "mode": batch["mode"],
+        # The policy this batch was actually composed under, which is the
+        # declaration's unless it was overridden. `policy_overrides` then says
+        # what the declaration said instead, and it is present only when there
+        # were any -- so every batch selected before this flag existed hashes
+        # to exactly what it hashed to.
         "policy": policy,
         "model_run": None if prior_run is None else project.artifact_ref(
             state["paths"]["root"],
@@ -180,7 +245,10 @@ def main(argv=None):
         },
         "round1_policy": batch.get("round1_policy"),
         "round1_draw_size": batch.get("round1_draw_size"),
-    }, inputs={
+    }
+    if overrides_policy:
+        body["policy_overrides"] = overrides_policy
+    record = schema.stamp(body, inputs={
         "objectives": obj["hash"], "pool": pool_rec["hash"],
         "designs": state["designs"]["hash"],
         "model_run": None if prior_run is None else prior_run["hash"],
@@ -203,6 +271,13 @@ def main(argv=None):
     if prior_run is not None:
         print("extrapolating   %d of %d slots sit above the %.0fth uncertainty percentile"
               % (extrap, len(slots), acquisition.EXTRAPOLATION_PERCENTILE))
+    for rec in overrides_policy:
+        print("policy override %s %s -> %s%s"
+              % (rec["field"], rec["from"], rec["to"],
+                 "" if not rec["by"] else "  (asked by %s)" % rec["by"]))
+    if overrides_policy:
+        print("                this batch only; objectives.json is untouched and round %d "
+              "reverts to it" % (args.round + 1))
     print("approval        %s%s" % (record["approval"]["status"],
                                     "" if not args.approved_by else " by " + args.approved_by))
     if overrides:

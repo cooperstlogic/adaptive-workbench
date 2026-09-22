@@ -95,6 +95,24 @@ const PAST = -1;
 const LATE = Number.MAX_SAFE_INTEGER;
 const NOW = Infinity;
 
+/** What an amendment would move, and what it costs. Numbers from the writer. */
+function Amendment({ am }) {
+  return (
+    <p>
+      And asks to move <span className="mono">{am.field}</span> from{" "}
+      <span className="num">{am.from}</span> to <span className="num">{am.to}</span>:{" "}
+      {am.why}{" "}
+      <span className="faint small">
+        {am.effects.pool_changes
+          ? `${am.effects.feasible_before.toLocaleString()} feasible candidates would become `
+            + am.effects.feasible_after.toLocaleString()
+          : `${am.effects.fresh_picks} of the batch's wells would go to fresh designs`}
+        , and it is bounded {am.bounds.low}–{am.bounds.high}.
+      </span>
+    </p>
+  );
+}
+
 /** A live question and its answer, as the composer's free text produces them. */
 function AskTurn({ turn, log, live, ctx }) {
   return (
@@ -117,6 +135,7 @@ export default function Session({ ctx, stored, history }) {
   } = ctx;
   const [verdict, setVerdict] = useState(null);
   const [note, setNote] = useState("");
+  const [amendTo, setAmendTo] = useState("");
   const [request, setRequest] = useState(view.objectives.diagnostics[4]);
 
   const stage = roundView.status;
@@ -229,10 +248,24 @@ export default function Session({ ctx, stored, history }) {
     }
   }, [verdict, recorded, note, replaying, canLive]);
 
-  const ready = !!verdict && !(RULING[verdict].required && !note.trim());
+  // The amendment the open recommendation proposes, if it proposes one. It is
+  // the only thing a ruling carries a number for, and the number starts where
+  // the agent put it: pressing *accept with modification* is how you move it,
+  // so the field is pre-filled with what would happen if you did not.
+  const amendment = openPass ? (openPass.recommendation || {}).amendment : null;
+  useEffect(() => {
+    if (amendment) setAmendTo(String(amendment.to));
+  }, [amendment && amendment.field, amendment && amendment.to]);
+  const amendDialled = !!amendment && verdict === "accepted_with_modification"
+    && amendTo.trim() !== "" && Number(amendTo) !== amendment.to;
+  const amendValid = !amendment || verdict !== "accepted_with_modification"
+    || amendTo.trim() === "" || (Number.isFinite(Number(amendTo))
+      && Number(amendTo) >= amendment.bounds.low && Number(amendTo) <= amendment.bounds.high);
+
+  const ready = !!verdict && !(RULING[verdict].required && !note.trim()) && amendValid;
   const rule = async () => {
     const req = verdict === "more_evidence_requested" ? request : null;
-    const rec = await onRule(verdict, note, req);
+    const rec = await onRule(verdict, note, req, amendDialled ? Number(amendTo) : null);
     setVerdict(null);
     setNote("");
     if (!rec || rec.status !== "awaiting_evidence") return;
@@ -303,6 +336,22 @@ export default function Session({ ctx, stored, history }) {
             {roundView.batch.composition.exploration} exploration and{" "}
             {roundView.batch.composition.pick} fresh picks — from the{" "}
             {roundView.batch.model_winner} fit of round {round - 1}.{hashed}
+          </p>
+        )}
+        {(batch?.policy_overrides || []).length > 0 && (
+          // The batch on screen is not the one the declaration would have
+          // produced, so the line that describes it says so and says what was
+          // asked for instead.
+          <p className="small">
+            Re-composed on request:{" "}
+            {batch.policy_overrides.map((o) => (
+              <span key={o.field}>
+                <span className="mono">{o.field}</span>{" "}
+                <span className="num">{o.from}</span> → <span className="num">{o.to}</span>
+              </span>
+            )).reduce((a, b) => [a, ", ", b])}
+            {batch.policy_overrides[0].note && <> — “{batch.policy_overrides[0].note}”</>}.
+            This batch only; <span className="mono">objectives.json</span> is unchanged.
           </p>
         )}
         <Chips entries={selectionSteps} />
@@ -615,6 +664,7 @@ export default function Session({ ctx, stored, history }) {
           {p.recommendation.confidence}. The rationale, the alternatives and the{" "}
           <i>if_wrong</i> line are in the Decision tab.
         </p>
+        {p.recommendation.amendment && <Amendment am={p.recommendation.amendment} />}
       </Turn>
     ));
     if (p.ruling) {
@@ -624,7 +674,11 @@ export default function Session({ ctx, stored, history }) {
             <p>
               <b>{p.ruling.verdict.replace(/_/g, " ")}</b>
               {p.ruling.requested && <> — run <span className="mono">
-                {p.ruling.requested.diagnostic}</span></>}.
+                {p.ruling.requested.diagnostic}</span></>}
+              {p.ruling.modified && <> — <span className="mono">
+                {p.ruling.modified.field}</span> at{" "}
+                <span className="num">{p.ruling.modified.to}</span> and not{" "}
+                <span className="num">{p.ruling.modified.proposed}</span></>}.
               {p.ruling.note && <> “{p.ruling.note}”</>}
             </p>
           </Turn>
@@ -693,13 +747,30 @@ export default function Session({ ctx, stored, history }) {
                 {view.objectives.diagnostics.map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
             ))}
-            <input className="field" autoFocus placeholder={RULING[verdict].ask}
+            {amendment && verdict === "accepted_with_modification" && (
+              // The one number a ruling carries. Typed, bounded by what the
+              // writer will take, and beside the note rather than inside it,
+              // because a modification stated in prose is one no code path
+              // can act on.
+              <label className="mono small amend">
+                {amendment.field}
+                <input className="field num-field" type="number" step="any" autoFocus
+                       min={amendment.bounds.low} max={amendment.bounds.high}
+                       value={amendTo} onChange={(e) => setAmendTo(e.target.value)} />
+                <span className="faint">{amendment.bounds.low}–{amendment.bounds.high}</span>
+              </label>
+            )}
+            <input className="field" autoFocus={!(amendment && verdict === "accepted_with_modification")}
+                   placeholder={RULING[verdict].ask}
                    value={note} onChange={(e) => setNote(e.target.value)} />
             <button type="submit" className="btn primary" disabled={!ready || busy}>
               {spin("rule")}
               {verdict === "more_evidence_requested"
                 ? <>Ask for <span className="mono">{request}</span></>
-                : RULING[verdict].commit}
+                : amendment && verdict === "accepted_with_modification" && amendDialled
+                  ? <>Accept with <span className="mono">{amendment.field.split(".").pop()}
+                    </span> at {amendTo}</>
+                  : RULING[verdict].commit}
             </button>
           </form>
         )}

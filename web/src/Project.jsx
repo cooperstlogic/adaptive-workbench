@@ -307,7 +307,7 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
     drive(async () => {
       const turn = mode === "live"
         ? await agent.runLive({ kind: "diagnose", project: pid, round, session: sessionId,
-                                model, ruling, ...conversation(sessionId),
+                                model, ruling, seat: SEAT, ...conversation(sessionId),
                                 call: rt.call, ...hooks(sessionId) })
         : await agent.runReplay({ project: pid, round, session: sessionId, plan: proposal,
                                   pass, call: rt.call, ...hooks(sessionId) });
@@ -318,7 +318,7 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
   const askLive = useCallback((question, chosenModel, label) =>
     drive(() => agent.runLive({
       kind: "ask", project: pid, round: round ?? null, session: sessionId, question,
-      model: chosenModel || model, ...conversation(sessionId),
+      model: chosenModel || model, seat: SEAT, ...conversation(sessionId),
       call: rt.call, ...hooks(sessionId, label ? { label } : {}),
     })), [drive, hooks, pid, round, sessionId, model]);
 
@@ -351,9 +351,9 @@ export default function Project({ route, runtime, campaign, proposal, live, repr
       rt.call("diagnostic", { round_id: round, test, project: pid, session: sessionId,
                               ...args })),
     hasReplay: !!(proposal && round === proposal.round),
-    onRule: (verdict, note, request) => act("rule", () =>
-      rt.call("rule", { round_id: round, verdict, by: SEAT, note, request, project: pid,
-                        session: sessionId })),
+    onRule: (verdict, note, request, amendTo) => act("rule", () =>
+      rt.call("rule", { round_id: round, verdict, by: SEAT, note, request,
+                        amend_to: amendTo, project: pid, session: sessionId })),
     onAdvance: () => act("advance", () => {
       const next = rt.call("act_and_advance", { round_id: round, project: pid,
                                                 session: sessionId });

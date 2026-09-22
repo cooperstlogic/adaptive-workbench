@@ -320,6 +320,10 @@ pre.code {
 .ruling .field { width: auto; flex: 1 1 220px; }
 .ruling select.field { flex: 0 0 auto; }
 .ruling .btn { white-space: nowrap; margin-left: auto; }
+/* The one number a ruling carries, with the bounds the writer will take it
+   between sitting beside the box rather than appearing when it is refused. */
+.ruling .amend { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.ruling .num-field { width: 5.5em; flex: 0 0 auto; }
 
 /* --- round graph --------------------------------------------------------- */
 
