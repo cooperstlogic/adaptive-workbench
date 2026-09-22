@@ -111,6 +111,18 @@ def cli_replay_of(files):
 
         lims = os.path.join(REPO, "lims.py")
         S = lambda name: os.path.join(scripts, name)  # noqa: E731
+        # The browser re-composes the unapproved batch and then puts it back,
+        # so the CLI does too: the claim is that the same sequence writes the
+        # same bytes, and `--set` is part of the sequence now. It leaves two
+        # designs on designs.json that the plain batch does not use, which is
+        # exactly what has to match on both surfaces.
+        # No --set-by: check.py drives the harness without an approver name so
+        # the whole chain stays a pure function of its inputs, and the driver
+        # passes the flag only when it has one.
+        run(S("select_batch.py"), "--project", root, "--round", "4",
+            "--set", "batch.exploration_slots=4",
+            "--set-note", "two slots cannot cover a pool this uncertain")
+        run(S("generate_candidates.py"), "--project", root, "--round", "4")
         run(S("select_batch.py"), "--project", root, "--round", "4")
         run(lims, "submit", "--project", root, "--round", "4", "--store", store)
         run(lims, "pull", "--project", root, "--round", "R4", "--out", csv_path,
@@ -190,6 +202,8 @@ def main():
     import numpy as np
 
     from core import acquisition, candidates, encode, project, reconcile, schema, surrogate
+    # `amend` is taken below by the landscape manifest's own amendment entry.
+    from core import amend as amend_mod
     from data import synthetic
     from data.oracle import Oracle, assay_version
 
@@ -465,11 +479,11 @@ def main():
     print("\nPhase 3: boundaries of the pipeline scripts and the skill")
     skill_dir = os.path.join(REPO, "skills", "adaptive-optimization")
     scripts_dir = os.path.join(skill_dir, "scripts")
-    expected = ["evaluate_prior.py", "fit_surrogates.py", "generate_candidates.py",
-                "import_round.py", "record_decision.py", "run_diagnostic.py",
-                "select_batch.py"]
+    expected = ["amend_objectives.py", "evaluate_prior.py", "fit_surrogates.py",
+                "generate_candidates.py", "import_round.py", "record_decision.py",
+                "run_diagnostic.py", "select_batch.py"]
     present = sorted(f for f in os.listdir(scripts_dir) if f.endswith(".py"))
-    check("the five pipeline scripts and the two diagnosis scripts are present",
+    check("the five pipeline scripts and the three diagnosis scripts are present",
           present == expected, ", ".join(present))
 
     # Same method as the core boundary check above: read the imports rather than
@@ -746,6 +760,78 @@ def main():
               % (cal["coverage"], corrected["coverage"], corrected["offset_applied"],
                  corrected["nominal_coverage"], corrected["mean_residual"]))
 
+    # Re-composing an unapproved batch: the everyday half of the override
+    # story, which needs no ruling because approval has not happened yet.
+    print("\nPhase 3: re-composing a batch nobody has approved")
+    with tempfile.TemporaryDirectory() as tmp:
+        sandbox = os.path.join(tmp, "demo-trastuzumab")
+        # The bundle's rewound copy: round 4 selected and waiting on a person,
+        # which is the state the browser opens on and the only state in which
+        # this is available at all.
+        shutil.copytree(os.path.join(REPO, "web", "public", "workbench", "projects",
+                                     os.path.basename(demo_root)), sandbox)
+        before = schema.read_json(os.path.join(sandbox, "batches", "batch_004.json"))
+        r = cli("select_batch.py", "--project", sandbox, "--round", "4",
+                "--set", "batch.exploration_slots=4",
+                "--set-note", "two slots is not enough coverage", "--set-by", "a.turing")
+        after = schema.read_json(os.path.join(sandbox, "batches", "batch_004.json"))
+        obj = schema.read_json(os.path.join(sandbox, "objectives.json"))
+        moved = (after.get("policy_overrides") or [{}])[0]
+        check("the optimizer re-runs for an unapproved batch under a changed policy, and "
+              "the declaration is not touched",
+              r.returncode == 0
+              and before["composition"]["exploration"] == 2
+              and after["composition"]["exploration"] == 4
+              and after["composition"]["pick"] == 40
+              and after["policy"]["exploration_slots"] == 4
+              and obj["version"] == 1 and obj["batch"]["exploration_slots"] == 2
+              and "amendments" not in obj,
+              "2 exploration slots -> 4, 42 fresh picks -> 40, objectives.json still "
+              "version 1 at 2 -- the next round reverts to the declaration")
+        check("and the record says what moved, who asked and why",
+              moved.get("field") == "batch.exploration_slots" and moved.get("from") == 2
+              and moved.get("to") == 4 and moved.get("by") == "a.turing"
+              and moved.get("note") and moved.get("at") and schema.verify(after),
+              "%s %s -> %s, asked by %s" % (moved.get("field"), moved.get("from"),
+                                            moved.get("to"), moved.get("by")))
+        check("a batch selected without one carries no overrides block at all, so every "
+              "record written before the flag existed hashes to what it hashed to",
+              "policy_overrides" not in before,
+              "the key is present only when there were any")
+
+        # Approving re-runs selection to stamp the approver. If it dropped the
+        # override the batch would silently revert to the declaration between
+        # the person seeing it and the laboratory receiving it.
+        r = cli("select_batch.py", "--project", sandbox, "--round", "4",
+                "--approved-by", "a.turing",
+                "--set", "batch.exploration_slots=4", "--set-note", "as reviewed")
+        signed = schema.read_json(os.path.join(sandbox, "batches", "batch_004.json"))
+        check("signing the batch keeps the override, so what is approved is what was seen",
+              r.returncode == 0 and signed["composition"]["exploration"] == 4
+              and signed["approval"]["status"] == "approved",
+              "approving re-runs selection, so the flags have to be carried with it")
+
+        r = cli("select_batch.py", "--project", sandbox, "--round", "4",
+                "--set", "batch.exploration_slots=99")
+        check("a value outside the declared bound is refused here too, by the same list",
+              r.returncode != 0 and r.stderr.startswith("refused: ")
+              and "out of range" in r.stderr,
+              "one bounds list, so a knob cannot be wound further for one round than it "
+              "could be wound permanently")
+        r = cli("select_batch.py", "--project", sandbox, "--round", "4",
+                "--set", "editable_region.end=109")
+        check("and a field that moves the candidate pool cannot be set for one batch",
+              r.returncode != 0 and r.stderr.startswith("refused: ")
+              and "moves the candidate pool" in r.stderr,
+              "the round's model run holds one prediction per pool member, so the region "
+              "goes through an amendment and a refit instead")
+        r = cli("select_batch.py", "--project", demo_root, "--round", "4",
+                "--set", "batch.exploration_slots=4")
+        check("a round the laboratory already has refuses it outright",
+              r.returncode != 0 and "has been submitted" in r.stderr,
+              "its batch record is the order that went out, and rewriting it would falsify "
+              "the account of what was sent")
+
     print("\nPhase 4: what the decision writer refuses")
     with tempfile.TemporaryDirectory() as tmp:
         sandbox = os.path.join(tmp, "demo-trastuzumab")
@@ -812,6 +898,67 @@ def main():
         check("it refuses a refusal that recommends an action anyway",
               r.returncode != 0 and "no_action" in r.stderr,
               "confidence 'refuses' pairs with no_action and nothing else")
+
+        # --- the amendment: the one thing the seat can propose that changes
+        # what the optimizer recommends next, and the bounds that hold it.
+        def amended(**kw):
+            block = {"field": "batch.exploration_slots", "to": 6,
+                     "why": "two slots cannot cover a pool this uncertain"}
+            block.update(kw)
+            return payload(recommendation=dict(payload()["recommendation"], amendment=block))
+
+        r = propose(amended(field="anomaly_flag.trigger_abs_pkd", to=1.0))
+        check("it refuses an amendment to a field that is not amendable, naming the list",
+              r.returncode != 0 and r.stderr.startswith("refused: ")
+              and "is not amendable" in r.stderr
+              and "batch.exploration_slots" in r.stderr,
+              "the thresholds, the recipes, the diagnostics and the anomaly trigger are "
+              "the pre-registration and cannot be moved from the seat")
+        r = propose(amended(field="constraints.max_mutations", to=3))
+        check("and the mutation budget is one of them",
+              r.returncode != 0 and r.stderr.startswith("refused: ")
+              and "is not amendable" in r.stderr,
+              "2 -> 3 enumerates 261,649 feasible candidates here; the same core/ has to "
+              "run under Pyodide, so the budget stays a template declaration")
+        r = propose(amended(to=99))
+        check("it refuses a value outside the bound declared beside the field",
+              r.returncode != 0 and r.stderr.startswith("refused: ")
+              and "declared between 0 and 16" in r.stderr,
+              "the bound is enforced in code before the record is written, not suggested")
+        r = propose(amended(**{"from": 2}))
+        check("it refuses an amendment that supplies what the field is now",
+              r.returncode != 0 and "supplied its own" in r.stderr,
+              "the same rule as a hypothesis carrying its own result: `from` is read off "
+              "the project")
+        r = propose(payload(recommendation=dict(
+            payload()["recommendation"], action="no_action", confidence="refuses",
+            amendment={"field": "batch.exploration_slots", "to": 6, "why": "x"})))
+        check("it refuses an amendment on a recommendation that refuses",
+              r.returncode != 0 and "amends nothing" in r.stderr,
+              "a refusal is a change you are declining to make")
+        r = propose(amended(why=""))
+        check("it refuses an amendment that will not say what the present value costs",
+              r.returncode != 0 and "why" in r.stderr,
+              "the same rule as if_wrong: the reason is not optional")
+
+        # The floor is the arithmetic and not any one bound: every field's
+        # maximum is reachable alone, and winding three of them up is what
+        # runs out of wells. Checked in-process because it takes three
+        # successive amendments to get there.
+        floored = dict(sb0 := project.load(sandbox))
+        floored["objectives"] = dict(sb0["objectives"],
+                                     batch=dict(sb0["objectives"]["batch"],
+                                                controls=4, replicates=8))
+        try:
+            amend_mod.validate(floored, "batch.exploration_slots", 16)
+            floor_said = None
+        except amend_mod.Refused as why:
+            floor_said = str(why)
+        check("an amendment that would leave the batch too few fresh designs is refused "
+              "with the arithmetic",
+              floor_said is not None and "20 of 48" in floor_said
+              and str(amend_mod.MIN_FRESH_PICKS) in floor_said,
+              floor_said.split(". ")[0] if floor_said else "it was allowed")
 
         # The push-back round trip, which is acceptance criterion 8 in miniature.
         r = propose(payload())
@@ -927,6 +1074,166 @@ def main():
         check("and it cannot be done without one",
               r.returncode != 0 and "no action is taken on an unruled record" in r.stderr,
               "discarding wells is an action, and actions need a ruling")
+
+    # The amendment applied: the whole path, from a proposal a model could have
+    # written to a batch composed differently because of it. Its own sandbox,
+    # because it ends with objectives.json moved.
+    with tempfile.TemporaryDirectory() as tmp:
+        sandbox = os.path.join(tmp, "demo-trastuzumab")
+        shutil.copytree(demo_root, sandbox)
+        os.remove(os.path.join(sandbox, "decisions", "decision_004.json"))
+        path = os.path.join(tmp, "payload.json")
+        with open(path, "w") as fh:
+            json.dump({"hypotheses": [{"claim": "the model extrapolated onto one main "
+                                                "effect it had a single observation of",
+                                       "diagnostic": "residual_by_mutation_class",
+                                       "args": {"by": "position", "scope": "fresh"},
+                                       "reading": "supported"}],
+                       "recommendation": {
+                           "action": "refit_only", "confidence": "medium",
+                           "rationale": "nothing happened to the data; the wells were spent "
+                                        "re-testing one main effect",
+                           "alternative_considered": "an offset correction",
+                           "if_wrong": "the exploration slots would come back on prediction",
+                           "amendment": {"field": "batch.exploration_slots", "to": 6,
+                                         "why": "two slots cannot cover a pool this "
+                                                "model is this uncertain about"}}}, fh)
+        ok = cli("record_decision.py", "--project", sandbox, "--round", "4",
+                 "--propose", path).returncode == 0
+        dec = schema.read_json(os.path.join(sandbox, "decisions", "decision_004.json"))
+        am = dec["recommendation"]["amendment"]
+        check("a proposed amendment is written with what the field is now, its bounds and "
+              "what the change would cost, none of which the payload supplied",
+              ok and am["from"] == 2 and am["to"] == 6
+              and am["bounds"] == {"kind": "int", "low": 0, "high": 16}
+              and am["effects"]["fresh_picks"] == 38
+              and am["effects"]["pool_changes"] is False
+              and am["source"] == "core.amend.validate",
+              "%s %s -> %s, %d wells left for fresh designs, computed by %s"
+              % (am["field"], am["from"], am["to"], am["effects"]["fresh_picks"],
+                 am["source"]))
+
+        r = cli("amend_objectives.py", "--project", sandbox, "--authority", "decision_004")
+        check("it will not be applied while the record is unruled",
+              r.returncode != 0 and "unruled record" in r.stderr,
+              "no action is taken on an unruled record, and an amendment is an action")
+        r = cli("amend_objectives.py", "--project", sandbox, "--authority", "decision_002")
+        check("and it cannot cite a ruling that proposed no amendment",
+              r.returncode != 0 and "carries no amendment" in r.stderr,
+              "decision_002 recommended refit_only and nothing else")
+
+        # The ruling's own number is held to the same bound, and belongs to the
+        # one verb that means "not that number". Both of these run before the
+        # record is ruled, because a refusal writes nothing and a closed record
+        # would refuse them for the wrong reason.
+        r = cli("record_decision.py", "--project", sandbox, "--round", "4",
+                "--rule", "accepted_with_modification", "--by", "check.py",
+                "--amend-to", "99", "--note", "ninety-nine")
+        check("a ruling's own number is held to the bound the proposal was held to",
+              r.returncode != 0 and r.stderr.startswith("refused: ")
+              and "declared between 0 and 16" in r.stderr,
+              "a person disposing does not reach past a check the system proposing "
+              "could not")
+        r = cli("record_decision.py", "--project", sandbox, "--round", "4",
+                "--rule", "accepted", "--by", "check.py", "--amend-to", "4")
+        check("and moving it is what accepting with modification means",
+              r.returncode != 0 and "belongs to accepted_with_modification" in r.stderr,
+              "plain acceptance takes the number the recommendation proposed")
+
+        # The person dials it down, and the dialled number is the one that runs.
+        r = cli("record_decision.py", "--project", sandbox, "--round", "4",
+                "--rule", "accepted_with_modification", "--by", "check.py",
+                "--amend-to", "4", "--note", "four, not six")
+        dec = schema.read_json(os.path.join(sandbox, "decisions", "decision_004.json"))
+        mod = dec["ruling"].get("modified") or {}
+        check("a ruling can move the number the amendment asked for, and the record keeps "
+              "both",
+              r.returncode == 0 and mod.get("proposed") == 6 and mod.get("to") == 4
+              and dec["recommendation"]["amendment"]["to"] == 6,
+              "proposed %s, ruled %s" % (mod.get("proposed"), mod.get("to")))
+        r = cli("amend_objectives.py", "--project", sandbox, "--authority", "decision_004")
+        obj2 = schema.read_json(os.path.join(sandbox, "objectives.json"))
+        entry = (obj2.get("amendments") or [{}])[0]
+        check("applying it bumps the version and keeps the superseded value beside the "
+              "ruling that moved it",
+              r.returncode == 0 and obj2["version"] == 2
+              and obj2["batch"]["exploration_slots"] == 4
+              and entry["from"] == 2 and entry["to"] == 4 and entry["proposed"] == 6
+              and entry["authority"] == "decision_004" and entry["ruled_by"] == "check.py"
+              and entry["superseded_version"] == 1 and schema.verify(obj2),
+              "version %d, exploration_slots %d, superseded %s kept in amendments[0]"
+              % (obj2["version"], obj2["batch"]["exploration_slots"], entry["from"]))
+
+        for argv in (("fit_surrogates.py", "--project", sandbox, "--round", "4"),
+                     ("generate_candidates.py", "--project", sandbox, "--round", "5"),
+                     ("select_batch.py", "--project", sandbox, "--round", "5")):
+            ok = ok and cli(*argv).returncode == 0
+        batch5 = schema.read_json(os.path.join(sandbox, "batches", "batch_005.json"))
+        comp = batch5["composition"]
+        check("and the next batch is composed under it: the amendment reaches the wells",
+              ok and comp == {"control": 2, "replicate": 2, "exploration": 4, "pick": 40}
+              and batch5["inputs"]["objectives"] == obj2["hash"],
+              "48 wells = %d control, %d replicate, %d exploration, %d picks, against the "
+              "2 exploration slots the template declared"
+              % (comp["control"], comp["replicate"], comp["exploration"], comp["pick"]))
+
+    # The other kind of amendment: one that moves the candidate pool, which is
+    # the case the ordering exists for. Its own sandbox again.
+    with tempfile.TemporaryDirectory() as tmp:
+        sandbox = os.path.join(tmp, "demo-trastuzumab")
+        shutil.copytree(demo_root, sandbox)
+        os.remove(os.path.join(sandbox, "decisions", "decision_004.json"))
+        path = os.path.join(tmp, "payload.json")
+        with open(path, "w") as fh:
+            json.dump({"hypotheses": [{"claim": "the window has been ranked to exhaustion",
+                                       "diagnostic": "offset_from_controls",
+                                       "reading": "not supported"}],
+                       "recommendation": {
+                           "action": "refit_only", "confidence": "medium",
+                           "rationale": "widen what may be chosen from, not the data",
+                           "alternative_considered": "more exploration slots in this window",
+                           "if_wrong": "the two new positions would read like the parent",
+                           "amendment": {"field": "editable_region.end", "to": 109,
+                                         "why": "two more CDR-H3 positions"}}}, fh)
+        ok = cli("record_decision.py", "--project", sandbox, "--round", "4",
+                 "--propose", path).returncode == 0
+        ok = ok and cli("record_decision.py", "--project", sandbox, "--round", "4",
+                        "--rule", "accepted", "--by", "check.py",
+                        "--note", "widen it").returncode == 0
+        r = cli("amend_objectives.py", "--project", sandbox, "--authority", "decision_004")
+        obj2 = schema.read_json(os.path.join(sandbox, "objectives.json"))
+        designs2 = schema.read_json(os.path.join(sandbox, "designs.json"))
+        check("a region amendment widens the pool and re-derives every stored "
+              "developability score under the amended window",
+              ok and r.returncode == 0 and obj2["editable_region"] == [99, 109]
+              and "13702" in r.stdout and "rescored" in r.stdout
+              and schema.verify(designs2),
+              "7,294 feasible -> 13,702, and the scores are a function of the window they "
+              "are taken over, so leaving them would put two definitions in one project")
+
+        r = cli("fit_surrogates.py", "--project", sandbox, "--round", "4")
+        check("fitting the round against its own pool afterwards is refused",
+              r.returncode != 0 and "no longer hashes to what pool_004" in r.stderr,
+              "a model run holds one prediction per pool member in pool order, so the "
+              "predictions would be indexed against the wrong sequences")
+
+        for argv in (("generate_candidates.py", "--project", sandbox, "--round", "5"),
+                     ("fit_surrogates.py", "--project", sandbox, "--round", "4",
+                      "--pool", "5"),
+                     ("select_batch.py", "--project", sandbox, "--round", "5")):
+            ok = ok and cli(*argv).returncode == 0
+        run4 = schema.read_json(os.path.join(sandbox, "models", "run_004.json"))
+        batch5 = schema.read_json(os.path.join(sandbox, "batches", "batch_005.json"))
+        by_id = {d["design_id"]: d for d in
+                 schema.read_json(os.path.join(sandbox, "designs.json"))["designs"]}
+        reaching = [s for s in batch5["slots"]
+                    if any(int(m[1:-1]) >= 107 for m in by_id[s["design_id"]]["mutations"])]
+        check("and the order the script prints does work: the next batch reaches residues "
+              "the declaration did not previously allow",
+              ok and run4["pool_round"] == 5 and run4["pool_size"] == 13702
+              and len(reaching) > 0,
+              "%d of %d wells mutate at a position the window gained" % (len(reaching),
+                                                                         len(batch5["slots"])))
 
     print("\nPhase 4: round 2 in the committed demo project")
     dec2 = project.read_decision(demo, 2)
@@ -1441,6 +1748,24 @@ def main():
                   "batch_005 %s on both surfaces"
                   % schema.short_hash(browser["after"]["round5_batch_hash"]))
 
+            rb = browser["revise_batch"]
+            check("the browser re-runs the optimizer on the unapproved batch, under the "
+                  "same script and the same bounds the CLI uses",
+                  rb["before"]["exploration"] == 2 and rb["after"]["exploration"] == 4
+                  and rb["after"]["pick"] == 40
+                  and rb["overrides"][0]["field"] == "batch.exploration_slots"
+                  and rb["objectives_version"] == 1
+                  and rb["objectives_exploration_slots"] == 2,
+                  "2 exploration slots -> 4 in Pyodide; objectives.json untouched at 2, so "
+                  "the next round reverts to the declaration")
+            check("and putting it back returns the same 48 wells, with only the designs it "
+                  "proposed left on the record",
+                  rb["restored_slots_identical"] and rb["restored_recommended_identical"]
+                  and rb["restored_inputs_moved"] == ["designs", "pool"],
+                  "every slot and the recommended list come back identical; designs.json "
+                  "moved because a design enters the project when it is recommended, which "
+                  "is the same rule that keeps a dropped design on the record")
+
             check("approving a round sends it to a lab rather than producing its data",
                   browser["submitted"]["status"] == "running"
                   and browser["first_check"]["ready"] is False
@@ -1708,17 +2033,32 @@ def main():
                   and hk["system_blocks"] == rq["system_blocks"],
                   "Haiku 4.5 rejects both fields by name; everything else about its "
                   "request -- prompt, tools, cap, fallbacks -- is the other model's")
-            check("the model is offered two read tools, the registry, and one way to hand "
-                  "back, and no way to name a test the template does not permit",
-                  rq["tools"] == ["run_diagnostic", "execute_analysis",
-                                  "check_lab_results", "propose_decision"]
+            check("the fields the seat may ask to move are the fields core/amend.py "
+                  "bounds",
+                  rq["amendable_enum"] == sorted(amend_mod.AMENDABLE),
+                  "%d amendable fields, the same list on the tool and in the writer; "
+                  "everything else in objectives.json is refused by name"
+                  % len(rq["amendable_enum"]))
+            check("the model is offered two read tools, the registry, one way to re-run the "
+                  "optimizer, and one way to hand back, and no way to name a test the "
+                  "template does not permit",
+                  rq["tools"] == ["run_diagnostic", "execute_analysis", "check_lab_results",
+                                  "revise_batch", "propose_decision"]
                   and rq["ask_tools"] == ["run_diagnostic", "execute_analysis",
-                                          "check_lab_results"]
+                                          "check_lab_results", "revise_batch"]
                   and rq["chat_tools"] == []
                   and rq["run_diagnostic_enum"] == list(diagnostics.TESTS)
                   and rq["run_diagnostic_strict"],
-                  "two reads, the registry, and one way to hand back; run_diagnostic's "
-                  "enum is the context's permitted list, strict; a chat gets no tools")
+                  "two reads, the registry, revise_batch and propose_decision; an ask gets "
+                  "everything but the proposal, because handing a diagnosis back needs a "
+                  "diagnosis; a chat gets no tools")
+            check("and the fields it may set for one batch are the ones that do not move "
+                  "the candidate pool",
+                  rq["round_scoped_enum"] == sorted(amend_mod.ROUND_SCOPED)
+                  and all(f not in rq["round_scoped_enum"] for f in amend_mod.POOL_FIELDS),
+                  "%s -- re-enumerating under a fitted model run would index every "
+                  "prediction against the wrong sequence, so the region goes through an "
+                  "amendment instead" % ", ".join(rq["round_scoped_enum"]))
             check("a blank project's own instructions reach the seat, and a templated "
                   "project cannot have any",
                   rq["chat_system_blocks"] == 1 and rq["chat_instructed_blocks"] == 2

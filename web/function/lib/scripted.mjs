@@ -26,6 +26,17 @@ function plan() {
 /** The turns one pass of the record expands to. */
 function turnsFor(pass, round) {
   const out = [];
+  // A plan may open with a batch revision, which is how the harness drives
+  // the one tool that re-runs the optimizer. Nothing in a committed record
+  // produces this; it is here so the scripted upstream can reach the same
+  // path a live model reaches when someone asks for the batch to be composed
+  // differently.
+  if (pass.revise) {
+    out.push({ text: `Re-composing round ${round}: ${pass.revise.why}`,
+               tool: { name: "revise_batch",
+                       input: { round, changes: pass.revise.changes,
+                                why: pass.revise.why } } });
+  }
   for (const h of pass.hypotheses) {
     out.push({ text: `${h.id}: ${h.claim}`,
                tool: { name: "run_diagnostic", input: { round, test: h.diagnostic, by: h.args.by || "position",
@@ -102,6 +113,27 @@ export function scriptedClient() {
         // what it was handed -- which is what the harness checks: that the
         // question arrived on the session's transcript, not a fresh one.
         const prior = params.messages.filter((m) => m.role === "assistant").length;
+        // Unless the plan opens with a batch revision and nothing has called
+        // it yet: asking for the batch in front of you to be composed
+        // differently is a question, so this is the path it arrives on.
+        const revise = record.passes[0] && record.passes[0].revise;
+        if (revise && offered.has("revise_batch") && prior === 0) {
+          const content = [
+            { type: "text", text: `Re-composing round ${record.round}: ${revise.why}` },
+            { type: "tool_use", id: "toolu_scripted_revise", name: "revise_batch",
+              input: { round: record.round, changes: revise.changes, why: revise.why } },
+          ];
+          const message = {
+            id: "msg_scripted_revise", type: "message", role: "assistant", model: MODEL,
+            content, stop_details: null, stop_reason: "tool_use",
+            usage: { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0,
+                     cache_read_input_tokens: 0 },
+          };
+          return {
+            async *[Symbol.asyncIterator]() { for (const e of events(content)) yield e; },
+            async finalMessage() { return message; },
+          };
+        }
         const text = `(scripted upstream) answering from a transcript with ${prior} earlier assistant turns`;
         const content = [{ type: "text", text }];
         const message = {

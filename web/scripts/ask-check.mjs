@@ -123,6 +123,7 @@ try {
 } catch (err) {
   instructionsOnTemplated = err.status;
 }
+const byName = (n) => req.tools.find((t) => t.name === n);
 report.request = {
   model: req.model, max_tokens: req.max_tokens, effort: req.output_config.effort,
   thinking: req.thinking.type, betas: req.betas, fallbacks: req.fallbacks,
@@ -130,6 +131,14 @@ report.request = {
   ask_tools: ask.tools.map((t) => t.name), chat_tools: chat.tools.map((t) => t.name),
   run_diagnostic_enum: req.tools[0].input_schema.properties.test.enum,
   run_diagnostic_strict: req.tools[0].strict === true,
+  // The fields the seat may ask to move, and the ones it may set for a single
+  // batch, off the two tools themselves. They have to be the ones
+  // core/amend.py bounds, or the model is offered a knob the writer refuses.
+  // By name and not by position, because the tool list grows.
+  amendable_enum: byName("propose_decision").input_schema.properties.recommendation
+    .properties.amendment.properties.field.enum,
+  round_scoped_enum: byName("revise_batch").input_schema.properties.changes
+    .items.properties.field.enum,
   system_blocks: req.system.length,
   system_has_skill: req.system.some((b) => b.text.includes("# Adaptive optimization")
     && b.text.includes("Four rules you do not break")),

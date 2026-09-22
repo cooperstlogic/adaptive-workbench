@@ -91,6 +91,44 @@ async function boot() {
 
 /** Approve round 4, ask the lab twice, and return what came back. */
 function bringBackRound4(call, timing, report) {
+  // Before anything is approved, the batch can be re-composed -- which is the
+  // one moment it can be, and the moment a person is looking at it. Run it
+  // here so the browser exercises the same `select_batch.py --set` the CLI
+  // does, then put it back and require the same 48 wells to come back.
+  //
+  // The restored record does not hash to what it hashed to, and should not:
+  // the two extra exploration picks are in `designs.json` now, because a
+  // design enters the project when it is *recommended* -- the same rule that
+  // keeps a dropped design on the record. So the selection is what has to be
+  // identical, and the input hash is what is allowed to move.
+  const original = call("artifact", { kind: "batches", round_id: 4 });
+  const revised = call("revise_batch", {
+    round_id: 4, changes: [{ field: "batch.exploration_slots", to: 4 }],
+    why: "two slots cannot cover a pool this uncertain", by: BY,
+  });
+  const objectivesAfter = call("view", {}).objectives;
+  call("advance", { round_id: 4 });
+  const restored = call("artifact", { kind: "batches", round_id: 4 });
+  report.revise_batch = {
+    before: original.composition,
+    after: revised.composition,
+    overrides: revised.policy_overrides,
+    objectives_version: objectivesAfter.version,
+    objectives_exploration_slots: objectivesAfter.batch.exploration_slots,
+    restored_slots_identical:
+      JSON.stringify(restored.slots) === JSON.stringify(original.slots),
+    restored_recommended_identical:
+      JSON.stringify(restored.recommended) === JSON.stringify(original.recommended),
+    // Everything but the designs the revision put on the record.
+    restored_inputs_moved: Object.keys(original.inputs)
+      .filter((k) => restored.inputs[k] !== original.inputs[k]),
+  };
+  say(`revise round 4    ${original.composition.exploration} exploration slots -> `
+    + `${revised.composition.exploration}, declaration untouched at `
+    + `${objectivesAfter.batch.exploration_slots}; restored `
+    + `${JSON.stringify(restored.slots) === JSON.stringify(original.slots)
+        ? "the same 48 wells" : "DIFFERENT WELLS"}`);
+
   let t = Date.now();
   const sent = call("approve", { round_id: 4, by: BY });
   timing.approve_ms = Date.now() - t;

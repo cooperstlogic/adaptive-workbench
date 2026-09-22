@@ -14,6 +14,11 @@
         --rule more_evidence_requested --by d.webster \
         --request calibration_by_region --note "show me the offset does not fix coverage"
 
+    # or accepts the diagnosis and dials the number it asked for
+    python record_decision.py --project projects/demo-trastuzumab --round 5 \
+        --rule accepted_with_modification --by d.webster --amend-to 4 \
+        --note "four exploration slots, not six; keep the fresh picks above forty"
+
 Writes decisions/decision_NNN.json and links it into rounds.json.
 
 **It adds no arithmetic of its own, and it accepts none.** A proposal names
@@ -25,13 +30,25 @@ reach a decision record. The one exception is the ``ad_hoc`` list, which is
 model-written analysis, is stored with its source inlined, is labelled
 one-off and unversioned, and is never an input to a code path.
 
-Four things it refuses outright, because each is a rule that is worth more
+A recommendation may also carry an **amendment**: one field of
+``objectives.json`` the agent is asking to move, and the value it is asking
+for. The field has to be one `core.amend` declares amendable and the value
+has to sit inside the bounds declared beside it, both checked here before
+anything is written. What the field is *now*, and what the change would cost
+the candidate pool, are read off the project rather than taken from the
+payload. Nothing is applied: `amend_objectives.py --authority` does that,
+after a ruling, and an `accepted_with_modification` ruling may dial the number
+with ``--amend-to``.
+
+Five things it refuses outright, because each is a rule that is worth more
 enforced than suggested:
 
 * a hypothesis naming a test the template does not permit
 * a recommendation to correct the frame with no concordant bridge behind it
 * a recommendation with an empty ``if_wrong``
 * a second pass that ignores the test the ruling asked for
+* an amendment naming a field that is not amendable, a value outside its
+  declared bounds, or one that would leave the batch too few fresh designs
 
 The four ruling verbs are `accepted`, `accepted_with_modification`,
 `rejected`, and `more_evidence_requested`, which names a test and hands the
@@ -47,7 +64,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
 
-from core import diagnostics, project, schema  # noqa: E402
+from core import amend, diagnostics, project, schema  # noqa: E402
 
 ACTIONS = ("apply_offset_correction", "drop_wells", "refit_only", "no_action")
 CONFIDENCE = ("high", "medium", "low", "refuses")
@@ -111,7 +128,51 @@ def evidence(state, round_id, snap, batch, prior_run, hypotheses, permitted, pol
     return out
 
 
-def recommendation(payload, hypotheses):
+def amendment(state, rec):
+    """Validate a proposed amendment to the declaration, or return None.
+
+    The payload names a field and a value and says why. Everything else in
+    the stored block -- what the field is now, the bounds it was checked
+    against, and what the change would cost the candidate pool -- is computed
+    here by `core.amend`, off the project on disk. A payload carrying its own
+    ``from`` or ``effects`` is refused for the same reason one carrying its
+    own ``result`` is: there is no channel for a number nobody can reproduce.
+
+    The value itself the agent does supply, and that is deliberate. It is a
+    choice about what to do next rather than a measurement -- the same channel
+    ``drop_wells`` names a plate in -- it is bounded here in code before it is
+    written down, and it changes nothing until a named person rules on it.
+    """
+    block = rec.get("amendment")
+    if not block:
+        return None
+    if not isinstance(block, dict):
+        raise Refused("amendment is an object naming a field, a value and why")
+    for key in ("from", "effects", "bounds"):
+        if key in block:
+            raise Refused("the amendment supplied its own %r. Name the field and the value "
+                          "you want; this script reads what it is now off the project and "
+                          "computes what the change would cost" % key)
+    if rec.get("confidence") == "refuses":
+        raise Refused("a refusal recommends no_action and amends nothing. An amendment is a "
+                      "change you are asking for, not a change you are declining to make")
+    field, to = block.get("field"), block.get("to")
+    was, value, effects = amend.validate(state, field, to, where="the amendment")
+    kind, low, high = amend.AMENDABLE[field]
+    return {
+        "field": field,
+        "from": was,
+        "to": value,
+        "why": _text(block, "why", "the amendment"),
+        "bounds": {"kind": kind, "low": low, "high": high},
+        "effects": effects,
+        "source": "core.amend.validate",
+        "note": "a decision parameter, bounded in code and inert until a named person "
+                "rules; applied by amend_objectives.py --authority, never from here",
+    }
+
+
+def recommendation(state, payload, hypotheses):
     """Validate the recommendation against the evidence just computed."""
     rec = payload.get("recommendation") or {}
     action = rec.get("action")
@@ -141,7 +202,7 @@ def recommendation(payload, hypotheses):
                 "with confidence 'refuses'"
                 % (result.get("delta_sd"), result.get("concordance_tolerance")))
 
-    return {
+    out = {
         "action": action,
         "confidence": confidence,
         "parameters": rec.get("parameters") or {},
@@ -149,6 +210,14 @@ def recommendation(payload, hypotheses):
         "alternative_considered": _text(rec, "alternative_considered", "recommendation"),
         "if_wrong": _text(rec, "if_wrong", "recommendation"),
     }
+    # What to do with this round's data and how to spend the next round's
+    # wells are independent decisions, so the amendment is a field beside the
+    # action rather than a fifth value of it: a round can both take an offset
+    # correction and widen exploration, and one ruling covers both.
+    amended = amendment(state, rec)
+    if amended is not None:
+        out["amendment"] = amended
+    return out
 
 
 def ad_hoc(payload):
@@ -204,12 +273,12 @@ def propose(state, round_id, payload, existing):
         "answering": requested,
         "hypotheses": hypotheses,
         "ad_hoc": ad_hoc(payload),
-        "recommendation": recommendation(payload, hypotheses),
+        "recommendation": recommendation(state, payload, hypotheses),
         "ruling": None,
     }, snap, batch, prior_run
 
 
-def rule(existing, verdict, by, note, request, permitted):
+def rule(state, existing, verdict, by, note, request, permitted, amend_to=None):
     """Attach a ruling to the open pass."""
     if not existing or not existing.get("passes"):
         raise Refused("there is nothing to rule on: no recommendation has been recorded")
@@ -230,6 +299,32 @@ def rule(existing, verdict, by, note, request, permitted):
 
     ruling = {"verdict": verdict, "by": by.strip(), "at": _now(), "note": note,
               "requested": None}
+
+    # A recommendation that carries an amendment carries a number, and the
+    # person ruling on it gets to move that number rather than only take it or
+    # leave it. The modified value is re-validated here against the same
+    # bounds the proposal was, so the human's hand does not reach past a check
+    # the agent's did -- and both numbers stay in the record.
+    proposed = (existing["recommendation"] or {}).get("amendment")
+    if amend_to is not None:
+        if verdict != "accepted_with_modification":
+            raise Refused("--amend-to belongs to accepted_with_modification, not to %r. "
+                          "Accepting takes the number the recommendation proposed" % verdict)
+        if not proposed:
+            raise Refused("--amend-to modifies an amendment and this recommendation does "
+                          "not propose one")
+        field = proposed["field"]
+        was, value, effects = amend.validate(state, field, amend_to, where="--amend-to")
+        if value == proposed["to"]:
+            raise Refused("--amend-to is %s, which is what the recommendation already "
+                          "proposes. Accept it instead" % value)
+        ruling["modified"] = {"field": field, "from": was, "proposed": proposed["to"],
+                              "to": value, "effects": effects,
+                              "source": "core.amend.validate"}
+    # No ``modified`` block means the number was not modified, whatever else
+    # the note says changed, and that is what the applier reads. The absence
+    # is the statement, so there is no third state to misread.
+
     if verdict == "more_evidence_requested":
         if request not in permitted:
             raise Refused("--request names a test the template permits: %s"
@@ -280,6 +375,9 @@ def main(argv=None):
     ap.add_argument("--note", default="", help="the reason, the modification, or the ask")
     ap.add_argument("--request", default=None,
                     help="more_evidence_requested: the test to go and run")
+    ap.add_argument("--amend-to", default=None, metavar="VALUE",
+                    help="accepted_with_modification: the value to apply instead of the "
+                         "one the recommendation's amendment proposed")
     args = ap.parse_args(argv)
 
     if bool(args.propose) == bool(args.rule):
@@ -300,12 +398,16 @@ def main(argv=None):
                        or (payload.get("trigger") or "").strip()
                        or default_trigger(snap))
         else:
-            ruling = rule(existing, args.rule, args.by, args.note, args.request,
-                          obj["diagnostics"])
+            ruling = rule(state, existing, args.rule, args.by, args.note, args.request,
+                          obj["diagnostics"], amend_to=args.amend_to)
             passes = list(existing["passes"])
             passes[-1] = dict(passes[-1], ruling=ruling)
             trigger = existing["trigger"]
-    except Refused as why:
+    # `core.amend` has a refusal of its own, raised out of the bounds check on
+    # an amendment. It means exactly what this one means and is reported the
+    # same way: a reason on stderr, not a traceback the model has to read
+    # around.
+    except (Refused, amend.Refused) as why:
         print("refused: %s" % why, file=sys.stderr)
         return 2
 
@@ -342,6 +444,12 @@ def report(record, round_id):
         print("  ad hoc  %s  (one-off, unversioned)" % a["question"][:60])
     rec = latest["recommendation"]
     print("recommends      %s, confidence %s" % (rec["action"], rec["confidence"]))
+    am = rec.get("amendment")
+    if am:
+        print("amends          %s  (%s, declared %s to %s)"
+              % (amend.describe(am["field"], am["from"], am["to"]),
+                 "the pool moves" if am["effects"]["pool_changes"] else "the wells re-spend",
+                 am["bounds"]["low"], am["bounds"]["high"]))
     print("if wrong        %s" % rec["if_wrong"])
     ruling = latest["ruling"]
     if ruling is None:
@@ -352,6 +460,13 @@ def report(record, round_id):
                  "" if not ruling["note"] else " -- %s" % ruling["note"]))
         if ruling["requested"]:
             print("                go and run %s" % ruling["requested"]["diagnostic"])
+        mod = ruling.get("modified")
+        if mod:
+            print("                %s dialled %s from %s to %s"
+                  % (ruling["by"], mod["field"], mod["proposed"], mod["to"]))
+        elif am:
+            print("                the amendment applies as proposed: %s"
+                  % amend.describe(am["field"], am["from"], am["to"]))
 
 
 if __name__ == "__main__":

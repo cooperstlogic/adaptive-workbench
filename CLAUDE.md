@@ -27,7 +27,7 @@ Production only — a preview runs without a seat and spends nothing.
 ## Commands
 
 - Use `.venv/bin/python`, never `python3` — the system interpreter has no numpy.
-- **Run `.venv/bin/python check.py` before and after any change.** It verifies 197
+- **Run `.venv/bin/python check.py` before and after any change.** It verifies 227
   invariants; a failure means the state drifted from what is documented. It takes about
   forty seconds, because it runs two full six-round campaigns through the CLI, checks them
   against the evaluator, drives both connectors over the MCP protocol, boots Pyodide twice
@@ -170,6 +170,25 @@ the frame around it.
   `record_decision.py --propose`, and the writer's refusal goes back to it as an error
   result. `check_lab_results` is the one tool that writes, and what it writes is a round the
   laboratory reported, pulled and imported by the same two scripts every surface runs.
+- **An unapproved batch is re-composed, not amended.** `revise_batch` is
+  `select_batch.py --set`: it runs the optimizer again for the batch in front of someone,
+  bounded by the same `core/amend.py` list, recording what moved in the batch's own
+  `policy_overrides`. It needs no ruling because it changes nothing that has left the
+  building — **the approval is the gate, and it is still a button**. A submitted round
+  refuses it. `approve()` re-runs selection, so it re-applies the overrides or the batch
+  would silently revert between being seen and being sent.
+- **A proposal may carry an amendment, and that is the only path to `objectives.json`.**
+  This is the heavier instrument and it is for the declaration, not for a batch.
+  Six fields are amendable, declared with their bounds in `core/amend.py` and enforced by
+  `record_decision.py` before anything is written; everything else — the thresholds, the
+  **mutation budget**, the recipes, the diagnostics, the anomaly trigger — is refused by
+  name. The value is the model's because it is a decision and not a measurement, the same
+  channel `drop_wells` names a plate in. It is inert until a named person rules, who may
+  dial it with `--amend-to`, and `amend_objectives.py --authority` is the one thing that
+  writes the file: version bumped, superseded value kept, the ruling named. **The mutation
+  budget is excluded for a measured reason** — 2 → 3 leaves 261,649 feasible candidates and
+  a 335 MB feature block, which Pyodide cannot hold. Keep it that way, and keep new
+  amendable fields behind `MAX_FEASIBLE_POOL`.
 - **The function is not a proxy.** It builds every request itself and accepts only
   transcripts it signed — never loosen `validate()` to take a `messages` array.
 - **The session is the conversation, and transcripts are not state.** A session holds one

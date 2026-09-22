@@ -309,6 +309,35 @@ function DecisionTab({ ctx }) {
         <Para text={rec.if_wrong} small />
       </div>
 
+      {rec.amendment && (
+        // What the recommendation asks to change about the next round, rather
+        // than about this one's data. Every figure here was computed by
+        // core.amend against the project on disk; the payload named the field,
+        // the value and the reason and nothing else.
+        <div className="card">
+          <div className="spread">
+            <b className="mono">{rec.amendment.field}</b>
+            <Badge kind="attn">
+              <span className="num">{rec.amendment.from}</span> →{" "}
+              <span className="num">{rec.amendment.to}</span>
+            </Badge>
+          </div>
+          <Para text={rec.amendment.why} small />
+          <p className="small muted" style={{ marginTop: 8 }}>
+            Bounded {rec.amendment.bounds.low}–{rec.amendment.bounds.high} by{" "}
+            <span className="mono">{rec.amendment.source}</span>, which read the present
+            value off the project.{" "}
+            {rec.amendment.effects.pool_changes
+              ? `The candidate pool would go from `
+                + `${rec.amendment.effects.feasible_before.toLocaleString()} feasible to `
+                + `${rec.amendment.effects.feasible_after.toLocaleString()}.`
+              : `${rec.amendment.effects.fresh_picks} of 48 wells would go to fresh designs.`}
+            {" "}Applied by <span className="mono">amend_objectives.py</span> only under a
+            ruling that authorized it.
+          </p>
+        </div>
+      )}
+
       {decision.ruling && (
         <div className="card">
           <div className="spread">
@@ -320,6 +349,14 @@ function DecisionTab({ ctx }) {
           {decision.ruling.requested && (
             <p className="small">requested: <span className="mono">
               {decision.ruling.requested.diagnostic}</span></p>
+          )}
+          {decision.ruling.modified && (
+            <p className="small">
+              <span className="mono">{decision.ruling.modified.field}</span> ruled at{" "}
+              <span className="num">{decision.ruling.modified.to}</span>, against the{" "}
+              <span className="num">{decision.ruling.modified.proposed}</span> proposed. The
+              ruled value is the one that runs.
+            </p>
           )}
           {decision.ruling.note && <p className="small">{decision.ruling.note}</p>}
         </div>

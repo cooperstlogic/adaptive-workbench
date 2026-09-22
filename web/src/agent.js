@@ -109,7 +109,7 @@ export function diagnosticArgs(input) {
   return out;
 }
 
-export function runTool({ name, input }, { call, project, round, session, verify }) {
+export function runTool({ name, input }, { call, project, round, session, verify, seat }) {
   if (name === "run_diagnostic") {
     const args = diagnosticArgs(input || {});
     const target = Number.isInteger(input && input.round) ? input.round : round;
@@ -142,6 +142,29 @@ export function runTool({ name, input }, { call, project, round, session, verify
       // A round that was never submitted, or one that is already imported.
       // The refusal is the boundary working, so it goes back as a result the
       // model can read rather than ending the turn.
+      return { content: String(err.message || err), is_error: true, refused: true };
+    }
+  }
+  if (name === "revise_batch") {
+    const target = Number.isInteger(input && input.round) ? input.round : round;
+    try {
+      const batch = call("revise_batch", {
+        round_id: target, changes: input.changes, why: input.why, by: seat,
+        project, session,
+      });
+      return {
+        entry: batch.log, batch,
+        content: JSON.stringify({
+          round: target, composition: batch.composition,
+          policy_overrides: batch.policy_overrides || [],
+          note: "the batch record only; objectives.json is unchanged and nobody has "
+            + "approved this batch",
+        }),
+      };
+    } catch (err) {
+      // A round already at the laboratory, or a value outside the declared
+      // bounds. Either way the refusal is the rule working, so it goes back
+      // as a result the model can answer rather than ending the turn.
       return { content: String(err.message || err), is_error: true, refused: true };
     }
   }
@@ -185,7 +208,7 @@ const MAX_TURNS = 24;
  */
 export async function runLive({
   kind, project, round, session, question, model, ruling, transcript = null, pending = null,
-  instructions = null, call, emit = () => {}, save = () => {},
+  instructions = null, seat = null, call, emit = () => {}, save = () => {},
   fetchImpl = globalThis.fetch, base = "",
   id = `live-${Date.now()}`, at = new Date().toISOString(),
 }) {
@@ -351,7 +374,7 @@ export async function runLive({
         results.push({ tool_use_id: c.id, content: why, is_error: true });
         continue;
       }
-      const out = runTool(c, { call, project, round: toolRound, session });
+      const out = runTool(c, { call, project, round: toolRound, session, seat });
       // The entry rides on the step while the turn streams, so the chip can
       // render before the page re-reads the log; the stored copy drops it and
       // finds the entry by its number. A tool that ran several commands
@@ -360,11 +383,20 @@ export async function runLive({
         push({ type: "tool", name: c.name, n: e.n, input: summarize(c.name, c.input),
                verified: out.verified || null, entry: e });
       }
+      if (out.batch) {
+        push({ type: "revision", round: out.batch.round,
+               composition: out.batch.composition,
+               overrides: out.batch.policy_overrides || [] });
+      }
       if (out.decision) {
         proposed = true;
         push({ type: "proposal", decision_id: out.decision.id, pass: out.decision.n_passes,
                action: out.decision.recommendation.action,
                confidence: out.decision.recommendation.confidence,
+               // The written block and not the model's input: the writer read
+               // `from` off the project and computed what the change costs,
+               // so this is the one the chip can quote.
+               amendment: out.decision.recommendation.amendment || null,
                n_hypotheses: out.decision.hypotheses.length });
       } else if (out.refused) {
         push({ type: "refused", text: out.content });
@@ -393,10 +425,15 @@ function summarize(name, input) {
   if (name === "run_diagnostic") return diagnosticArgs(input || {});
   if (name === "execute_analysis") return { question: (input || {}).question };
   if (name === "check_lab_results") return { round: (input || {}).round };
+  if (name === "revise_batch") {
+    return { round: (input || {}).round,
+             set: ((input || {}).changes || []).map((c) => `${c.field}=${c.to}`).join(" ") };
+  }
   if (name === "propose_decision") {
     const p = input || {};
-    return { hypotheses: (p.hypotheses || []).length,
-             action: p.recommendation && p.recommendation.action };
+    const rec = p.recommendation || {};
+    return { hypotheses: (p.hypotheses || []).length, action: rec.action,
+             ...(rec.amendment ? { amends: `${rec.amendment.field}=${rec.amendment.to}` } : {}) };
   }
   return input;
 }
